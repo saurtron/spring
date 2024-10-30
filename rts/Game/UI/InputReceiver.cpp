@@ -12,6 +12,12 @@
 
 float CInputReceiver::guiAlpha = 0.8f;
 
+// Cache for GetReceiverAt
+static std::int64_t cachedReceiverTime = -1;
+static int cachedReceiverX = 0;
+static int cachedReceiverY = 0;
+static CInputReceiver* cachedReceiver = nullptr;
+
 CInputReceiver* CInputReceiver::activeReceiver = nullptr;
 
 CInputReceiver::CInputReceiver(Where w)
@@ -76,20 +82,31 @@ void CInputReceiver::DrawReceivers()
 CInputReceiver* CInputReceiver::GetReceiverAt(int x, int y)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	if (globalRendering->lastFrameStart.toMilliSecsi() == cachedReceiverTime && cachedReceiverX == x && cachedReceiverY == y)
+		return cachedReceiver;
+
+	cachedReceiverTime = globalRendering->lastFrameStart.toMilliSecsi();
+	cachedReceiverX = x;
+	cachedReceiverY = y;
+
 	// check RmlUI first
-	if (RmlGui::IsMouseInteractingWith())
-		return RmlGui::GetInputReceiver();
+	if (RmlGui::IsMouseInteractingWith()) {
+		cachedReceiver = RmlGui::GetInputReceiver();
+		return cachedReceiver;
+	}
 
 	// check lua second
-	if (luaInputReceiver != nullptr && luaInputReceiver->IsAbove(x, y))
+	if (luaInputReceiver != nullptr && luaInputReceiver->IsAbove(x, y)) {
+		cachedReceiver = luaInputReceiver;
 		return luaInputReceiver;
+	}
 
 	for (CInputReceiver* recv: GetReceivers()) {
 		if (recv == nullptr)
 			continue;
 		if (!recv->IsAbove(x, y))
 			continue;
-
+		cachedReceiver = recv;
 		return recv;
 	}
 
