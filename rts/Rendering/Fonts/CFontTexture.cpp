@@ -89,56 +89,23 @@ public:
 		: config(nullptr)
 		, lib(nullptr)
 	{
-		{
-			const FT_Error error = FT_Init_FreeType(&lib);
+		const FT_Error error = FT_Init_FreeType(&lib);
 
+		if (error != 0) {
 			FT_Int version[3];
 			FT_Library_Version(lib, &version[0], &version[1], &version[2]);
 
-			std::string msg = fmt::sprintf("%s::FreeTypeInit (version %d.%d.%d)", __func__, version[0], version[1], version[2]);
-			std::string err = fmt::sprintf("[%s] FT_Init_FreeType failure \"%s\"", __func__, GetFTError(error));
-
-			if (error != 0)
-				throw std::runtime_error(err);
+			std::string err = fmt::sprintf("[%s] FT_Init_FreeType failure (version %d.%d.%d) \"%s\"",
+						       __func__, version[0], version[1], version[2], GetFTError(error));
+			throw std::runtime_error(err);
 		}
-
-        #ifdef USE_FONTCONFIG
-		if (!UseFontConfig())
-			return;
-
-		{
-			std::string msg = fmt::sprintf("%s::FontConfigInit (version %d.%d.%d)", __func__, FC_MAJOR, FC_MINOR, FC_REVISION);
-			ScopedOnceTimer timer(msg);
-			ZoneScopedNC("FtLibraryHandler::FontConfigInit", tracy::Color::Purple);
-
-			try
-			{
-				FcInit();
-			} catch (const std::exception& e) {
-				LOG("FcInit() runtime error: \"%s\"", e.what());
-				config = nullptr;
-				return;
-			}
-
-			FcConfigEnableHome(FcFalse);
-			config = FcInitLoadConfigAndFonts();
-			if (!config)
-				return;
-
-			static constexpr const char* cacheDirFmt = R"(<fontconfig><cachedir>fontcache</cachedir></fontconfig>)";
-			if (!FcConfigParseAndLoadFromMemory(config, reinterpret_cast<const FcChar8*>(cacheDirFmt), FcTrue)) {
-				FcConfigDestroy(config);
-				config = nullptr;
-			}
-		}
-		#endif
 	}
 
 	~FtLibraryHandler() {
 		FT_Done_FreeType(lib);
 
 		#ifdef USE_FONTCONFIG
-		if (!UseFontConfig())
+		if (!CanUseFontConfig())
 			return;
 
 		FcConfigDestroy(config);
@@ -147,22 +114,8 @@ public:
 		#endif
 	}
 
-	// reduced set of fonts
-	// not called if FcInit() fails
-	static bool CheckGenFontConfigFast() {
-		FcConfigAppFontClear(GetFCConfig());
-		if (!FcConfigAppFontAddDir(GetFCConfig(), reinterpret_cast<const FcChar8*>("fonts")))
-			return false;
-
-		if (!FtLibraryHandler::CheckFontConfig()) {
-			return FcConfigBuildFonts(GetFCConfig());
-		}
-
-		return true;
-	}
-
-	static bool CheckGenFontConfigFull(bool console) {
-	#ifndef HEADLESS
+	bool InitFontconfig(bool console) {
+		#ifdef USE_FONTCONFIG
 		auto LOG_MSG = [console](const std::string& fmt, bool isError, auto&&... args) {
 			if (console) {
 				std::string fmtNL = fmt + "\n";
@@ -178,16 +131,56 @@ public:
 			}
 		};
 
-		if (!FtLibraryHandler::CanUseFontConfig()) {
-			LOG_MSG("[%s] Fontconfig(version %d.%d.%d) failed to initialize", true, __func__, FC_MAJOR, FC_MINOR, FC_REVISION);
+		if (!UseFontConfig())
 			return false;
-		}
-
-		FcConfigAppFontClear(GetFCConfig());
-		FcConfigAppFontAddDir(GetFCConfig(), reinterpret_cast<const FcChar8*>("fonts"));
 
 		{
-			auto dirs = FcConfigGetCacheDirs(GetFCConfig());
+			std::string msg = fmt::sprintf("%s::FontConfigInit (version %d.%d.%d)", __func__, FC_MAJOR, FC_MINOR, FC_REVISION);
+			ScopedOnceTimer timer(msg);
+			ZoneScopedNC("FtLibraryHandler::FontConfigInit", tracy::Color::Purple);
+
+			FcBool res;
+			std::string errprefix = fmt::sprintf("[%s] Fontconfig(version %d.%d.%d) failed to initialize", __func__, FC_MAJOR, FC_MINOR, FC_REVISION);
+
+			// init configuration
+			FcConfigEnableHome(FcFalse);
+			config = FcConfigCreate();
+
+			// add local cache in case fontconfig one can't be used
+			static constexpr const char* cacheDirFmt = R"(<fontconfig><cachedir>fontcache</cachedir></fontconfig>)";
+			res = FcConfigParseAndLoadFromMemory(config, reinterpret_cast<const FcChar8*>(cacheDirFmt), FcTrue);
+			if (!res) {
+				LOG_MSG("%s cache", true, errprefix);
+				InitFailed();
+				return false;
+			}
+
+			// load system configuration
+			res = FcConfigParseAndLoad(config, 0, true);
+			if (!res) {
+				LOG_MSG("%s config", true, errprefix);
+				InitFailed();
+				return false;
+			}
+
+			// build system fonts
+			res = FcConfigBuildFonts(config);
+			if (!res) {
+				LOG_MSG("%s build fonts", true, errprefix);
+				InitFailed();
+				return false;
+			}
+
+			// init app fonts dir
+			res = FcConfigAppFontAddDir(config, reinterpret_cast<const FcChar8*>("fonts"));
+			if (!res) {
+				LOG_MSG("%s font dir", true, errprefix);
+				InitFailed();
+				return false;
+			}
+
+			// print cache dirs
+			auto dirs = FcConfigGetCacheDirs(config);
 			FcStrListFirst(dirs);
 			for (FcChar8* dir = FcStrListNext(dirs); dir != nullptr; dir = FcStrListNext(dirs)) {
 				LOG_MSG("[%s] Using Fontconfig cache dir \"%s\"", false, __func__, dir);
@@ -195,18 +188,17 @@ public:
 			FcStrListDone(dirs);
 		}
 
-		if (FtLibraryHandler::CheckFontConfig()) {
-			LOG_MSG("[%s] fontconfig up to date", false, __func__);
-			return true;
-		}
-
-		LOG_MSG("[%s] creating fontconfig", false, __func__);
-
-		return FcConfigBuildFonts(GetFCConfig());
-	#endif
+		#endif // USE_FONTCONFIG
 
 		return true;
 	}
+
+	void InitFailed() {
+		FcConfigDestroy(config);
+		FcFini();
+		config = nullptr;
+	}
+	static bool InitSingletonFontconfig(bool console) { return singleton->InitFontconfig(console); }
 
 	static bool UseFontConfig() { return (configHandler == nullptr || configHandler->GetBool("UseFontConfigLib")); }
 
@@ -252,21 +244,11 @@ void FtLibraryHandlerProxy::InitFtLibrary()
 #endif
 }
 
-bool FtLibraryHandlerProxy::CheckGenFontConfigFast()
+bool FtLibraryHandlerProxy::InitFontconfig(bool console)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 #ifndef HEADLESS
-	return FtLibraryHandler::CheckGenFontConfigFast();
-#else
-	return false;
-#endif
-}
-
-bool FtLibraryHandlerProxy::CheckGenFontConfigFull(bool console)
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-#ifndef HEADLESS
-	return FtLibraryHandler::CheckGenFontConfigFull(console);
+	return FtLibraryHandler::InitSingletonFontconfig(console);
 #else
 	return false;
 #endif
