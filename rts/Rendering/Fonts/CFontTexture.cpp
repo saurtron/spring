@@ -155,7 +155,12 @@ public:
 
 			// init configuration
 			FcConfigEnableHome(FcFalse);
-			config = FcConfigCreate();
+			//config = FcConfigCreate();
+			config = FcInitLoadConfigAndFonts();
+			if (!config) {
+				LOG_MSG("%s config and fonts", true, errprefix.c_str());
+				return;
+			}
 
 			// add local cache in case fontconfig one can't be used
 			static constexpr const char* cacheDirFmt = R"(<fontconfig><cachedir>fontcache</cachedir></fontconfig>)";
@@ -166,7 +171,7 @@ public:
 				return false;
 			}
 
-			// load system configuration
+			/*// load system configuration
 			res = FcConfigParseAndLoad(config, 0, true);
 			if (!res) {
 				LOG_MSG("%s config, you will miss system fallback fonts", false, errprefix.c_str());
@@ -178,7 +183,7 @@ public:
 				LOG_MSG("%s build fonts", true, errprefix.c_str());
 				InitFailed();
 				return false;
-			}
+			}*/
 
 			// init app fonts dir
 			res = FcConfigAppFontAddDir(config, reinterpret_cast<const FcChar8*>("fonts"));
@@ -207,8 +212,8 @@ public:
 	}
 
 	void InitFailed() {
-		FcConfigDestroy(config);
 		FcFini();
+		//FcConfigDestroy(config);
 		config = nullptr;
 	}
 	static bool InitSingletonFontconfig(bool console) { return singleton->InitFontconfig(console); }
