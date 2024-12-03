@@ -23,6 +23,7 @@
 #include "Rendering/Textures/Bitmap.h"
 #include "System/Config/ConfigHandler.h"
 #include "System/Exceptions.h"
+#include "System/EventHandler.h"
 #include "System/Log/ILog.h"
 #include "System/FileSystem/FileHandler.h"
 #include "System/Threading/ThreadPool.h"
@@ -643,7 +644,19 @@ CFontTexture::CFontTexture(const std::string& fontfile, int size, int _outlinesi
 	CreateTexture(32, 32);
 
 	// precache ASCII glyphs & kernings (save them in kerningPrecached array for better lvl2 cpu cache hitrate)
+	PreloadGlyphs();
 
+#endif
+}
+
+/***
+ *
+ * Preloads standard alphabet glyphs for a font
+ */
+void CFontTexture::PreloadGlyphs()
+{
+#ifndef HEADLESS
+	FT_Face face = *shFace;
 	//preload Glyphs
 	LoadWantedGlyphs(32, 127);
 	for (char32_t i = 32; i < 127; ++i) {
@@ -672,7 +685,12 @@ CFontTexture::~CFontTexture()
 #endif
 }
 
-
+/***
+ *
+ * Add a fallback font
+ *
+ * @param fontfile VFS path for the font
+ */
 bool CFontTexture::AddFallbackFont(const std::string& fontfile)
 {
 #if defined(USE_FONTCONFIG) && !defined(HEADLESS)
@@ -723,12 +741,19 @@ bool CFontTexture::AddFallbackFont(const std::string& fontfile)
 		LOG_L(L_WARNING, "[%s] could not add priority for %s", __func__, fontfile.c_str());
 		return false;
 	}
+
+	needsClearGlyphs = true;
+
 	return true;
 #else
 	return false;
 #endif
 }
 
+/***
+ *
+ * Clears fontconfig fallbacks
+ */
 void CFontTexture::ClearFallbackFonts()
 {
 #if defined(USE_FONTCONFIG) && !defined(HEADLESS)
@@ -737,7 +762,73 @@ void CFontTexture::ClearFallbackFonts()
 
 	FtLibraryHandler::ClearFallbackPattern();
 	FtLibraryHandler::ClearGameFontSet();
+
+	needsClearGlyphs = true;
 #endif
+}
+
+/***
+ *
+ * Clears all glyphs for all fonts
+ */
+void CFontTexture::ClearAllGlyphs() {
+#ifndef HEADLESS
+	RECOIL_DETAILED_TRACY_ZONE;
+
+	bool changed = false;
+	for (const auto& ft : allFonts) {
+		auto lf = ft.lock();
+		changed |= lf->ClearGlyphs();
+	}
+	if (changed)
+		eventHandler.FontsChanged();
+
+	needsClearGlyphs = false;
+#endif
+}
+
+/***
+ *
+ * Clears all glyphs for a font
+ */
+bool CFontTexture::ClearGlyphs() {
+#ifndef HEADLESS
+	RECOIL_DETAILED_TRACY_ZONE;
+
+	bool changed = false;
+
+	// Invalidate glyphs coming from other fonts, or those with the 'not found' glyph.
+	for (const auto& g : glyphs) {
+		if (g.second.face->face != shFace->face || g.second.index == 0) {
+			changed = true;
+		}
+	}
+
+	// Always clear failed attempts in case we have any cache here.
+	failedAttemptsToReplace.clear();
+
+	if (changed) {
+		kerningPrecached = {};
+
+		// clear all glyps
+		glyphs.clear();
+
+		// refresh the atlasAlloc to reset coordinates
+		atlasAlloc.clear(); // just in case
+		atlasAlloc = CRowAtlasAlloc();
+		atlasAlloc.SetMaxSize(globalRendering->maxTextureSize, globalRendering->maxTextureSize);
+
+		// clear atlases
+		ReallocAtlases(false);
+
+		// preload standard glyphs
+		PreloadGlyphs();
+
+		// signal need to update texture
+		++curTextureUpdate;
+	}
+#endif
+	return true;
 }
 
 void CFontTexture::InitFonts()
@@ -768,6 +859,9 @@ void CFontTexture::Update() {
 
 	static std::vector<std::shared_ptr<CFontTexture>> fontsToUpdate;
 	fontsToUpdate.clear();
+
+	if (needsClearGlyphs)
+		ClearAllGlyphs();
 
 	for (const auto& font : allFonts) {
 		auto lf = font.lock();
