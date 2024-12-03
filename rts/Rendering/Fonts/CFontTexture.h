@@ -114,6 +114,7 @@ public:
 	static void Update();
 	static bool AddFallbackFont(const std::string& fontfile);
 	static void ClearFallbackFonts();
+	static void ClearAllGlyphs();
 
 	inline static spring::WrappedSyncRecursiveMutex sync = {};
 protected:
@@ -146,12 +147,15 @@ protected:
 private:
 	void CreateTexture(const int width, const int height);
 	void LoadGlyph(std::shared_ptr<FontFace>& f, char32_t ch, unsigned index);
+	bool ClearGlyphs();
+	void PreloadGlyphs();
 protected:
 	float GetKerning(const GlyphInfo& lgl, const GlyphInfo& rgl);
 protected:
 	static inline std::vector<std::weak_ptr<CFontTexture>> allFonts = {};
 
 	static inline const GlyphInfo dummyGlyph = GlyphInfo();
+	static inline bool needsClearGlyphs = false;
 
 	std::array<float, 128 * 128> kerningPrecached = {}; // contains ASCII kerning
 
