@@ -387,6 +387,7 @@ static std::shared_ptr<FontFace> GetRenderFontFace(const std::string& fontfile, 
 		return fontIt->second.lock();
 
 	std::shared_ptr<FontFace> facePtr = LoadFontFace(fontfile);
+	LOG("LOAD FONTFACE %s", facePtr->face->family_name);
 
 	// set render size
 	if (!FT_IS_SCALABLE(facePtr->face) && facePtr->face->num_fixed_sizes >= 1)
@@ -1125,6 +1126,7 @@ void CFontTexture::LoadGlyph(std::shared_ptr<FontFace>& f, char32_t ch, unsigned
 	auto flags = FT_LOAD_RENDER;
 	if (FT_HAS_COLOR(f->face)) {
 		flags |= FT_LOAD_COLOR;
+		LOG("LOAD COLORED GLYPH %s", f->face->family_name);
 	}
 	if (FT_Load_Glyph(*f, index, flags) != 0)
 		LOG_L(L_ERROR, "Couldn't load glyph %d", ch);
