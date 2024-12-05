@@ -47,6 +47,12 @@
       "command" : "GlobalLOS",
       "description" : "Enables/Disables global line-of-sight, which makes the whole map permanently visible to everyone or to a specific allyteam"
    },
+   "enginegadgets" : {
+      "arguments" : {},
+      "cheatRequired" : true,
+      "command" : "EngineGadgets",
+      "description" : "Enables engine gadgets"
+   },
    "godmode" : {
       "arguments" : {},
       "cheatRequired" : true,

@@ -31,9 +31,7 @@
 #include "System/Log/ILog.h"
 #include "System/SafeUtil.h"
 
-#include "Custom/BuilderRangeCheck.h"
-#include "Custom/GuardRemove.h"
-#include "Custom/UnitImmobileBuilder.h"
+#include "Custom/CGadgetHandler.h"
 
 #include <string>
 #include <vector>
@@ -571,9 +569,9 @@ public:
 	}
 };
 
-class EnableEngineGadgetsActionExecutor : public ISyncedActionExecutor {
+class EngineGadgetsActionExecutor : public ISyncedActionExecutor {
 public:
-	EnableEngineGadgetsActionExecutor() : ISyncedActionExecutor("EnableEngineGadgets", "Enable engine gadgets") {
+	EngineGadgetsActionExecutor() : ISyncedActionExecutor("EngineGadgets", "Enable engine gadgets", true) {
 	}
 
 	bool Execute(const SyncedAction& action) const final {
@@ -585,9 +583,7 @@ public:
 		}
 		bool enabled = StringToBool(args[0]);
 
-		BuilderRangeCheck::SetEnabled(enabled);
-		GuardRemove::SetEnabled(enabled);
-		UnitImmobileBuilder::SetEnabled(enabled);
+		gadgetHandler.EnableAll(enabled);
 
 		LogSystemStatus("engine gadgets", enabled);
 		return true;
@@ -616,7 +612,7 @@ void SyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<NoSpectatorChatActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ReloadCobActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ReloadCegsActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<EnableEngineGadgetsActionExecutor>());
+	AddActionExecutor(AllocActionExecutor<EngineGadgetsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DevLuaActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<EditDefsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<LuaRulesActionExecutor>());
