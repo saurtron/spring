@@ -41,6 +41,7 @@ public:
 	CGadget(const char *name, int priority, bool synced);
 	virtual ~CGadget() {}
 
+	void Enable();
 	void Disable();
 	bool enabled;
 };
