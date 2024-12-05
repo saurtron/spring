@@ -1,10 +1,6 @@
 ## Engine Gadgets
 
-Currently there is no clear mechanism to implement activable engine modules.
-
-These modules could implement useful functionality that not all games would like to implement, or where a game might later want to override it by disabling it.
-
-So, in this document, I propose a system of **Engine Gadgets**.
+In this document, I propose a system of **Engine Gadgets**.
 
 **note:** the name is just an idea, maybe a less confusing name can be found, like recoilets I dont know XD.
 
@@ -16,6 +12,10 @@ Such gadgets could provide:
 - An easy way for games to convert some of their gadgets/widgets to c++ and share with other projects.
 
 ### Motivation
+
+Currently there is no clear mechanism to implement activable engine modules.
+
+These modules could implement useful functionality that not all games would like to implement, or where a game might later want to override it by disabling it.
 
 #### Performance
 
