@@ -2,14 +2,12 @@
 
 #include "BuilderRangeCheck.h"
 
-#include "Sim/Units/UnitDef.h"
-
-#include "Sim/Units/UnitHandler.h"
 #include "Sim/Features/FeatureHandler.h"
+#include "Sim/Units/UnitDef.h"
+#include "Sim/Units/UnitHandler.h"
 
 #include "System/EventHandler.h"
 #include "System/Misc/TracyDefs.h"
-#include "System/SafeUtil.h"
 
 
 BuilderRangeCheck::BuilderRangeCheck(const char *name, int priority)

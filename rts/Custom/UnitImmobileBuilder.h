@@ -1,11 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#ifndef UNIT_IMMOBILE_BUILDER
-#define UNIT_IMMOBILE_BUILDER
-
-#include "System/EventClient.h"
-
-#include "System/UnorderedSet.hpp"
+#ifndef UNIT_IMMOBILE_BUILDER_H
+#define UNIT_IMMOBILE_BUILDER_H
 
 #include "CGadget.h"
 
@@ -30,4 +26,4 @@ private:
 	bool TestUnit(const CUnit *unit);
 };
 
-#endif // UNIT_IMMOBILE_BUILDER
+#endif // UNIT_IMMOBILE_BUILDER_H

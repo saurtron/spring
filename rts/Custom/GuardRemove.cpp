@@ -6,7 +6,6 @@
 
 #include "System/EventHandler.h"
 #include "System/Misc/TracyDefs.h"
-#include "System/SafeUtil.h"
 
 
 GuardRemove::GuardRemove(const char *name, int priority)

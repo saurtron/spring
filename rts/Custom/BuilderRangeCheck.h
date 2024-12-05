@@ -1,9 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#ifndef BUILDER_RANGE_CHECK
-#define BUILDER_RANGE_CHECK
-
-#include "System/EventClient.h"
+#ifndef BUILDER_RANGE_CHECK_H
+#define BUILDER_RANGE_CHECK_H
 
 #include "System/UnorderedSet.hpp"
 #include "CGadget.h"
@@ -28,4 +26,4 @@ private:
 	bool gate = false;
 };
 
-#endif // BUILDER_RANGE_CHECK
+#endif // BUILDER_RANGE_CHECK_H

@@ -2,16 +2,17 @@
 
 #include "UnitImmobileBuilder.h"
 
-#include "Sim/Units/UnitDef.h"
-#include "Sim/Misc/GlobalSynced.h"
-#include "Game/GlobalUnsynced.h"
-#include "Map/ReadMap.h"
 #include "Game/GameSetup.h"
+#include "Game/GlobalUnsynced.h"
+
+#include "Map/ReadMap.h"
+
+#include "Sim/Misc/GlobalSynced.h"
+#include "Sim/Units/UnitDef.h"
 #include "Sim/Units/UnitHandler.h"
 
 #include "System/EventHandler.h"
 #include "System/Misc/TracyDefs.h"
-#include "System/SafeUtil.h"
 
 
 UnitImmobileBuilder::UnitImmobileBuilder(const char *name, int priority)
