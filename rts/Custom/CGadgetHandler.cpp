@@ -41,6 +41,11 @@ void CGadgetHandler::AddFactory(CGadgetFactory* fact)
 	gadgetFactories[fact->GetName()] = fact;
 }
 
+bool CGadgetHandler::IsGadgetEnabled(const char* name)
+{
+	return gadgets.contains(name) && gadgets[name]->IsEnabled();
+}
+
 bool CGadgetHandler::EnableGadget(const char* name, bool enable, int priority)
 {
 	if (enable && !gadgets.contains(name)) {
