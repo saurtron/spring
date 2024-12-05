@@ -2,24 +2,15 @@
 
 #include "BuilderRangeCheck.h"
 
-#include "Game/Camera.h"
-#include "Game/GlobalUnsynced.h"
-#include "Sim/Misc/GlobalSynced.h"
 #include "Game/SelectedUnitsHandler.h"
-#include "Game/UI/MouseHandler.h"
 
 #include "Sim/Units/UnitDef.h"
-#include "Map/Ground.h"
-#include "Map/ReadMap.h"
 
-#include "Sim/Misc/LosHandler.h"
-#include "Sim/Misc/QuadField.h"
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Features/FeatureHandler.h"
 #include "Sim/Units/CommandAI/FactoryCAI.h"
 
 #include "System/EventHandler.h"
-#include "System/GlobalConfig.h"
 #include "System/Misc/TracyDefs.h"
 #include "System/SafeUtil.h"
 
