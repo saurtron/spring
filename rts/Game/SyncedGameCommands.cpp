@@ -31,6 +31,10 @@
 #include "System/Log/ILog.h"
 #include "System/SafeUtil.h"
 
+#include "Custom/BuilderRangeCheck.h"
+#include "Custom/GuardRemove.h"
+#include "Custom/UnitImmobileBuilder.h"
+
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -567,6 +571,29 @@ public:
 	}
 };
 
+class EnableEngineGadgetsActionExecutor : public ISyncedActionExecutor {
+public:
+	EnableEngineGadgetsActionExecutor() : ISyncedActionExecutor("EnableEngineGadgets", "Enable engine gadgets") {
+	}
+
+	bool Execute(const SyncedAction& action) const final {
+		auto args = CSimpleParser::Tokenize(action.GetArgs());
+
+		if (args.size() == 0) {
+			LOG_L(L_WARNING, "/%s: need to specify on/off", GetCommand().c_str());
+			return false;
+		}
+		enabled = StringToBool(args[0]);
+
+		BuilderRangeCheck::SetEnabled(enabled);
+		GuardRemove::SetEnabled(enabled);
+		UnitImmobileBuilder::SetEnabled(enabled);
+
+		LogSystemStatus("engine gadgets", enabled);
+		return true;
+	}
+};
+
 } // namespace (unnamed)
 
 
@@ -589,6 +616,7 @@ void SyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<NoSpectatorChatActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ReloadCobActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<ReloadCegsActionExecutor>());
+	AddActionExecutor(AllocActionExecutor<EnableEngineGadgetsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DevLuaActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<EditDefsActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<LuaRulesActionExecutor>());

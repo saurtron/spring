@@ -96,7 +96,6 @@
 #include "Sim/Units/UnitDefHandler.h"
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Units/CommandAI/CommandDescription.h"
-#include "Custom/BuilderRangeCheck.h"
 
 #include "System/EventHandler.h"
 #include "System/GlobalConfig.h"
@@ -1550,20 +1549,6 @@ public:
 		return true;
 	}
 };
-
-class BuilderRangeCheckActionExecutor : public IUnsyncedActionExecutor {
-public:
-	BuilderRangeCheckActionExecutor() : IUnsyncedActionExecutor("BuilderRangeCheck", "Draw quadfield sectors around GuiTraceRay and selected units") {
-	}
-
-	bool Execute(const UnsyncedAction& action) const final {
-		bool enabled = BuilderRangeCheck::IsEnabled();
-		BuilderRangeCheck::SetEnabled(!enabled);
-		LogSystemStatus("nano range check", !enabled);
-		return true;
-	}
-};
-
 
 class DebugQuadFieldActionExecutor : public IUnsyncedActionExecutor {
 public:
@@ -3980,7 +3965,6 @@ void UnsyncedGameCommands::AddDefaultActionExecutors()
 	AddActionExecutor(AllocActionExecutor<DebugActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DebugCubeMapActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DebugQuadFieldActionExecutor>());
-	AddActionExecutor(AllocActionExecutor<BuilderRangeCheckActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DrawSkyActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DebugGLActionExecutor>());
 	AddActionExecutor(AllocActionExecutor<DebugGLErrorsActionExecutor>());
