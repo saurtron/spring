@@ -152,6 +152,7 @@ make_global_var(engineSources
 		${sources_engine_Menu}
 		${sources_engine_System}
 		${sources_engine_ExternalAI}
+		${sources_engine_Custom}
 	)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/assimp/include) #FIXME: hack for rts/Rendering/Models/IModelParser.cpp
 

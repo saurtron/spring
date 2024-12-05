@@ -1,6 +1,6 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#include "DebugDrawerQuadField.h"
+#include "BuilderRangeCheck.h"
 
 #include "Game/Camera.h"
 #include "Game/GlobalUnsynced.h"
@@ -8,6 +8,7 @@
 #include "Game/SelectedUnitsHandler.h"
 #include "Game/UI/MouseHandler.h"
 
+#include "Sim/Units/UnitDef.h"
 #include "Map/Ground.h"
 #include "Map/ReadMap.h"
 
@@ -15,6 +16,7 @@
 #include "Sim/Misc/QuadField.h"
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Features/FeatureHandler.h"
+#include "Sim/Units/CommandAI/FactoryCAI.h"
 
 #include "System/EventHandler.h"
 #include "System/GlobalConfig.h"
@@ -43,29 +45,29 @@ void BuilderRangeCheck::SetEnabled(bool enable)
 	instance = new BuilderRangeCheck();
 }
 
-bool BuilderRangeCheck::CheckDistance(CUnit *unit, int targetID)
+bool BuilderRangeCheck::CheckDistance(const CUnit *unit, int targetID)
 {
 	auto unitDef = unit->unitDef;
 	const CUnit* target = unitHandler.GetUnit(targetID);
-	auto maxUnits = unitHandler.MaxUnits(;)
+	const unsigned int maxUnits = unitHandler.MaxUnits();
 
 	auto distance = std::numeric_limits<float>::max();
-	if (targetId < maxUnits && target) {
-		if (unitDef.buildRange3D)
-			distance = unit->midPos.distance(targetUnit->midPos);
+	if (targetID < maxUnits && target) {
+		if (unitDef->buildRange3D)
+			distance = unit->midPos.distance(target->midPos);
 		else
-			distance = unit->midPos.distance2D(targetUnit->midPos);
+			distance = unit->midPos.distance2D(target->midPos);
 	} else {
-		targetId = targetID - maxUnits;
+		targetID = targetID - maxUnits;
 		CFeature* targetFeature = featureHandler.GetFeature(targetID);
 		if (targetFeature) {
-			if (unitDef.buildRange3D)
+			if (unitDef->buildRange3D)
 				distance = unit->midPos.distance(targetFeature->midPos);
 			else
 				distance = unit->midPos.distance2D(targetFeature->midPos);
 		}
 	}
-	if (distance > unitDef.buildDistance + unitDef.range) {
+	if (distance > unitDef->buildDistance + unit->radius) {
 		return false;
 	}
 	return true;
@@ -73,31 +75,32 @@ bool BuilderRangeCheck::CheckDistance(CUnit *unit, int targetID)
 
 void BuilderRangeCheck::GameFrame(int frameNum)
 {
-	auto pointer = gs->GameFrame();
-	for(auto unitID: trackingTable) {
-		auto unitDef = unitHandler.GetUnit(unitID);
-		auto maxDistance = unitDef.buildDistance;
+	for(auto iter: trackingTable) {
+		auto unit = unitHandler.GetUnit(iter.first);
+		auto maxDistance = unit->unitDef->buildDistance;
 
 		const CCommandAI* commandAI = unit->commandAI;
 		const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
-		const CCommandQueue* queue = (factoryCAI == nullptr)? &commandAI->commandQue : &factoryCAI->newUnitCommands;
+		const CCommandQueue& queue = (factoryCAI == nullptr)? commandAI->commandQue : factoryCAI->newUnitCommands;
 
-		for(auto cmd: queue) {
-			if (!CheckDistance(unit, targetID)) {
-				auto newCmd = Command(CMD_REMOVE, 0, curTag = cmd.GetTag());
+		for(const Command& cmd: queue) {
+			auto targetID = cmd.GetParam(0);
+			const CUnit* target = unitHandler.GetUnit(targetID);
+			if (target && !CheckDistance(unit, targetID)) {
+				auto newCmd = Command(CMD_REMOVE, 0, cmd.GetTag());
 				unit->commandAI->GiveCommand(newCmd, -1, true, true);
 			}
 		}
 		if (queue.size() == 1) {
 			auto cmd = queue[0];
-			if (cmd.id == CMD_FIGHT) {
+			if (cmd.GetID() == CMD_FIGHT) {
 				trackingTable.erase(unit->id);
 			}
 		}
 		if (queue.size() == 0) {
 			trackingTable.erase(unit->id);
 		}
-	}
+	}/*
 	bool debug = false;
 	if (debug) {
 		if (gate && trackingTable.size() > 0) {
@@ -112,7 +115,7 @@ void BuilderRangeCheck::GameFrame(int frameNum)
 			LOG_L(LOG.INFO, "Tracking stopped.");
 			gate = false;
 		}
-	}
+	}*/
 }
 
 bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int playerNum, bool fromSynced, bool fromLua)
@@ -123,15 +126,16 @@ bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int 
 	auto targetID = cmd.GetParam(0);
 	const CUnit* target = unitHandler.GetUnit(targetID);
 
-	if (targetId < maxUnits && target) {
+	const unsigned int maxUnits = unitHandler.MaxUnits();
+	if (targetID < maxUnits && target) {
 		auto targetUnitDef = target->unitDef;
-		if (targetUnitDef.canMove) {
+		if (targetUnitDef->canmove) {
 			trackingTable[unit->id] = true;
 			return true;
 		}
 	}
 
-	return CheckDistance(targetID);
+	return CheckDistance(unit, targetID);
 }
 
 void BuilderRangeCheck::UnitDestroyed(const CUnit* unit, const CUnit* attacker, int weaponDefID)

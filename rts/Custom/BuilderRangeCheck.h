@@ -5,6 +5,8 @@
 
 #include "System/EventClient.h"
 
+#include "System/UnorderedMap.hpp" // better to use Set
+
 class BuilderRangeCheck : public CEventClient
 {
 public:
@@ -20,6 +22,7 @@ private:
 	BuilderRangeCheck();
 
 	static BuilderRangeCheck* instance;
+	bool CheckDistance(const CUnit *unit, int targetID);
 
 	spring::unordered_map<int, bool> trackingTable;
 	bool debug = false;
