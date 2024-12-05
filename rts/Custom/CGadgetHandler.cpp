@@ -22,12 +22,12 @@ void CGadgetHandler::EnableAll(bool enable)
 {
 	LOG_L(L_WARNING, "[%s] enabling all engine gadgets!", __func__);
 	for(auto iter: gadgetFactories) {
-		if (enable && !gadgets.contains(iter.first)) {
+		if (enable && !IsGadgetEnabled(iter.first.c_str())) {
 			CGadgetFactory *fact = iter.second;
 			gadgets[iter.first] = fact->Create();
 			LOG_L(L_WARNING, "[%s] enabled %s", __func__, iter.first.c_str());
 		}
-		else if (!enable && gadgets.contains(iter.first)) {
+		else if (!enable && IsGadgetEnabled(iter.first.c_str())) {
 			CGadgetFactory *fact = iter.second;
 			CGadget *gadget = gadgets[iter.first];
 			gadgets.erase(iter.first);
@@ -48,7 +48,7 @@ bool CGadgetHandler::IsGadgetEnabled(const char* name)
 
 bool CGadgetHandler::EnableGadget(const char* name, bool enable, int priority)
 {
-	if (enable && !gadgets.contains(name)) {
+	if (enable && !IsGadgetEnabled(name) ) {
 		CGadgetFactory *fact = gadgetFactories[name];
 		if (fact) {
 			gadgets[name] = fact->Create(priority);
@@ -56,7 +56,7 @@ bool CGadgetHandler::EnableGadget(const char* name, bool enable, int priority)
 		} else {
 			LOG_L(L_ERROR, "[%s] no gadget factory for %s", __func__, name);
 		}
-	} else if (!enable && gadgets.contains(name)) {
+	} else if (!enable && IsGadgetEnabled(name)) {
 		CGadget *gadget = gadgets[name];
 		gadgets.erase(name);
 		delete gadget;
