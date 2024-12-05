@@ -121,8 +121,8 @@ This could also be exported into a different module, like EngineGadgets:
 
 Reference lua widgets:
 
-- [nano_range_checker](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3908/files)
-- [cmd_guard_remove](https://github.com/beyond-all-reason/Beyond-All-Reason/blob/master/luaui/Widgets/cmd_guard_remove.lua)
-- [unit_immobile_builder](https://github.com/beyond-all-reason/Beyond-All-Reason/blob/eb6b3cf60d5e64bf09773ec4a452fa7fd978a794/luaui/Widgets/unit_immobile_builder.lua)
+- [nano_range_checker](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3908/files) ([c++](https://github.com/saurtron/spring/blob/engine-gadgets/rts/Custom/BuilderRangeCheck.cpp))
+- [cmd_guard_remove](https://github.com/beyond-all-reason/Beyond-All-Reason/blob/master/luaui/Widgets/cmd_guard_remove.lua) ([c++](https://github.com/saurtron/spring/blob/engine-gadgets/rts/Custom/GuardRemove.cpp))
+- [unit_immobile_builder](https://github.com/beyond-all-reason/Beyond-All-Reason/blob/eb6b3cf60d5e64bf09773ec4a452fa7fd978a794/luaui/Widgets/unit_immobile_builder.lua) ([c++](https://github.com/saurtron/spring/blob/engine-gadgets/rts/Custom/UnitImmobileBuilder.cpp))
 
 Simple widgets that have a high cost due to command queue and AllowCommand/UnitCommand usage.
