@@ -63,8 +63,8 @@ bool BuilderRangeCheck::CheckDistance(const CUnit *unit, int targetID)
 
 void BuilderRangeCheck::GameFrame(int frameNum)
 {
-	for(auto iter: trackingTable) {
-		auto unit = unitHandler.GetUnit(iter.first);
+	for(auto unitID: trackingTable) {
+		auto unit = unitHandler.GetUnit(unitID);
 		auto maxDistance = unit->unitDef->buildDistance;
 
 		const CCommandAI* commandAI = unit->commandAI;
@@ -118,7 +118,7 @@ bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int 
 	if (targetID < maxUnits && target) {
 		auto targetUnitDef = target->unitDef;
 		if (targetUnitDef->canmove) {
-			trackingTable[unit->id] = true;
+			trackingTable.insert(unit->id);
 			return true;
 		}
 	}
