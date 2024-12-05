@@ -583,7 +583,7 @@ public:
 			LOG_L(L_WARNING, "/%s: need to specify on/off", GetCommand().c_str());
 			return false;
 		}
-		enabled = StringToBool(args[0]);
+		bool enabled = StringToBool(args[0]);
 
 		BuilderRangeCheck::SetEnabled(enabled);
 		GuardRemove::SetEnabled(enabled);
