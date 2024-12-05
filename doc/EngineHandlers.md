@@ -11,7 +11,7 @@ Such gadgets could provide:
 - More extensibility and organization to the lua api.
 - An easy way for games to convert some of their gadgets/widgets to c++ and share with other projects.
 
-Check [here](rts/Custom/) for a proof of concept implementation, migrating some easy but heavy bar widgets/gadgets.
+Check [here](/rts/Custom/) for a proof of concept implementation, migrating some easy but heavy bar widgets/gadgets.
 
 ### Motivation
 
