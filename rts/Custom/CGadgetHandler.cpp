@@ -1,0 +1,63 @@
+/* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
+
+#include <cassert>
+
+#include "CGadgetHandler.h"
+
+#include "System/Log/ILog.h"
+#include "BuilderRangeCheck.h"
+#include "GuardRemove.h"
+#include "UnitImmobileBuilder.h"
+
+CGadgetHandler gadgetHandler;
+
+CGadgetHandler::CGadgetHandler()
+{
+	AddFactory(new Factory<BuilderRangeCheck>("BuilderRangeCheck"));
+	AddFactory(new Factory<GuardRemove>("GuardRemove"));
+	AddFactory(new Factory<UnitImmobileBuilder>("UnitImmobileBuilder"));
+}
+
+void CGadgetHandler::EnableAll(bool enable)
+{
+	LOG_L(L_WARNING, "[%s] enabling all engine gadgets!", __func__);
+	for(auto iter: gadgetFactories) {
+		if (enable && !gadgets.contains(iter.first)) {
+			CGadgetFactory *fact = iter.second;
+			gadgets[iter.first] = fact->Create();
+			LOG_L(L_WARNING, "[%s] enabled %s", __func__, iter.first.c_str());
+		}
+		else if (!enable && gadgets.contains(iter.first)) {
+			CGadgetFactory *fact = iter.second;
+			CGadget *gadget = gadgets[iter.first];
+			gadgets.erase(iter.first);
+			delete gadget;
+		}
+	}
+}
+
+void CGadgetHandler::AddFactory(CGadgetFactory* fact)
+{
+	gadgetFactories[fact->GetName()] = fact;
+}
+
+bool CGadgetHandler::EnableGadget(const char* name, bool enable)
+{
+	if (enable && !gadgets.contains(name)) {
+		CGadgetFactory *fact = gadgetFactories[name];
+		if (fact) {
+			gadgets[name] = fact->Create();
+			return true;
+		} else {
+			LOG_L(L_ERROR, "[%s] no gadget factory for %s", __func__, name);
+		}
+	} else if (!enable && gadgets.contains(name)) {
+		CGadget *gadget = gadgets[name];
+		gadgets.erase(name);
+		delete gadget;
+		return true;
+	}
+	LOG_L(L_DEBUG, "[%s] bad enable state for %s", __func__, name);
+	return false;
+}
+

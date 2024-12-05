@@ -12,25 +12,9 @@
 #include "System/SafeUtil.h"
 
 
-BuilderRangeCheck* BuilderRangeCheck::instance = nullptr;
-
-BuilderRangeCheck::BuilderRangeCheck()
-: CEventClient("[BuilderRangeCheck]", 199991, false)
+BuilderRangeCheck::BuilderRangeCheck(const char *name, int priority)
+: CGadget(name, priority)
 {
-	autoLinkEvents = true;
-	RegisterLinkedEvents(this);
-	eventHandler.AddClient(this);
-}
-
-void BuilderRangeCheck::SetEnabled(bool enable)
-{
-	if (!enable) {
-		spring::SafeDelete(instance);
-		return;
-	}
-
-	assert(instance == nullptr);
-	instance = new BuilderRangeCheck();
 }
 
 bool BuilderRangeCheck::CheckDistance(const CUnit *unit, int targetID)

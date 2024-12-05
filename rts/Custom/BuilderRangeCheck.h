@@ -6,22 +6,21 @@
 #include "System/EventClient.h"
 
 #include "System/UnorderedSet.hpp"
+#include "CGadget.h"
 
-class BuilderRangeCheck : public CEventClient
+class BuilderRangeCheck : public CGadget
 {
 public:
+	BuilderRangeCheck(const char *name, int priority);
+
 	// CEventClient interface
 	virtual void GameFrame(int frameNum) override;
 	virtual bool AllowCommand(const CUnit* unit, const Command& cmd, int playerNum, bool fromSynced, bool fromLua) override;
 	virtual void UnitDestroyed(const CUnit* unit, const CUnit* attacker, int weaponDefID) override;
 
-	static void SetEnabled(bool enable);
-	static bool IsEnabled() { return (instance != nullptr); }
+	const char *name = "BuilderRangeCheck";
 
 private:
-	BuilderRangeCheck();
-
-	static BuilderRangeCheck* instance;
 	bool CheckDistance(const CUnit *unit, int targetID);
 
 	spring::unordered_set<int> trackingTable;

@@ -7,9 +7,13 @@
 
 #include "System/UnorderedSet.hpp"
 
-class UnitImmobileBuilder : public CEventClient
+#include "CGadget.h"
+
+class UnitImmobileBuilder : public CGadget
 {
 public:
+	UnitImmobileBuilder(const char *name, int priority);
+
 	// CEventClient interface
 	virtual void UnitCommand(const CUnit* unit, const Command& command, int playerNum, bool fromSynced, bool fromLua) override;
 	virtual void PlayerChanged(int playerID) override;
@@ -18,13 +22,7 @@ public:
 	virtual void UnitGiven(const CUnit* unit, int oldTeam, int newTeam) override;
 	virtual void UnitIdle(const CUnit* unit) override;
 
-	static void SetEnabled(bool enable);
-	static bool IsEnabled() { return (instance != nullptr); }
-
 private:
-	UnitImmobileBuilder();
-
-	static UnitImmobileBuilder* instance;
 
 	void Init();
 	void MaybeRemoveSelf(bool gamestart);

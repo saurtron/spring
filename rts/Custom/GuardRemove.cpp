@@ -9,25 +9,9 @@
 #include "System/SafeUtil.h"
 
 
-GuardRemove* GuardRemove::instance = nullptr;
-
-GuardRemove::GuardRemove()
-: CEventClient("[GuardRemove]", 199991, false)
+GuardRemove::GuardRemove(const char *name, int priority)
+: CGadget(name, priority)
 {
-	autoLinkEvents = true;
-	RegisterLinkedEvents(this);
-	eventHandler.AddClient(this);
-}
-
-void GuardRemove::SetEnabled(bool enable)
-{
-	if (!enable) {
-		spring::SafeDelete(instance);
-		return;
-	}
-
-	assert(instance == nullptr);
-	instance = new GuardRemove();
 }
 
 void GuardRemove::UnitCommand(const CUnit* unit, const Command& command, int playerNum, bool fromSynced, bool fromLua)

@@ -14,26 +14,10 @@
 #include "System/SafeUtil.h"
 
 
-UnitImmobileBuilder* UnitImmobileBuilder::instance = nullptr;
-
-UnitImmobileBuilder::UnitImmobileBuilder()
-: CEventClient("[UnitImmobileBuilder]", 199991, false)
+UnitImmobileBuilder::UnitImmobileBuilder(const char *name, int priority)
+: CGadget(name, priority)
 {
-	autoLinkEvents = true;
-	RegisterLinkedEvents(this);
-	eventHandler.AddClient(this);
 	Init();
-}
-
-void UnitImmobileBuilder::SetEnabled(bool enable)
-{
-	if (!enable) {
-		spring::SafeDelete(instance);
-		return;
-	}
-
-	assert(instance == nullptr);
-	instance = new UnitImmobileBuilder();
 }
 
 bool UnitImmobileBuilder::TestUnit(const CUnit *unit)
@@ -48,7 +32,7 @@ bool UnitImmobileBuilder::TestUnit(const CUnit *unit)
 void UnitImmobileBuilder::MaybeRemoveSelf(bool gamestart)
 {
    if (gu->spectating && (gs->frameNum > 0 || gamestart))
-	   UnitImmobileBuilder::SetEnabled(false);
+	   Disable();
 }
 
 
