@@ -75,6 +75,7 @@
 #include "System/EventHandler.h"
 #include "System/ObjectDependenceTypes.h"
 #include "System/Log/ILog.h"
+#include "Custom/CGadgetHandler.h"
 
 using std::max;
 
@@ -354,6 +355,8 @@ bool LuaSyncedCtrl::PushEntries(lua_State* L)
 	REGISTER_LUA_CFUNC(SetExperienceGrade);
 
 	REGISTER_LUA_CFUNC(SetRadarErrorParams);
+
+	REGISTER_LUA_CFUNC(EnableEngineGadget);
 
 	if (!LuaSyncedMoveCtrl::PushMoveCtrl(L))
 		return false;
@@ -7001,6 +7004,13 @@ int LuaSyncedCtrl::SetRadarErrorParams(lua_State* L)
 	losHandler->SetAllyTeamRadarErrorSize(allyTeamID, luaL_checknumber(L, 2));
 	losHandler->SetBaseRadarErrorSize(luaL_optnumber(L, 3, losHandler->GetBaseRadarErrorSize()));
 	losHandler->SetBaseRadarErrorMult(luaL_optnumber(L, 4, losHandler->GetBaseRadarErrorMult()));
+	return 0;
+}
+
+int LuaSyncedCtrl::EnableEngineGadget(lua_State* L)
+{
+	const int enabled = lua_toboolean(L, 1);
+	gadgetHandler.EnableAll(enabled);
 	return 0;
 }
 
