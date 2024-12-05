@@ -35,7 +35,7 @@ An example scenario, with 300 units attacking another 200, can result in `300*20
 
 Now think, one microsecond already becomes 100ms when spent so many times. Too much even for 30fps. And that's not even an incredibly big command.
 
-By providing a path for optimizing, maybe in the future more and more restrictions, and bigger and bigger games can be possible. Currently the late game is many times unpracticable for many users, where they start to lag or experience bad framerates.
+By providing a path for optimizing, maybe in the future more and more restrictions can be lifted, and bigger and bigger games can be possible. Currently the late game is many times unpracticable for many users, where they start to lag or experience bad framerates.
 
 #### Engine extensibility
 
