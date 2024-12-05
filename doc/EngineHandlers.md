@@ -1,4 +1,4 @@
-== Engine Gadgets
+## Engine Gadgets
 
 Currently there is no clear mechanism to implement activable engine modules.
 
@@ -15,9 +15,9 @@ Such gadgets could provide:
 - More extensibility and organization to the lua api.
 - An easy way for games to convert some of their gadgets/widgets to c++ and share with other projects.
 
-=== Motivation
+### Motivation
 
-==== Performance
+#### Performance
 
 While lua is a great language and it's really fast, it also has its limitations.
 
@@ -33,7 +33,7 @@ An example scenario, with 300 units attacking another 200, can result in 300*200
 
 Now think, one microsecond already becomes 100ms when spent so many times. Too much for one frame. And that's not even an incredibly big command.
 
-==== Engine extensibility
+#### Engine extensibility
 
 The engine at the moment, while having a great extensibility mechanism with EventClient interface, doesn't have a way to enable and disable clients from lua.
 
@@ -42,7 +42,7 @@ Also such modules don't have a mechanism for exporting lua methods, relying curr
 With a bit of work, such gadgets could export their EventClient interface, for further controlability form lua. Also later they could even declare some of their other methods for exporting directly.
 
 
-=== C++ api
+### C++ api
 
 The C++ api could be based on a gadgetHandler and a CGadget base object. This can make gadgets clean and easy to control.
 
@@ -50,7 +50,7 @@ The api is mostly internal, and games are expected to control this from lua.
 
 CGadget makers just need to clone the example gadgets.
 
-==== gadgetHandler
+#### gadgetHandler
 
 ```
   bool IsGadgetEnabled(string name);
@@ -61,7 +61,7 @@ CGadget makers just need to clone the example gadgets.
 
 ```
 
-==== CGadget
+#### CGadget
 
 ```
   bool IsEnabled()
@@ -70,7 +70,7 @@ CGadget makers just need to clone the example gadgets.
 ```
 
 
-=== Lua api
+### Lua api
 
 These methods would allow games to enable desired modules from synced code.
 
