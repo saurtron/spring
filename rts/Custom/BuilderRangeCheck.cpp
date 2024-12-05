@@ -39,26 +39,23 @@ void BuilderRangeCheck::SetEnabled(bool enable)
 bool BuilderRangeCheck::CheckDistance(const CUnit *unit, int targetID)
 {
 	auto unitDef = unit->unitDef;
-	const CUnit* target = unitHandler.GetUnit(targetID);
 	const unsigned int maxUnits = unitHandler.MaxUnits();
 
 	auto distance = std::numeric_limits<float>::max();
-	if (targetID < maxUnits && target) {
-		if (unitDef->buildRange3D)
-			distance = unit->midPos.distance(target->midPos);
-		else
-			distance = unit->midPos.distance2D(target->midPos);
+
+	CSolidObject* target;
+	if (targetID >= unitHandler.MaxUnits()) {
+		target = featureHandler.GetFeature(targetID - unitHandler.MaxUnits());
 	} else {
-		targetID = targetID - maxUnits;
-		CFeature* targetFeature = featureHandler.GetFeature(targetID);
-		if (targetFeature) {
-			if (unitDef->buildRange3D)
-				distance = unit->midPos.distance(targetFeature->midPos);
-			else
-				distance = unit->midPos.distance2D(targetFeature->midPos);
-		}
+		target = unitHandler.GetUnit(targetID);
 	}
-	if (distance > unitDef->buildDistance + unit->radius) {
+
+	if (unitDef->buildRange3D)
+		distance = unit->midPos.distance(target->midPos);
+	else
+		distance = unit->midPos.distance2D(target->midPos);
+
+	if (distance > unitDef->buildDistance + target->radius) {
 		return false;
 	}
 	return true;
@@ -114,7 +111,7 @@ bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int 
 	if (cmd.GetNumParams() != 1)
 		return true;
 	auto unitDef = unit->unitDef;
-	auto targetID = cmd.GetParam(0);
+	const int targetID = (int) cmd.GetParam(0);
 	const CUnit* target = unitHandler.GetUnit(targetID);
 
 	const unsigned int maxUnits = unitHandler.MaxUnits();
