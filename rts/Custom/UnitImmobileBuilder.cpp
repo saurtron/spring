@@ -15,8 +15,8 @@
 #include "System/Misc/TracyDefs.h"
 
 
-UnitImmobileBuilder::UnitImmobileBuilder(const char *name, int priority)
-: CGadget(name, priority)
+UnitImmobileBuilder::UnitImmobileBuilder(const char *name, int priority, bool synced)
+: CGadget(name, priority, synced)
 {
 	Init();
 }

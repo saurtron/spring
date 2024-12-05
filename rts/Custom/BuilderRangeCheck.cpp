@@ -10,8 +10,8 @@
 #include "System/Misc/TracyDefs.h"
 
 
-BuilderRangeCheck::BuilderRangeCheck(const char *name, int priority)
-: CGadget(name, priority)
+BuilderRangeCheck::BuilderRangeCheck(const char *name, int priority, bool synced)
+: CGadget(name, priority, synced)
 {
 }
 

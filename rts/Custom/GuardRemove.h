@@ -10,7 +10,7 @@
 class GuardRemove : public CGadget
 {
 public:
-	GuardRemove(const char *name, int priority);
+	GuardRemove(const char *name, int priority, bool synced);
 
 	// CEventClient interface
 	virtual void UnitCommand(const CUnit* unit, const Command& command, int playerNum, bool fromSynced, bool fromLua) override;

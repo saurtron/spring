@@ -8,8 +8,8 @@
 #include "System/Misc/TracyDefs.h"
 
 
-GuardRemove::GuardRemove(const char *name, int priority)
-: CGadget(name, priority)
+GuardRemove::GuardRemove(const char *name, int priority, bool synced)
+: CGadget(name, priority, synced)
 {
 }
 

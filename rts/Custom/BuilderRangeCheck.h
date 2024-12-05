@@ -9,7 +9,7 @@
 class BuilderRangeCheck : public CGadget
 {
 public:
-	BuilderRangeCheck(const char *name, int priority);
+	BuilderRangeCheck(const char *name, int priority, bool synced);
 
 	// CEventClient interface
 	virtual void GameFrame(int frameNum) override;

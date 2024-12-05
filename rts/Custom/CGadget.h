@@ -12,7 +12,7 @@ class CGadgetFactory
 	public:
 	virtual ~CGadgetFactory() {}
 	virtual const char* GetName() {return "";}
-	virtual CGadget* Create() {return nullptr;};
+	virtual CGadget* Create(int priority=0) {return nullptr;};
 };
 
 template <typename T>
