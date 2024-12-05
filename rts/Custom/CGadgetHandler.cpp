@@ -41,12 +41,12 @@ void CGadgetHandler::AddFactory(CGadgetFactory* fact)
 	gadgetFactories[fact->GetName()] = fact;
 }
 
-bool CGadgetHandler::EnableGadget(const char* name, bool enable)
+bool CGadgetHandler::EnableGadget(const char* name, bool enable, int priority)
 {
 	if (enable && !gadgets.contains(name)) {
 		CGadgetFactory *fact = gadgetFactories[name];
 		if (fact) {
-			gadgets[name] = fact->Create();
+			gadgets[name] = fact->Create(priority);
 			return true;
 		} else {
 			LOG_L(L_ERROR, "[%s] no gadget factory for %s", __func__, name);

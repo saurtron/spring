@@ -11,7 +11,7 @@ class CGadgetHandler
 {
 public:
 	CGadgetHandler();
-	bool EnableGadget(const char* name, bool enable);
+	bool EnableGadget(const char* name, bool enable, int priority=0);
 
 	void EnableAll(bool enable);
 	void AddFactory(CGadgetFactory* fact);

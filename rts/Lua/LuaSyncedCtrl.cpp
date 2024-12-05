@@ -7009,8 +7009,14 @@ int LuaSyncedCtrl::SetRadarErrorParams(lua_State* L)
 
 int LuaSyncedCtrl::EnableEngineGadget(lua_State* L)
 {
-	const int enabled = lua_toboolean(L, 1);
-	gadgetHandler.EnableAll(enabled);
+	const int enable = lua_toboolean(L, 1);
+	if (lua_isstring(L, 2)) {
+		const string name = lua_tostring(L, 2);
+		const int priority = luaL_optint(L, 3, 0);
+		gadgetHandler.EnableGadget(name.c_str(), enable, priority);
+	} else {
+		gadgetHandler.EnableAll(enable);
+	}
 	return 0;
 }
 
