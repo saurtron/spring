@@ -14,8 +14,7 @@
 #include "Sim/Misc/LosHandler.h"
 #include "Sim/Misc/QuadField.h"
 #include "Sim/Units/UnitHandler.h"
-
-#include "Rendering/LineDrawer.h"
+#include "Sim/Features/FeatureHandler.h"
 
 #include "System/EventHandler.h"
 #include "System/GlobalConfig.h"
@@ -52,9 +51,6 @@ bool BuilderRangeCheck::CheckDistance(CUnit *unit, int targetID)
 
 	auto distance = std::numeric_limits<float>::max();
 	if (targetId < maxUnits && target) {
-		auto targetUnitDef = target->unitDef;
-		if (targetUnitDef.canMove)
-			return true
 		if (unitDef.buildRange3D)
 			distance = unit->midPos.distance(targetUnit->midPos);
 		else
@@ -88,7 +84,6 @@ void BuilderRangeCheck::GameFrame(int frameNum)
 
 		for(auto cmd: queue) {
 			if (!CheckDistance(unit, targetID)) {
-				trackingTable[unit->id].erase(idx);
 				auto newCmd = Command(CMD_REMOVE, 0, curTag = cmd.GetTag());
 				unit->commandAI->GiveCommand(newCmd, -1, true, true);
 			}
@@ -98,6 +93,9 @@ void BuilderRangeCheck::GameFrame(int frameNum)
 			if (cmd.id == CMD_FIGHT) {
 				trackingTable.erase(unit->id);
 			}
+		}
+		if (queue.size() == 0) {
+			trackingTable.erase(unit->id);
 		}
 	}
 	bool debug = false;
@@ -123,14 +121,21 @@ bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int 
 		return true;
 	auto unitDef = unit->unitDef;
 	auto targetID = cmd.GetParam(0);
+	const CUnit* target = unitHandler.GetUnit(targetID);
+
+	if (targetId < maxUnits && target) {
+		auto targetUnitDef = target->unitDef;
+		if (targetUnitDef.canMove) {
+			trackingTable[unit->id] = true;
+			return true;
+		}
+	}
+
 	return CheckDistance(targetID);
 }
 
 void BuilderRangeCheck::UnitDestroyed(const CUnit* unit, const CUnit* attacker, int weaponDefID)
 {
-	trackingTable.erase[unit->id];
-	for(auto targets: trackingTable) {
-		targets.erase[unit->id];
-	}
+	trackingTable.erase(unit->id);
 }
 

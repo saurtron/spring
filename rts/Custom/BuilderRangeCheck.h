@@ -21,7 +21,7 @@ private:
 
 	static BuilderRangeCheck* instance;
 
-	spring::unordered_map<int, std::vector<int>> trackingTable;
+	spring::unordered_map<int, bool> trackingTable;
 	bool debug = false;
 	bool gate = false;
 };
