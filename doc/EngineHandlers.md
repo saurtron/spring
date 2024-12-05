@@ -116,3 +116,13 @@ This could also be exported into a different module, like EngineGadgets:
   gadget.AllowCommand(...)
   ...
 ```
+
+### Links
+
+Reference lua widgets:
+
+- [nano_range_checker](https://github.com/beyond-all-reason/Beyond-All-Reason/pull/3908/files)
+- [cmd_guard_remove](https://github.com/beyond-all-reason/Beyond-All-Reason/blob/master/luaui/Widgets/cmd_guard_remove.lua)
+- [unit_immobile_builder](https://github.com/beyond-all-reason/Beyond-All-Reason/blob/eb6b3cf60d5e64bf09773ec4a452fa7fd978a794/luaui/Widgets/unit_immobile_builder.lua)
+
+Simple widgets that have a high cost due to command queue and AllowCommand/UnitCommand usage.
