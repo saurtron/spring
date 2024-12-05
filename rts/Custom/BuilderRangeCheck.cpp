@@ -2,13 +2,10 @@
 
 #include "BuilderRangeCheck.h"
 
-#include "Game/SelectedUnitsHandler.h"
-
 #include "Sim/Units/UnitDef.h"
 
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Features/FeatureHandler.h"
-#include "Sim/Units/CommandAI/FactoryCAI.h"
 
 #include "System/EventHandler.h"
 #include "System/Misc/TracyDefs.h"
@@ -67,16 +64,14 @@ void BuilderRangeCheck::GameFrame(int frameNum)
 		auto unit = unitHandler.GetUnit(unitID);
 		auto maxDistance = unit->unitDef->buildDistance;
 
-		const CCommandAI* commandAI = unit->commandAI;
-		const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
-		const CCommandQueue& queue = (factoryCAI == nullptr)? commandAI->commandQue : factoryCAI->newUnitCommands;
+		const CCommandQueue& queue = unit->commandAI->commandQue;
 
 		for(const Command& cmd: queue) {
 			auto targetID = cmd.GetParam(0);
 			const CUnit* target = unitHandler.GetUnit(targetID);
 			if (target && !CheckDistance(unit, targetID)) {
 				auto newCmd = Command(CMD_REMOVE, 0, cmd.GetTag());
-				unit->commandAI->GiveCommand(newCmd, -1, true, true);
+				unit->commandAI->GiveCommand(newCmd, -1, false, false);
 			}
 		}
 		if (queue.size() == 1) {

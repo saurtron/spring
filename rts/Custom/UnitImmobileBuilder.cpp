@@ -2,16 +2,12 @@
 
 #include "UnitImmobileBuilder.h"
 
-#include "Game/SelectedUnitsHandler.h"
-
 #include "Sim/Units/UnitDef.h"
 #include "Sim/Misc/GlobalSynced.h"
 #include "Game/GlobalUnsynced.h"
 #include "Map/ReadMap.h"
 #include "Game/GameSetup.h"
 #include "Sim/Units/UnitHandler.h"
-#include "Sim/Features/FeatureHandler.h"
-#include "Sim/Units/CommandAI/FactoryCAI.h"
 
 #include "System/EventHandler.h"
 #include "System/Misc/TracyDefs.h"
@@ -65,9 +61,7 @@ void UnitImmobileBuilder::UnitCommand(const CUnit* unit, const Command& command,
 		return;
 
 	if (TestUnit(unit)) {
-		const CCommandAI* commandAI = unit->commandAI;
-		const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
-		const CCommandQueue& queue = (factoryCAI == nullptr)? commandAI->commandQue : factoryCAI->newUnitCommands;
+		const CCommandQueue& queue = unit->commandAI->commandQue;
 		if (queue.size() == 0)
 			return;
 		auto cmd = queue[queue.size()-1];

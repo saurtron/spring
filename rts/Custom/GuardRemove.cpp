@@ -2,13 +2,7 @@
 
 #include "GuardRemove.h"
 
-#include "Game/SelectedUnitsHandler.h"
-
 #include "Sim/Units/UnitDef.h"
-
-#include "Sim/Units/UnitHandler.h"
-#include "Sim/Features/FeatureHandler.h"
-#include "Sim/Units/CommandAI/FactoryCAI.h"
 
 #include "System/EventHandler.h"
 #include "System/Misc/TracyDefs.h"
@@ -42,9 +36,7 @@ void GuardRemove::UnitCommand(const CUnit* unit, const Command& command, int pla
 		return;
 	if (unit->unitDef->builder && !unit->unitDef->IsFactoryUnit())
 	{
-		const CCommandAI* commandAI = unit->commandAI;
-		const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
-		const CCommandQueue& queue = (factoryCAI == nullptr)? commandAI->commandQue : factoryCAI->newUnitCommands;
+		const CCommandQueue& queue = unit->commandAI->commandQue;
 		if (queue.size() == 0)
 			return;
 		auto cmd = queue[queue.size()-1];
