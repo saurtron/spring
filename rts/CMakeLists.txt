@@ -137,6 +137,7 @@ add_subdirectory(Menu)
 add_subdirectory(Map)
 add_subdirectory(Net)
 add_subdirectory(Sim)
+add_subdirectory(Custom)
 #add_subdirectory(System) # this is already added in ../
 
 make_global_var(engineSources
