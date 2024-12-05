@@ -45,6 +45,11 @@ Also, such modules don't have a mechanism for exporting lua methods, relying cur
 
 With a bit of work, such gadgets could export their EventClient interface, for further controlability from lua. Also later they could even declare some of their other methods for exporting directly by providing some convenience mechanism so they don't need to write lua code directly.
 
+#### Extending the EventClient
+
+It could be argued we have the EventClient interface now, pretty much such a system already in place, why extend this?
+
+In my opinion, as seen by the proof of concept implementation, extending the EventClient with a layer to allow further control can allow great power, while not requiring changes or disturbances on the rest of the engine, if at all.
 
 ### C++ api
 
