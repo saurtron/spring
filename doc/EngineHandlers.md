@@ -17,7 +17,7 @@ Check [here](/rts/Custom/) for a proof of concept implementation, migrating some
 
 Currently there is no clear mechanism to implement activable engine modules.
 
-These modules could implement useful functionality that not all games would like to implement, or where a game might later want to override it by disabling it.
+These modules could implement useful functionality not all games would like to use, or where a game might later want to override by disabling it.
 
 #### Performance
 
@@ -31,17 +31,19 @@ Some other mechanisms, though, are difficult to optimize.
 
 For example the main callbacks running when giving commands, AllowCommand and UnitCommand, can quickly degenerate into 1000s of lua calls.
 
-An example scenario, with 300 units attacking another 200, can result in 300*200*(AllowCommand listeners + UnitCommand listeners). This is 60k calls, that will result in 60k to 180k calls into lua (due to the widget/synced/unsynced structure).
+An example scenario, with 300 units attacking another 200, can result in `300*200*(AllowCommand listeners + UnitCommand listeners)`. This is 60k calls, that will result in 60k to 180k calls into lua (due to the widget/synced/unsynced structure).
 
-Now think, one microsecond already becomes 100ms when spent so many times. Too much for one frame. And that's not even an incredibly big command.
+Now think, one microsecond already becomes 100ms when spent so many times. Too much even for 30fps. And that's not even an incredibly big command.
+
+By providing a path for optimizing, maybe in the future more and more restrictions, and bigger and bigger games can be possible. Currently the late game is many times unpracticable for many users, where they start to lag or experience bad framerates.
 
 #### Engine extensibility
 
 The engine at the moment, while having a great extensibility mechanism with EventClient interface, doesn't have a way to enable and disable clients from lua.
 
-Also such modules don't have a mechanism for exporting lua methods, relying currently on always adding functions in a number of lua files, with some of them reaching 5000+ lines.
+Also, such modules don't have a mechanism for exporting lua methods, relying currently on always adding functions in a number of lua files, with some of them reaching 5000+ lines.
 
-With a bit of work, such gadgets could export their EventClient interface, for further controlability form lua. Also later they could even declare some of their other methods for exporting directly.
+With a bit of work, such gadgets could export their EventClient interface, for further controlability from lua. Also later they could even declare some of their other methods for exporting directly by providing some convenience mechanism so they don't need to write lua code directly.
 
 
 ### C++ api
@@ -50,7 +52,7 @@ The C++ api could be based on a gadgetHandler and a CGadget base object. This ca
 
 The api is mostly internal, and games are expected to control this from lua.
 
-CGadget makers just need to clone the example gadgets.
+CGadget makers just need to clone the [example gadgets](/rts/Custom/).
 
 #### gadgetHandler
 
