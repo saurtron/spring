@@ -13,9 +13,9 @@ CGadgetHandler gadgetHandler;
 
 CGadgetHandler::CGadgetHandler()
 {
-	AddFactory(new Factory<BuilderRangeCheck>("BuilderRangeCheck"));
-	AddFactory(new Factory<GuardRemove>("GuardRemove"));
-	AddFactory(new Factory<UnitImmobileBuilder>("UnitImmobileBuilder"));
+	AddFactory(new Factory<BuilderRangeCheck>("BuilderRangeCheck", 19991, false));
+	AddFactory(new Factory<GuardRemove>("GuardRemove", 19992, false));
+	AddFactory(new Factory<UnitImmobileBuilder>("UnitImmobileBuilder", 19993, false));
 }
 
 void CGadgetHandler::EnableAll(bool enable)

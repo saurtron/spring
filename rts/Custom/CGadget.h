@@ -19,26 +19,30 @@ template <typename T>
 class Factory : public CGadgetFactory
 {
 	public:
-		Factory(const char* gname, int gpriority=19991) {
+		Factory(const char* gname, int gpriority=19991, bool gsynced=false) {
 			name = gname;
 			priority = gpriority;
+			synced = gsynced;
 		}
-		CGadget* Create() override {
-			return new T(name, priority);
+		CGadget* Create(int gpriority=0) override {
+
+			return new T(name, (gpriority > 0) ? gpriority : priority, synced);
 		}
 		const char *GetName() override {
 			return name;
 		}
 		const char *name;
 		int priority;
+		int synced;
 };
 
 class CGadget : public CEventClient {
 public:
-	CGadget(const char *name, int priority);
+	CGadget(const char *name, int priority, bool synced);
 	virtual ~CGadget() {}
 
 	void Disable();
+	bool enabled;
 };
 
 #endif // GADGET_H
