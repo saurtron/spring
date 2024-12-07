@@ -472,7 +472,8 @@ void CFactory::AssignBuildeeOrders(CUnit* unit) {
 	}
 
 	if (unitCmdQue.empty()) {
-		unitCAI->GiveCommand(c);
+		if (factoryCmdQue.empty())
+			unitCAI->GiveCommand(c);
 
 		// copy factory orders for new unit
 		for (auto ci = factoryCmdQue.begin(); ci != factoryCmdQue.end(); ++ci) {
