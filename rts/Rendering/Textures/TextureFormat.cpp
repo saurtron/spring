@@ -76,7 +76,7 @@ GLenum GL::GetInternalFormatDataType(GLenum internalFormat) {
 			dataType = GL_UNSIGNED_INT;
 		} break;
 		case GL_DEPTH_COMPONENT24: {
-			dataType = GL_UNSIGNED_INT_24_8;
+			dataType = GL_UNSIGNED_INT;
 		} break;
 		case GL_RGBA16:
 		case GL_RGBA16UI:
@@ -154,6 +154,7 @@ GLenum GL::GetBindingQueryFromTarget(GLenum target) {
 GLsizei GL::GetPixelFormatSize(GLenum format) {
 	GLsizei size;
 	switch (format) {
+		case GL_DEPTH_COMPONENT:
 		case GL_RED:
 		case GL_RED_INTEGER:
 		case GL_GREEN:
