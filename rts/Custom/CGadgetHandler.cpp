@@ -25,6 +25,7 @@ void CGadgetHandler::EnableAll(bool enable)
 		if (enable && !IsGadgetEnabled(iter.first.c_str())) {
 			CGadgetFactory *fact = iter.second;
 			gadgets[iter.first] = fact->Create();
+			gadgets[iter.first]->EnableEvents();
 			LOG_L(L_WARNING, "[%s] enabled %s", __func__, iter.first.c_str());
 		}
 		else if (!enable && IsGadgetEnabled(iter.first.c_str())) {
@@ -57,6 +58,7 @@ bool CGadgetHandler::EnableGadget(const char* name, bool enable, int priority)
 		CGadgetFactory *fact = gadgetFactories[name];
 		if (fact) {
 			gadgets[name] = fact->Create(priority);
+			gadgets[name]->EnableEvents();
 			return true;
 		} else {
 			LOG_L(L_ERROR, "[%s] no gadget factory for %s", __func__, name);

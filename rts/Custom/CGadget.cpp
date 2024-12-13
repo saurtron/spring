@@ -9,6 +9,10 @@ CGadget::CGadget(const char *name, int priority, bool synced)
 	: CEventClient(name, priority, synced)
 	, enabled(false)
 {
+}
+
+void CGadget::EnableEvents()
+{
 	autoLinkEvents = true;
 	RegisterLinkedEvents(this);
 	eventHandler.AddClient(this);

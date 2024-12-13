@@ -41,6 +41,18 @@ public:
 	CGadget(const char *name, int priority, bool synced);
 	virtual ~CGadget() {}
 
+	virtual void EnableEvents();
+
+	virtual void UnitCommand(const CUnit* unit, const Command& command, int playerNum, bool fromSynced, bool fromLua) override {};
+	virtual void PlayerChanged(int playerID) override {};
+	virtual void GameStart() override {};
+	virtual void UnitCreated(const CUnit* unit, const CUnit* builder) override {};
+	virtual void UnitGiven(const CUnit* unit, int oldTeam, int newTeam) override {};
+	virtual void UnitIdle(const CUnit* unit) override {};
+	virtual void GameFrame(int frameNum) override {};
+	virtual bool AllowCommand(const CUnit* unit, const Command& cmd, int playerNum, bool fromSynced, bool fromLua) override {return true;};
+	virtual void UnitDestroyed(const CUnit* unit, const CUnit* attacker, int weaponDefID) override {};
+
 	bool IsEnabled() { return enabled; };
 	void Enable();
 	void Disable();
