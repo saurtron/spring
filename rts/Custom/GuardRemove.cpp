@@ -15,6 +15,8 @@ GuardRemove::GuardRemove(const char *name, int priority, bool synced)
 
 void GuardRemove::UnitCommand(const CUnit* unit, const Command& command, int playerNum, bool fromSynced, bool fromLua)
 {
+	RECOIL_DETAILED_TRACY_ZONE;
+
 	if (!(command.GetOpts() & SHIFT_KEY))
 		return;
 	if (unit->unitDef->builder && !unit->unitDef->IsFactoryUnit())

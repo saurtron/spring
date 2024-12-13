@@ -14,7 +14,6 @@ public:
 
 	// CEventClient interface
 	virtual void UnitCommand(const CUnit* unit, const Command& command, int playerNum, bool fromSynced, bool fromLua) override;
-	//virtual void Update() override;
 };
 
 #endif // GUARD_REMOVE_H
