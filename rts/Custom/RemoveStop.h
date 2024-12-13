@@ -3,7 +3,6 @@
 #ifndef REMOVE_STOP_H
 #define REMOVE_STOP_H
 
-#include "RemoveStop.h"
 #include "System/UnorderedSet.hpp"
 
 #include "CGadget.h"

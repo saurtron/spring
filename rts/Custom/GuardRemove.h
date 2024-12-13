@@ -3,8 +3,6 @@
 #ifndef GUARD_REMOVE_H
 #define GUARD_REMOVE_H
 
-#include "GuardRemove.h"
-
 #include "CGadget.h"
 
 class GuardRemove : public CGadget
