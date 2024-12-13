@@ -39,6 +39,8 @@ void UnitImmobileBuilder::MaybeRemoveSelf(bool gamestart)
 
 void UnitImmobileBuilder::UnitCommand(const CUnit* unit, const Command& command, int playerNum, bool fromSynced, bool fromLua)
 {
+	RECOIL_DETAILED_TRACY_ZONE;
+
 	if (!(command.GetOpts() & SHIFT_KEY))
 		return;
 
