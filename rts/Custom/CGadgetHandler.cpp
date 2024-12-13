@@ -8,6 +8,7 @@
 #include "BuilderRangeCheck.h"
 #include "GuardRemove.h"
 #include "UnitImmobileBuilder.h"
+#include "RemoveStop.h"
 
 CGadgetHandler gadgetHandler;
 
@@ -16,6 +17,7 @@ CGadgetHandler::CGadgetHandler()
 	AddFactory(new Factory<BuilderRangeCheck>("BuilderRangeCheck", 19991, false));
 	AddFactory(new Factory<GuardRemove>("GuardRemove", 19992, false));
 	AddFactory(new Factory<UnitImmobileBuilder>("UnitImmobileBuilder", 19993, false));
+	AddFactory(new Factory<RemoveStop>("RemoveStop", 19993, true));
 }
 
 void CGadgetHandler::EnableAll(bool enable)
