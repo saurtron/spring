@@ -28,6 +28,9 @@ bool BuilderRangeCheck::CheckDistance(const CUnit *unit, int targetID)
 	} else {
 		target = unitHandler.GetUnit(targetID);
 	}
+	if (!target) {
+		return false;
+	}
 
 	if (unitDef->buildRange3D)
 		distance = unit->midPos.distance(target->midPos);
@@ -42,16 +45,19 @@ bool BuilderRangeCheck::CheckDistance(const CUnit *unit, int targetID)
 
 void BuilderRangeCheck::GameFrame(int frameNum)
 {
-	for(auto unitID: trackingTable) {
-		auto unit = unitHandler.GetUnit(unitID);
+	for(const auto iter: trackingTable) {
+		auto unit = unitHandler.GetUnit(iter.first);
 		auto maxDistance = unit->unitDef->buildDistance;
 
 		const CCommandQueue& queue = unit->commandAI->commandQue;
 
 		for(const Command& cmd: queue) {
-			auto targetID = cmd.GetParam(0);
+			int targetID = cmd.GetParam(0);
 			const CUnit* target = unitHandler.GetUnit(targetID);
-			if (target && !CheckDistance(unit, targetID)) {
+			if (target && CheckDistance(unit, targetID)) {
+				trackingTable[unit->id].insert(targetID);
+			} else {
+				trackingTable[unit->id].erase(targetID);
 				auto newCmd = Command(CMD_REMOVE, 0, cmd.GetTag());
 				unit->commandAI->GiveCommand(newCmd, -1, false, false);
 			}
@@ -62,7 +68,7 @@ void BuilderRangeCheck::GameFrame(int frameNum)
 				trackingTable.erase(unit->id);
 			}
 		}
-		if (queue.size() == 0) {
+		else if (queue.size() == 0) {
 			trackingTable.erase(unit->id);
 		}
 	}/*
@@ -85,9 +91,14 @@ void BuilderRangeCheck::GameFrame(int frameNum)
 
 bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int playerNum, bool fromSynced, bool fromLua)
 {
+	RECOIL_DETAILED_TRACY_ZONE;
+
 	if (cmd.GetNumParams() != 1)
 		return true;
 	auto unitDef = unit->unitDef;
+	if (!unitDef->IsBuilderUnit() || !unitDef->IsImmobileUnit() || !unitDef->yardmap.empty())
+		return true;
+
 	const int targetID = (int) cmd.GetParam(0);
 	const CUnit* target = unitHandler.GetUnit(targetID);
 
@@ -95,7 +106,8 @@ bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int 
 	if (targetID < maxUnits && target) {
 		auto targetUnitDef = target->unitDef;
 		if (targetUnitDef->canmove) {
-			trackingTable.insert(unit->id);
+			trackingTable.try_emplace(unit->id);
+			//trackingTable.insert(unit->id);
 			return true;
 		}
 	}
@@ -105,6 +117,9 @@ bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int 
 
 void BuilderRangeCheck::UnitDestroyed(const CUnit* unit, const CUnit* attacker, int weaponDefID)
 {
+	for(auto& iter: trackingTable) {
+		iter.second.erase(unit->id);
+	}
 	trackingTable.erase(unit->id);
 }
 

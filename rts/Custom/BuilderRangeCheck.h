@@ -3,7 +3,10 @@
 #ifndef BUILDER_RANGE_CHECK_H
 #define BUILDER_RANGE_CHECK_H
 
+#include <unordered_map>
+
 #include "System/UnorderedSet.hpp"
+#include "System/UnorderedMap.hpp"
 #include "CGadget.h"
 
 class BuilderRangeCheck : public CGadget
@@ -21,7 +24,7 @@ public:
 private:
 	bool CheckDistance(const CUnit *unit, int targetID);
 
-	spring::unordered_set<int> trackingTable;
+	std::unordered_map<int, spring::unordered_set<int>> trackingTable;
 	bool debug = false;
 	bool gate = false;
 };
