@@ -9,6 +9,7 @@
 #include "GuardRemove.h"
 #include "UnitImmobileBuilder.h"
 #include "RemoveStop.h"
+#include "OnlyTargetCategory.h"
 
 CGadgetHandler gadgetHandler;
 
@@ -18,6 +19,7 @@ CGadgetHandler::CGadgetHandler()
 	AddFactory(new Factory<GuardRemove>("GuardRemove", 19992, false));
 	AddFactory(new Factory<UnitImmobileBuilder>("UnitImmobileBuilder", 19993, false));
 	AddFactory(new Factory<RemoveStop>("RemoveStop", 19993, true));
+	AddFactory(new Factory<OnlyTargetCategory>("OnlyTargetCategory", 19993, true));
 }
 
 void CGadgetHandler::EnableAll(bool enable)

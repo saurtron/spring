@@ -7,6 +7,7 @@ make_global_var(sources_engine_Custom
 		"${CMAKE_CURRENT_SOURCE_DIR}/BuilderRangeCheck.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/BuilderRangeCheck.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/GuardRemove.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/OnlyTargetCategory.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/RemoveStop.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/UnitImmobileBuilder.cpp"
 	)
