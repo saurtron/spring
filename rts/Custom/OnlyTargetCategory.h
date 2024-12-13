@@ -11,6 +11,7 @@
 class OnlyTargetCategory : public CGadget
 {
 public:
+	ENABLE_GADGET_EVENTS
 	OnlyTargetCategory(const char *name, int priority, bool synced);
 
 	// CEventClient interface

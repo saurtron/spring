@@ -8,6 +8,7 @@
 class UnitImmobileBuilder : public CGadget
 {
 public:
+	ENABLE_GADGET_EVENTS
 	UnitImmobileBuilder(const char *name, int priority, bool synced);
 
 	// CEventClient interface

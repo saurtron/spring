@@ -8,6 +8,7 @@
 class GuardRemove : public CGadget
 {
 public:
+	ENABLE_GADGET_EVENTS
 	GuardRemove(const char *name, int priority, bool synced);
 
 	// CEventClient interface

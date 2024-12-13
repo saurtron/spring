@@ -10,6 +10,7 @@
 class RemoveStop : public CGadget
 {
 public:
+	ENABLE_GADGET_EVENTS
 	RemoveStop(const char *name, int priority, bool synced);
 
 	// CEventClient interface

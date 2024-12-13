@@ -11,6 +11,7 @@
 class BuilderRangeCheck : public CGadget
 {
 public:
+	ENABLE_GADGET_EVENTS
 	BuilderRangeCheck(const char *name, int priority, bool synced);
 
 	// CEventClient interface
