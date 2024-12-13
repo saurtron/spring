@@ -357,7 +357,6 @@ bool LuaSyncedCtrl::PushEntries(lua_State* L)
 	REGISTER_LUA_CFUNC(SetRadarErrorParams);
 
 	REGISTER_LUA_CFUNC(EnableEngineGadget);
-	REGISTER_LUA_CFUNC(IsEngineGadgetEnabled);
 
 	if (!LuaSyncedMoveCtrl::PushMoveCtrl(L))
 		return false;
@@ -7017,19 +7016,6 @@ int LuaSyncedCtrl::EnableEngineGadget(lua_State* L)
 		gadgetHandler.EnableGadget(name.c_str(), enable, priority);
 	} else {
 		gadgetHandler.EnableAll(enable);
-	}
-	return 0;
-}
-
-int LuaSyncedCtrl::IsEngineGadgetEnabled(lua_State* L)
-{
-	if (lua_isstring(L, 2)) {
-		const string name = lua_tostring(L, 2);
-		const bool res = gadgetHandler.IsGadgetEnabled(name.c_str());
-		lua_pushboolean(L, res);
-		return 1;
-	} else {
-		luaL_error(L, "first argument has to be the gadget name");
 	}
 	return 0;
 }

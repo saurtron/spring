@@ -75,6 +75,7 @@
 #include "System/FileSystem/FileHandler.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/StringUtil.h"
+#include "Custom/CGadgetHandler.h"
 
 #include <cctype>
 #include <type_traits>
@@ -380,6 +381,9 @@ bool LuaSyncedRead::PushEntries(lua_State* L)
 	REGISTER_LUA_CFUNC(GetFeaturePieceMatrix);
 
 	REGISTER_LUA_CFUNC(GetRadarErrorParams);
+
+	REGISTER_LUA_CFUNC(HasEngineGadget);
+	REGISTER_LUA_CFUNC(IsEngineGadgetEnabled);
 
 	if (!LuaMetalMap::PushReadEntries(L))
 		return false;
@@ -8582,6 +8586,34 @@ int LuaSyncedRead::GetUnitScriptNames(lua_State* L)
 
 	return 1;
 }
+
+
+int LuaSyncedRead::IsEngineGadgetEnabled(lua_State* L)
+{
+	if (lua_isstring(L, 1)) {
+		const string name = lua_tostring(L, 1);
+		const bool res = gadgetHandler.IsGadgetEnabled(name.c_str());
+		lua_pushboolean(L, res);
+		return 1;
+	} else {
+		luaL_error(L, "first argument has to be the gadget name");
+	}
+	return 0;
+}
+
+int LuaSyncedRead::HasEngineGadget(lua_State* L)
+{
+	if (lua_isstring(L, 1)) {
+		const string name = lua_tostring(L, 1);
+		const bool res = gadgetHandler.HasGadget(name.c_str());
+		lua_pushboolean(L, res);
+		return 1;
+	} else {
+		luaL_error(L, "first argument has to be the gadget name");
+	}
+	return 0;
+}
+
 
 
 /******************************************************************************

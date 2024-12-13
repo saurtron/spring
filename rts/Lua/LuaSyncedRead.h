@@ -294,6 +294,9 @@ class LuaSyncedRead {
 		static int TraceRayUnits(lua_State* L);      //TODO: not implemented
 		static int TraceRayFeatures(lua_State* L);   //TODO: not implemented
 		static int TraceRayGround(lua_State* L);     //TODO: not implemented
+
+		static int HasEngineGadget(lua_State* L);
+		static int IsEngineGadgetEnabled(lua_State* L);
 };
 
 #endif /* LUA_SYNCED_READ_H */

@@ -250,7 +250,6 @@ class LuaSyncedCtrl
 		static int SetRadarErrorParams(lua_State* L);
 
 		static int EnableEngineGadget(lua_State* L);
-		static int IsEngineGadgetEnabled(lua_State* L);
 };
 
 
