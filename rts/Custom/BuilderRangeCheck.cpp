@@ -91,7 +91,7 @@ void BuilderRangeCheck::GameFrame(int frameNum)
 
 bool BuilderRangeCheck::AllowCommand(const CUnit* unit, const Command& cmd, int playerNum, bool fromSynced, bool fromLua)
 {
-	RECOIL_DETAILED_TRACY_ZONE;
+	ZoneScopedN("M:BuilderRangeCheck::AllowCommand");
 
 	if (cmd.GetNumParams() != 1)
 		return true;

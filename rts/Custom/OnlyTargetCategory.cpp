@@ -19,7 +19,7 @@ OnlyTargetCategory::OnlyTargetCategory(const char *name, int priority, bool sync
 
 void OnlyTargetCategory::Init()
 {
-	RECOIL_DETAILED_TRACY_ZONE;
+	ZoneScopedN("M:OnlyTargetCategory::Init");
 
 	CCategoryHandler* categoryHandler = CCategoryHandler::Instance();
 	const unsigned vtolCategory = categoryHandler->GetCategories("VTOL");
@@ -41,7 +41,7 @@ void OnlyTargetCategory::Init()
 
 bool OnlyTargetCategory::AllowCommand(const CUnit* unit, const Command& cmd, int playerNum, bool fromSynced, bool fromLua)
 {
-	RECOIL_DETAILED_TRACY_ZONE;
+	ZoneScopedN("M:OnlyTargetCategory::AllowCommand");
 
 	if (cmd.GetID() != CMD_ATTACK || cmd.GetNumParams() == 0)
 		return true;

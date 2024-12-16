@@ -18,7 +18,7 @@ RemoveStop::RemoveStop(const char *name, int priority, bool synced)
 
 void RemoveStop::Init()
 {
-	RECOIL_DETAILED_TRACY_ZONE;
+	ZoneScopedN("M:RemoveStop::Init");
 
 	for (const UnitDef& unitDef: unitDefHandler->GetUnitDefsVec()) {
 		auto customParams = unitDef.customParams;
@@ -34,7 +34,7 @@ void RemoveStop::Init()
 
 bool RemoveStop::AllowCommand(const CUnit* unit, const Command& cmd, int playerNum, bool fromSynced, bool fromLua)
 {
-	RECOIL_DETAILED_TRACY_ZONE;
+	ZoneScopedN("M:RemoveStop::AllowCommand");
 
 	if (cmd.GetID() == CMD_STOP && stopRemoveDefs.contains(unit->unitDef->id))
 		return false;
