@@ -17,7 +17,7 @@ CGadgetHandler::CGadgetHandler()
 {
 	AddFactory(new Factory<BuilderRangeCheck>("BuilderRangeCheck", 19991, false));
 	AddFactory(new Factory<GuardRemove>("GuardRemove", 19992, false));
-	AddFactory(new Factory<UnitImmobileBuilder>("UnitImmobileBuilder", 19993, false));
+	AddFactory(new Factory<UnitImmobileBuilder>("UnitImmobileBuilder", 19990, false));
 	AddFactory(new Factory<RemoveStop>("RemoveStop", 19993, true));
 	AddFactory(new Factory<OnlyTargetCategory>("OnlyTargetCategory", 19993, true));
 }
