@@ -146,8 +146,7 @@ public:
 	auto*       GetSavedData()       { return &savedData; }
 	const auto* GetSavedData() const { return &savedData; }
 
-	const spring::unsynced_map<icon::CIconData*, std::vector<const CUnit*> >& GetUnitsByIcon() const { return unitsByIcon; }
-	const spring::unsynced_map<icon::CIconData*, std::vector<const GhostSolidObject*> >& GetGhostsByIcon() const { return ghostsByIcon; }
+	const spring::unsynced_map<icon::CIconData*, std::pair<std::vector<const CUnit*>, std::vector<const GhostSolidObject*> > >& GetUnitsByIcon() const { return unitsByIcon; }
 protected:
 	void UpdateObjectDrawFlags(CSolidObject* o) const override;
 private:
@@ -181,8 +180,7 @@ public:
 private:
 	SavedData savedData;
 
-	spring::unsynced_map<icon::CIconData*, std::vector<const CUnit*> > unitsByIcon;
-	spring::unsynced_map<icon::CIconData*, std::vector<const GhostSolidObject*> > ghostsByIcon;
+	spring::unsynced_map<icon::CIconData*, std::pair<std::vector<const CUnit*>, std::vector<const GhostSolidObject*> > > unitsByIcon;
 
 	std::vector<UnitDefImage> unitDefImages;
 
