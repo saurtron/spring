@@ -190,7 +190,7 @@ public:
 	unsigned short CalcLosStatus(int allyTeam);
 	void UpdateLosStatus(int allyTeam);
 
-	void SetLeavesGhost(bool isStatic);
+	void SetLeavesGhost(bool newLeavesGhost);
 
 	void UpdateWeapons();
 	void UpdateWeaponVectors();

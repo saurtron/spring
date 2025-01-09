@@ -545,9 +545,9 @@ void CUnit::ForcedMove(const float3& newPos)
 }
 
 
-void CUnit::SetLeavesGhost(bool isStatic)
+void CUnit::SetLeavesGhost(bool newLeavesGhost)
 {
-	leavesGhost = isStatic;
+	leavesGhost = newLeavesGhost;
 }
 
 
