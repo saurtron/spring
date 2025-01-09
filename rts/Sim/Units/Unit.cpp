@@ -547,7 +547,7 @@ void CUnit::ForcedMove(const float3& newPos)
 
 void CUnit::SetLeavesGhost(bool isStatic)
 {
-	leavesGhost = isStatic && unitDef->leavesGhost;
+	leavesGhost = isStatic;
 }
 
 
