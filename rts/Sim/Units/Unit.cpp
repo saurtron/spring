@@ -682,8 +682,6 @@ void CUnit::Update()
 	}
 
 	restTime += 1;
-	outOfMapTime += 1;
-	outOfMapTime *= (!pos.IsInBounds());
 }
 
 void CUnit::UpdateWeaponVectors()
@@ -2932,7 +2930,6 @@ CR_REG_METADATA(CUnit, (
 	CR_MEMBER(delayedWreckLevel),
 
 	CR_MEMBER(restTime),
-	CR_MEMBER(outOfMapTime),
 
 	CR_MEMBER(reloadSpeed),
 	CR_MEMBER(maxRange),
