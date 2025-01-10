@@ -236,8 +236,8 @@ void CUnitDefHandler::SanitizeUnitDefs()
 {
 	for (auto &ud : unitDefsVector) {
 		// Factories cannot assist another builder
-		if (ud.IsFactoryUnit())
-			ud.canAssist = false;
+		//if (ud.IsFactoryUnit())
+		//	ud.canAssist = false;
 
 		// Make sure the wreck name refers to an existent feature
 		if (ud.wreckName != "") {

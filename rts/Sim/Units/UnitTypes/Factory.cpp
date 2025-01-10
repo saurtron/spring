@@ -9,6 +9,8 @@
 #include "Sim/Misc/GroundBlockingObjectMap.h"
 #include "Sim/Misc/ModInfo.h"
 #include "Sim/Misc/QuadField.h"
+#include "Sim/Features/Feature.h"
+#include "Sim/Features/FeatureHandler.h"
 #include "Sim/Misc/TeamHandler.h"
 #include "Sim/MoveTypes/MoveType.h"
 #include "Sim/MoveTypes/MoveDefHandler.h"
@@ -25,6 +27,7 @@
 #include "System/SpringMath.h"
 #include "System/creg/DefTypes.h"
 #include "System/Sound/ISoundChannels.h"
+#include "Sim/Units/Scripts/CobInstance.h"
 
 #include "Game/GlobalUnsynced.h"
 
@@ -33,6 +36,9 @@
 CR_BIND_DERIVED(CFactory, CBuilding, )
 CR_REG_METADATA(CFactory, (
 	CR_MEMBER(buildSpeed),
+	CR_MEMBER(buildDistance),
+	CR_MEMBER(reclaimSpeed),
+	CR_MEMBER(range3D),
 
 	CR_MEMBER(boOffset),
 	CR_MEMBER(boRadius),
@@ -55,6 +61,9 @@ CR_REG_METADATA(CFactory, (
 CFactory::CFactory()
 	: CBuilding()
 	, buildSpeed(100.0f)
+	, reclaimSpeed(100)
+	, range3D(true)
+	, buildDistance(16)
 	, boOffset(0.0f) //can't set here
 	, boRadius(0.0f) //can't set here
 	, boRelHeading(0)
@@ -81,7 +90,10 @@ void CFactory::PreInit(const UnitLoadParams& params)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	unitDef = params.unitDef;
+	range3D = unitDef->buildRange3D;
 	buildSpeed = unitDef->buildSpeed / GAME_SPEED;
+	buildDistance = (params.unitDef)->buildDistance;
+	reclaimSpeed   = INV_GAME_SPEED * unitDef->reclaimSpeed;
 
 	CBuilding::PreInit(params);
 
@@ -116,7 +128,7 @@ void CFactory::Update()
 		// construction (by assisting builders) or has to be killed --> the
 		// latter is easier
 		if (curBuild != nullptr)
-			StopBuild();
+			StopBuild(true);
 
 		return;
 	}
@@ -154,6 +166,19 @@ void CFactory::Update()
 	if (curBuild != nullptr) {
 		UpdateBuild(curBuild);
 		FinishBuild(curBuild);
+	} else if (!IsStunned()) {
+		const CFactoryCAI* cai = static_cast<CFactoryCAI*>(commandAI);
+		const CCommandQueue& cQueue = cai->commandQue;
+		const Command& fCommand = (!cQueue.empty())? cQueue.front(): Command(CMD_STOP);
+
+		bool updated = false;
+
+		//updated = updated || UpdateTerraform(fCommand);
+		//updated = updated || AssistTerraform(fCommand);
+		//updated = updated || UpdateBuild(fCommand);
+		updated = updated || UpdateReclaim(fCommand);
+		//updated = updated || UpdateResurrect(fCommand);
+		//updated = updated || UpdateCapture(fCommand);
 	}
 
 	const bool wantClose = (!IsStunned() && yardOpen && (gs->frameNum >= (lastBuildUpdateFrame + GAME_SPEED * (UNIT_SLOWUPDATE_RATE >> 1))));
@@ -168,7 +193,29 @@ void CFactory::Update()
 	CBuilding::Update();
 }
 
+bool CFactory::UpdateReclaim(const Command& fCommand)
+{
+	RECOIL_DETAILED_TRACY_ZONE;
+	// AddBuildPower can invoke StopBuild indirectly even if returns true
+	// and reset curReclaim to null (which would crash CreateNanoParticle)
+	CSolidObject* curReclaimee = curReclaim;
 
+	if (curReclaimee == nullptr || f3SqDist(curReclaimee->pos, pos) >= Square(buildDistance + curReclaimee->buildeeRadius) || !inBuildStance)
+		return false;
+
+	if (fCommand.GetID() == CMD_WAIT) {
+		StopBuild();
+		return true;
+	}
+
+	ScriptDecloak(curReclaimee, nullptr);
+
+	if (!curReclaimee->AddBuildPower(this, -reclaimSpeed))
+		return true;
+
+	CreateNanoParticle(curReclaimee->midPos, curReclaimee->radius * 0.7f, true, (reclaimingUnit && curReclaimee->team != team));
+	return true;
+}
 
 void CFactory::StartBuild(const UnitDef* buildeeDef) {
 	RECOIL_DETAILED_TRACY_ZONE;
@@ -226,17 +273,19 @@ void CFactory::UpdateBuild(CUnit* buildee) {
 	const int buildPieceHeading = GetHeadingFromVector(buildPieceMat[8], buildPieceMat[10]);
 	const int buildFaceHeading = GetHeadingFromFacing(buildFacing);
 
-	float3 buildeePos = buildPos;
-
-	// note: basically StaticMoveType::SlowUpdate()
-	if (buildee->FloatOnWater() && buildee->IsInWater())
-		buildeePos.y = -buildee->moveType->GetWaterline();
-
-	// rotate unit nanoframe with platform
-	buildee->Move(buildeePos, false);
-	buildee->SetHeading((-buildPieceHeading + buildFaceHeading) & (SPRING_CIRCLE_DIVS - 1), false, false, 0.0f);
-
 	const CCommandQueue& queue = commandAI->commandQue;
+
+	if (!queue.empty() && (queue.front().GetID() < 0)) {
+		float3 buildeePos = buildPos;
+
+		// note: basically StaticMoveType::SlowUpdate()
+		if (buildee->FloatOnWater() && buildee->IsInWater())
+			buildeePos.y = -buildee->moveType->GetWaterline();
+
+		// rotate unit nanoframe with platform
+		buildee->Move(buildeePos, false);
+		buildee->SetHeading((-buildPieceHeading + buildFaceHeading) & (SPRING_CIRCLE_DIVS - 1), false, false, 0.0f);
+	}
 
 	if (!queue.empty() && (queue.front().GetID() == CMD_WAIT)) {
 		buildee->AddBuildPower(this, 0.0f);
@@ -246,7 +295,7 @@ void CFactory::UpdateBuild(CUnit* buildee) {
 	if (!buildee->AddBuildPower(this, buildSpeed))
 		return;
 
-	CreateNanoParticle();
+	CreateNanoParticle(buildee->midPos, buildee->radius * 0.5f, false);
 }
 
 void CFactory::FinishBuild(CUnit* buildee) {
@@ -256,26 +305,34 @@ void CFactory::FinishBuild(CUnit* buildee) {
 	if (unitDef->fullHealthFactory && buildee->health < buildee->maxHealth)
 		return;
 
-	// assign buildee to same group as us
-	if (GetGroup() != nullptr && buildee->GetGroup() != nullptr)
-		buildee->SetGroup(GetGroup(), true);
+	bool isOurs = false;
+	const CCommandQueue& queue = commandAI->commandQue;
+	if (!queue.empty() && (queue.front().GetID() < 0)) {
+		// assign buildee to same group as us
+		if (GetGroup() != nullptr && buildee->GetGroup() != nullptr)
+			buildee->SetGroup(GetGroup(), true);
+		isOurs = true;
+
+	}
 
 	const CCommandAI* bcai = buildee->commandAI;
 	// if not idle, the buildee already has user orders
 	const bool buildeeIdle = (bcai->commandQue.empty());
 	const bool buildeeMobile = (dynamic_cast<const CMobileCAI*>(bcai) != nullptr);
 
-	if (buildeeIdle || buildeeMobile) {
+	if (isOurs && (buildeeIdle || buildeeMobile)) {
 		AssignBuildeeOrders(buildee);
 		waitCommandsAI.AddLocalUnit(buildee, this);
 	}
 
-	// inform our commandAI
-	CFactoryCAI* factoryCAI = static_cast<CFactoryCAI*>(commandAI);
-	factoryCAI->FactoryFinishBuild(finishedBuildCommand);
+	if (isOurs) {
+		// inform our commandAI
+		CFactoryCAI* factoryCAI = static_cast<CFactoryCAI*>(commandAI);
+		factoryCAI->FactoryFinishBuild(finishedBuildCommand);
 
-	eventHandler.UnitFromFactory(buildee, this, !buildeeIdle);
-	StopBuild();
+		eventHandler.UnitFromFactory(buildee, this, !buildeeIdle);
+	}
+	StopBuild(true);
 }
 
 
@@ -304,13 +361,16 @@ unsigned int CFactory::QueueBuild(const UnitDef* buildeeDef, const Command& buil
 	return FACTORY_NEXT_BUILD_ORDER;
 }
 
-void CFactory::StopBuild()
+void CFactory::StopBuild(bool callScript)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	// cancel a build-in-progress
-	script->StopBuilding();
+	/*if (curBuild != nullptr)
+		DeleteDeathDependence(curBuild, DEPENDENCE_BUILD);*/
+	if (callScript)
+		script->StopBuilding();
 
 	if (curBuild) {
+		// cancel a build-in-progress
 		if (curBuild->beingBuilt) {
 			AddMetal(curBuild->cost.metal * curBuild->buildProgress, false);
 			curBuild->KillUnit(nullptr, false, true, -CSolidObject::DAMAGE_FACTORY_CANCEL);
@@ -318,16 +378,40 @@ void CFactory::StopBuild()
 		DeleteDeathDependence(curBuild, DEPENDENCE_BUILD);
 	}
 
+
+	if (curReclaim != nullptr)
+		DeleteDeathDependence(curReclaim, DEPENDENCE_RECLAIM);
+	/*if (helpTerraform != nullptr)
+		DeleteDeathDependence(helpTerraform, DEPENDENCE_TERRAFORM);
+	if (curResurrect != nullptr)
+		DeleteDeathDependence(curResurrect, DEPENDENCE_RESURRECT);*/
+	if (curCapture != nullptr)
+		DeleteDeathDependence(curCapture, DEPENDENCE_CAPTURE);
+
 	curBuild = nullptr;
+	curReclaim = nullptr;
+	/*helpTerraform = nullptr;*/
+	curResurrect = nullptr;
+	curCapture = nullptr;
 	curBuildDef = nullptr;
+
+	/*if (terraforming) {
+		constexpr int tsr = TERRA_SMOOTHING_RADIUS;
+		mapDamage->RecalcArea(tx1 - tsr, tx2 + tsr, tz1 - tsr, tz2 + tsr);
+	}
+
+	terraforming = false;
+
+	SetHoldFire(false);*/
 }
+
 
 void CFactory::DependentDied(CObject* o)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (o == curBuild) {
 		curBuild = nullptr;
-		StopBuild();
+		StopBuild(true);
 	}
 
 	CUnit::DependentDied(o);
@@ -517,7 +601,7 @@ bool CFactory::ChangeTeam(int newTeam, ChangeType type)
 }
 
 
-void CFactory::CreateNanoParticle(bool highPriority)
+void CFactory::CreateNanoParticle(const float3& goal, float radius, bool inverse, bool highPriority)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	const int modelNanoPiece = nanoPieceCache.GetNanoPiece(script);
@@ -529,5 +613,104 @@ void CFactory::CreateNanoParticle(bool highPriority)
 	const float3 nanoPos = this->GetObjectSpacePos(relNanoFirePos);
 
 	// unsynced
-	projectileHandler.AddNanoParticle(nanoPos, curBuild->midPos, unitDef, team, highPriority);
+	projectileHandler.AddNanoParticle(nanoPos, goal, unitDef, team, radius, inverse, highPriority);
+}
+
+void CFactory::SetRepairTarget(CUnit* target)
+{
+	RECOIL_DETAILED_TRACY_ZONE;
+	if (target == curBuild)
+		return;
+
+	StopBuild(false);
+	TempHoldFire(CMD_REPAIR);
+
+	curBuild = target;
+	AddDeathDependence(curBuild, DEPENDENCE_BUILD);
+
+	if (!target->groundLevelled) {
+		// resume levelling the ground
+		tx1 = (int)std::max(0.0f, (target->pos.x - (target->xsize * 0.5f * SQUARE_SIZE)) / SQUARE_SIZE);
+		tz1 = (int)std::max(0.0f, (target->pos.z - (target->zsize * 0.5f * SQUARE_SIZE)) / SQUARE_SIZE);
+		tx2 = std::min(mapDims.mapx, tx1 + target->xsize);
+		tz2 = std::min(mapDims.mapy, tz1 + target->zsize);
+
+		terraformCenter = target->pos;
+		terraformRadius = (tx1 - tx2) * SQUARE_SIZE;
+		terraformType = Terraform_Building;
+		terraforming = true;
+	}
+
+	ScriptStartBuilding(target->pos, false);
+}
+
+
+void CFactory::SetReclaimTarget(CSolidObject* target)
+{
+	RECOIL_DETAILED_TRACY_ZONE;
+	if (dynamic_cast<CFeature*>(target) != nullptr && !static_cast<CFeature*>(target)->def->reclaimable)
+		return;
+
+	CUnit* recUnit = dynamic_cast<CUnit*>(target);
+
+	if (recUnit != nullptr && !recUnit->unitDef->reclaimable)
+		return;
+
+	if (curReclaim == target || this == target)
+		return;
+
+	StopBuild(false);
+	TempHoldFire(CMD_RECLAIM);
+
+	reclaimingUnit = (recUnit != nullptr);
+	curReclaim = target;
+
+	AddDeathDependence(curReclaim, DEPENDENCE_RECLAIM);
+
+	ScriptStartBuilding(target->pos, false);
+}
+
+bool CFactory::ScriptStartBuilding(float3 pos, bool silent)
+{
+	RECOIL_DETAILED_TRACY_ZONE;
+	if (script->HasStartBuilding()) {
+		const float3 wantedDir = (pos - midPos).Normalize();
+		const float h = GetHeadingFromVectorF(wantedDir.x, wantedDir.z);
+		const float p = math::asin(wantedDir.dot(updir));
+		const float pitch = math::asin(frontdir.dot(updir));
+
+		// clamping p - pitch not needed, range of asin is -PI/2..PI/2,
+		// so max difference between two asin calls is PI.
+		// FIXME: convert CSolidObject::heading to radians too.
+		script->StartBuilding(ClampRad(h - heading * TAANG2RAD), p - pitch);
+	}
+
+	if ((!silent || inBuildStance) && IsInLosForAllyTeam(gu->myAllyTeam))
+		Channels::General->PlayRandomSample(unitDef->sounds.build, pos);
+
+	return inBuildStance;
+}
+
+
+bool CFactory::CanAssistUnit(const CUnit* u, const UnitDef* def) const
+{
+	RECOIL_DETAILED_TRACY_ZONE;
+	if (!unitDef->canAssist)
+		return false;
+
+	return ((def == nullptr || u->unitDef == def) && u->beingBuilt && (u->buildProgress < 1.0f) && (u->soloBuilder == nullptr || u->soloBuilder == this));
+}
+
+
+bool CFactory::CanRepairUnit(const CUnit* u) const
+{
+	RECOIL_DETAILED_TRACY_ZONE;
+	if (!unitDef->canRepair)
+		return false;
+	if (u->beingBuilt)
+		return false;
+	if (u->health >= u->maxHealth)
+		return false;
+
+	return (u->unitDef->repairable);
 }

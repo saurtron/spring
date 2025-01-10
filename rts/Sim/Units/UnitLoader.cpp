@@ -49,8 +49,9 @@ CCommandAI* CUnitLoader::NewCommandAI(CUnit* u, const UnitDef* ud)
 	static_assert(sizeof( CMobileCAI) <= sizeof(u->caiMemBuffer), "");
 	static_assert(sizeof( CCommandAI) <= sizeof(u->caiMemBuffer), "");
 
-	if (ud->IsFactoryUnit())
+	if (ud->IsFactoryUnit()) {
 		return (new (u->caiMemBuffer) CFactoryCAI(u));
+	}
 
 	if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit())
 		return (new (u->caiMemBuffer) CBuilderCAI(u));
@@ -62,8 +63,9 @@ CCommandAI* CUnitLoader::NewCommandAI(CUnit* u, const UnitDef* ud)
 	if (ud->IsAirUnit())
 		return (new (u->caiMemBuffer) CMobileCAI(u));
 
-	if (ud->IsGroundUnit() || ud->IsTransportUnit())
+	if (ud->IsGroundUnit() || ud->IsTransportUnit()) {
 		return (new (u->caiMemBuffer) CMobileCAI(u));
+	}
 
 	return (new (u->caiMemBuffer) CCommandAI(u));
 }
