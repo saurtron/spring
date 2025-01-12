@@ -616,9 +616,7 @@ bool CUnitDrawerData::UpdateUnitGhosts(const CUnit* unit, const bool addNewGhost
 			// (the ref-counter saves us come deletion time)
 			savedData.deadGhostBuildings[allyTeam][gsoModel->type].push_back(gso);
 			gso->IncRef();
-			// remove prevlos for unit
-			if (u->losStatus[allyTeam] & LOS_PREVLOS)
-				u->losStatus[allyTeam] ^= LOS_PREVLOS;
+			u->losStatus[allyTeam] &= ~LOS_PREVLOS;
 			if (allyTeam == gu->myAllyTeam)
 				addedOwnAllyTeam = true;
 
