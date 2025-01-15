@@ -1618,6 +1618,12 @@ void CCommandAI::SlowUpdateImpl()
 int CCommandAI::GetDefaultCmd(const CUnit* pointed, const CFeature* feature)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	int newCmd = CMDTYPE_NEXT; // TODO: find a better way to signal this, maybe std::optional
+	for(auto behaviourAI: behaviourAIs) {
+		newCmd = behaviourAI->GetDefaultCmd(pointed, feature);
+		if (newCmd != CMDTYPE_NEXT)
+			return newCmd;
+	}
 	if (pointed != nullptr) {
 		if (!teamHandler.Ally(gu->myAllyTeam, pointed->allyteam)) {
 			if (IsAttackCapable())
