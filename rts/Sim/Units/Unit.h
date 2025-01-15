@@ -69,11 +69,6 @@ class CUnit : public CSolidObject
 {
 public:
 	CR_DECLARE(CUnit)
-enum ChangeType {
-	ChangeGiven,
-	ChangeCaptured
-};
-
 
 	CUnit();
 	virtual ~CUnit();
@@ -206,6 +201,10 @@ enum ChangeType {
 	bool ScriptDecloak(const CSolidObject* object, const CWeapon* weapon);
 	bool GetNewCloakState(bool checkStun);
 
+	enum ChangeType {
+		ChangeGiven,
+		ChangeCaptured
+	};
 	virtual bool ChangeTeam(int team, ChangeType type);
 	virtual void StopAttackingAllyTeam(int ally);
 
