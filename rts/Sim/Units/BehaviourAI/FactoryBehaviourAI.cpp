@@ -55,13 +55,11 @@ static std::string GetUnitDefBuildOptionToolTip(const UnitDef* ud, bool disabled
 
 CFactoryBehaviourAI::CFactoryBehaviourAI(): CBehaviourAI()
 {
-	LOG("CFactoryBehaviourAI nil");
 }
 
 
 CFactoryBehaviourAI::CFactoryBehaviourAI(CUnit* owner): CBehaviourAI(owner)
 {
-	LOG("CFactoryBehaviourAI %d", owner->id);
 	auto& possibleCommands = owner->commandAI->possibleCommands;
 	auto& commandQue = owner->commandAI->commandQue;
 

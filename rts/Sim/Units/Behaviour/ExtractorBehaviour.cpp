@@ -61,7 +61,6 @@ CExtractorBehaviour::~CExtractorBehaviour()
 
 void CExtractorBehaviour::PreInit(const UnitLoadParams& params)
 {
-	LOG("CExtractorBehaviour::PreInit");
 	extractionRange = owner->unitDef->extractRange;
 	extractionDepth = owner->unitDef->extractsMetal;
 }

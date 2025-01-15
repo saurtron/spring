@@ -92,7 +92,6 @@ CBuilderBehaviourAI::CBuilderBehaviourAI():
 	lastPC3(-1),
 	range3D(true)
 {
-	LOG("CBuilderBehaviourAI nil");
 }
 
 CBuilderBehaviourAI::CBuilderBehaviourAI(CUnit* owner):
@@ -107,7 +106,6 @@ CBuilderBehaviourAI::CBuilderBehaviourAI(CUnit* owner):
 	lastPC3(-1),
 	range3D(owner->unitDef->buildRange3D)
 {
-	LOG("CBuilderBehaviourAI %d", owner->id);
 	ownerBuilder = owner->GetBehaviour<CBuilderBehaviour>();
 	auto& possibleCommands = owner->commandAI->possibleCommands;
 

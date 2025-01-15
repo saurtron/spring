@@ -89,7 +89,6 @@ void CFactoryBehaviour::KillUnit(CUnit* attacker, bool selfDestruct, bool reclai
 void CFactoryBehaviour::PreInit(const UnitLoadParams& params)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	LOG("CFactoryBehaviour::PreInit %d", owner->id);
 	//unitDef = params.unitDef;
 	//buildSpeed = unitDef->buildSpeed / GAME_SPEED;
 

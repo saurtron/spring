@@ -133,7 +133,6 @@ using std::max;
 void CBuilderBehaviour::PreInit(const UnitLoadParams& params)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	LOG("CBuilderBehaviour::PreInit %d", owner->id);
 	auto& unitDef = params.unitDef;
 	range3D = unitDef->buildRange3D;
 	buildDistance = (params.unitDef)->buildDistance;
