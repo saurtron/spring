@@ -108,6 +108,11 @@ CUnit::~CUnit()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	assert(unitMemPool.mapped(this));
+	for(auto behaviour: behaviours) {
+		spring::SafeDestruct(behaviour);
+
+	}
+	behaviours.clear();
 	// clean up if we are still under MoveCtrl here
 	DisableScriptMoveType();
 

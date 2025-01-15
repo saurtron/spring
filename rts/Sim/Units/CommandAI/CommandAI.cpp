@@ -374,6 +374,10 @@ CCommandAI::CCommandAI(CUnit* owner):
 
 CCommandAI::~CCommandAI()
 {
+	for(auto behaviourAI: behaviourAIs) {
+		spring::SafeDestruct(behaviourAI);
+	}
+	behaviourAIs.clear();
 	SetOrderTarget(nullptr);
 	ClearCommandDependencies();
 	commandDescriptionCache.DecRef(possibleCommands);
