@@ -422,7 +422,7 @@ bool CFactoryBehaviourAI::SlowUpdate()
 					ExecuteStop(c);
 				} break;
 				default: {
-					owner->commandAI->SlowUpdateImpl();
+					owner->commandAI->SlowUpdate();
 				} break;
 			}
 		}

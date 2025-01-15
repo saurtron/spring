@@ -1557,7 +1557,7 @@ void CCommandAI::SlowUpdate()
 			// TODO: maybe should let other behaviourAIs run
 			return;
 	}
-	this->SlowUpdateImpl();
+	SlowUpdateImpl();
 }
 
 void CCommandAI::SlowUpdateImpl()

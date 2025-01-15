@@ -19,7 +19,7 @@ public:
 	CAirCAI();
 
 	int GetDefaultCmd(const CUnit* pointed, const CFeature* feature);
-	void SlowUpdateImpl();
+	void SlowUpdateImpl() override;
 	void GiveCommandReal(const Command& c, bool fromSynced = true);
 	void AddUnit(CUnit* unit);
 	void FinishCommand();

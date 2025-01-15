@@ -386,7 +386,7 @@ void CMobileCAI::Execute()
 		}
 	}
 
-	CCommandAI::SlowUpdate();
+	CCommandAI::SlowUpdateImpl();
 }
 
 /**

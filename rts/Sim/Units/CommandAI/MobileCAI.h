@@ -37,7 +37,7 @@ public:
 
 	bool AllowedCommand(const Command& c, bool fromSynced) override;
 	int GetDefaultCmd(const CUnit* pointed, const CFeature* feature) override;
-	void SlowUpdateImpl() override;
+	virtual void SlowUpdateImpl() override;
 	void GiveCommandReal(const Command& c, bool fromSynced = true) override;
 	void NonMoving();
 	void FinishCommand() override;

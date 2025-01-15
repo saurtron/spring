@@ -30,7 +30,7 @@ public:
 
 	virtual void PreInit(const UnitLoadParams& params) override;
 	//void Update();
-	virtual void SlowUpdate() override;
+	void SlowUpdate() override;
 	virtual void DependentDied(CObject* o) override;
 
 	bool UpdateTerraform(const Command& fCommand);
