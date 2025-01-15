@@ -30,7 +30,6 @@
 #include "Sim/Projectiles/ExplosionListener.h"
 #include "Sim/Projectiles/Projectile.h"
 #include "Sim/Units/CommandAI/MobileCAI.h"
-#include "Sim/Units/UnitTypes/Factory.h"
 #include "Sim/Units/BuildInfo.h"
 #include "Sim/Units/UnitDef.h"
 #include "Sim/Units/Unit.h"

@@ -3,15 +3,15 @@
 #ifndef UNIT_MEMPOOL_H
 #define UNIT_MEMPOOL_H
 
-#include "UnitTypes/Builder.h"
+#include "UnitTypes/Building.h"
 #include "Sim/Misc/GlobalConstants.h"
 #include "System/MemPoolTypes.h"
 
 #if (defined(__x86_64) || defined(__x86_64__) || defined(_M_X64))
 // CBuilder is (currently) the largest derived unit-type
-typedef StaticMemPoolT<MAX_UNITS, CBuilder> UnitMemPool;
+typedef StaticMemPoolT<MAX_UNITS, CBuilding> UnitMemPool;
 #else
-typedef FixedDynMemPoolT<MAX_UNITS / 1000, MAX_UNITS / 32, CBuilder> UnitMemPool;
+typedef FixedDynMemPoolT<MAX_UNITS / 1000, MAX_UNITS / 32, CBuilding> UnitMemPool;
 #endif
 
 extern UnitMemPool unitMemPool;

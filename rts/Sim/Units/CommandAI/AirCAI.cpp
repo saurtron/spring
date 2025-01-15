@@ -165,7 +165,7 @@ void CAirCAI::GiveCommandReal(const Command& c, bool fromSynced)
 	CCommandAI::GiveAllowedCommand(c);
 }
 
-void CAirCAI::SlowUpdate()
+void CAirCAI::SlowUpdateImpl()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	// Commands issued may invoke SlowUpdate when paused

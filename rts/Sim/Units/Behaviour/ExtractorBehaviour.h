@@ -1,31 +1,31 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#ifndef _EXTRACTOR_BUILDING_H
-#define _EXTRACTOR_BUILDING_H
+#ifndef EXTRACTOR_BEHAVIOUR_H
+#define EXTRACTOR_BEHAVIOUR_H
 
-#include <vector>
+#include "Behaviour.h"
 
-#include "Building.h"
+#include "System/float3.h"
 
-class CExtractorBuilding : public CBuilding {
+class CExtractorBehaviour : public CBehaviour
+{
 public:
-	CR_DECLARE_DERIVED(CExtractorBuilding)
+	CR_DECLARE(CExtractorBehaviour)
 	CR_DECLARE_SUB(MetalSquareOfControl)
 
-	CExtractorBuilding(): CBuilding() {
-		extractionRange = 0.0f;
-		extractionDepth = 0.0f;
-	}
-	~CExtractorBuilding();
+	CExtractorBehaviour();
+	CExtractorBehaviour(CUnit* owner);
+
+	~CExtractorBehaviour();
 
 	void PreInit(const UnitLoadParams& params) override;
 
 	void ResetExtraction();
 	void SetExtractionRangeAndDepth(float range, float depth);
 	void ReCalculateMetalExtraction();
-	bool IsNeighbour(CExtractorBuilding* neighbour);
-	void AddNeighbour(CExtractorBuilding* neighbour);
-	void RemoveNeighbour(CExtractorBuilding* neighbour);
+	bool IsNeighbour(CExtractorBehaviour* neighbour);
+	void AddNeighbour(CExtractorBehaviour* neighbour);
+	void RemoveNeighbour(CExtractorBehaviour* neighbour);
 
 	float GetExtractionRange() const { return extractionRange; }
 	float GetExtractionDepth() const { return extractionDepth; }
@@ -43,9 +43,10 @@ protected:
 
 	float extractionRange, extractionDepth;
 	std::vector<MetalSquareOfControl> metalAreaOfControl;
-	std::vector<CExtractorBuilding*> neighbours;
+	std::vector<CExtractorBehaviour*> neighbours;
 
 	static float maxExtractionRange;
+
 };
 
-#endif // _EXTRACTOR_BUILDING_H
+#endif // EXTRACTOR_BEHAVIOUR_H

@@ -6,11 +6,9 @@
 #include "Unit.h"
 #include "UnitDefHandler.h"
 #include "UnitMemPool.h"
-#include "UnitTypes/Builder.h"
-#include "UnitTypes/ExtractorBuilding.h"
-#include "UnitTypes/Factory.h"
+#include "UnitTypes/Building.h"
 
-#include "CommandAI/BuilderCAI.h"
+#include "BehaviourAI/BuilderBehaviourAI.h"
 #include "Sim/Ecs/Registry.h"
 #include "Sim/Misc/GlobalSynced.h"
 #include "Sim/Misc/ModInfo.h"
@@ -69,7 +67,7 @@ CUnitHandler unitHandler;
 CUnit* CUnitHandler::NewUnit(const UnitDef* ud)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	// special static builder structures that can always be given
+	/*// special static builder structures that can always be given
 	// move orders (which are passed on to all mobile buildees)
 	if (ud->IsFactoryUnit())
 		return (unitMemPool.alloc<CFactory>());
@@ -78,12 +76,12 @@ CUnit* CUnitHandler::NewUnit(const UnitDef* ud)
 	// nano-towers (the latter should not have any build-options at all,
 	// whereas the former should be unable to build any mobile units)
 	if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit())
-		return (unitMemPool.alloc<CBuilder>());
+		return (unitMemPool.alloc<CBuilder>());*/
 
 	// static non-builder structures
 	if (ud->IsBuildingUnit()) {
-		if (ud->IsExtractorUnit())
-			return (unitMemPool.alloc<CExtractorBuilding>());
+		/*if (ud->IsExtractorUnit())
+			return (unitMemPool.alloc<CExtractorBuilding>());*/
 
 		return (unitMemPool.alloc<CBuilding>());
 	}
@@ -100,10 +98,10 @@ void CUnitHandler::Init() {
 	GeneralMoveSystem::Init();
 	UnitTrapCheckSystem::Init();
 
-	static_assert(sizeof(CBuilder) >= sizeof(CUnit             ), "");
-	static_assert(sizeof(CBuilder) >= sizeof(CBuilding         ), "");
-	static_assert(sizeof(CBuilder) >= sizeof(CExtractorBuilding), "");
-	static_assert(sizeof(CBuilder) >= sizeof(CFactory          ), "");
+	static_assert(sizeof(CBuilding) >= sizeof(CUnit             ), "");
+	static_assert(sizeof(CBuilding) >= sizeof(CBuilding         ), "");
+	//static_assert(sizeof(CBuilder) >= sizeof(CExtractorBuilding), "");
+	//static_assert(sizeof(CBuilder) >= sizeof(CFactory          ), "");
 
 	{
 		// set the global (runtime-constant) unit-limit as the sum
@@ -467,14 +465,14 @@ void CUnitHandler::Update()
 
 
 
-void CUnitHandler::AddBuilderCAI(CBuilderCAI* b)
+void CUnitHandler::AddBuilderCAI(CBuilderBehaviourAI* b)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	// called from CBuilderCAI --> owner is already valid
 	builderCAIs[b->owner->id] = b;
 }
 
-void CUnitHandler::RemoveBuilderCAI(CBuilderCAI* b)
+void CUnitHandler::RemoveBuilderCAI(CBuilderBehaviourAI* b)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	// called from ~CUnit --> owner is still valid

@@ -12,7 +12,7 @@
 
 struct UnitDef;
 class CUnit;
-class CBuilderCAI;
+class CBuilderBehaviourAI;
 
 class CUnitHandler
 {
@@ -51,8 +51,8 @@ public:
 	bool CanBuildUnit(const UnitDef* unitdef, int team) const;
 	bool GarbageCollectUnit(unsigned int id);
 
-	void AddBuilderCAI(CBuilderCAI*);
-	void RemoveBuilderCAI(CBuilderCAI*);
+	void AddBuilderCAI(CBuilderBehaviourAI*);
+	void RemoveBuilderCAI(CBuilderBehaviourAI*);
 
 	void ChangeUnitTeam(CUnit* unit, int oldTeamNum, int newTeamNum);
 
@@ -72,7 +72,7 @@ public:
 	std::vector<CUnit*>& GetUnitsByTeam      (int teamNum               ) { return unitsByDefs[teamNum][        0]; }
 	std::vector<CUnit*>& GetUnitsByTeamAndDef(int teamNum, int unitDefID) { return unitsByDefs[teamNum][unitDefID]; }
 
-	const spring::unordered_map<unsigned int, CBuilderCAI*>& GetBuilderCAIs() const { return builderCAIs; }
+	const spring::unordered_map<unsigned int, CBuilderBehaviourAI*>& GetBuilderCAIs() const { return builderCAIs; }
 
 private:
 	void InsertActiveUnit(CUnit* unit);
@@ -100,7 +100,7 @@ private:
 	std::vector<CUnit*> activeUnits;                                     ///< used to get all active units
 	std::vector<CUnit*> unitsToBeRemoved;                                ///< units that will be removed at start of next update
 
-	spring::unordered_map<unsigned int, CBuilderCAI*> builderCAIs;
+	spring::unordered_map<unsigned int, CBuilderBehaviourAI*> builderCAIs;
 
 
 	size_t activeSlowUpdateUnit = 0;  ///< first unit of batch that will be SlowUpdate'd this frame

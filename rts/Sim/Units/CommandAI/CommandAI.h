@@ -15,6 +15,7 @@
 class CUnit;
 class CFeature;
 class CWeapon;
+class CBehaviourAI;
 struct Command;
 
 class CCommandAI : public CObject
@@ -50,6 +51,7 @@ public:
 	virtual bool CanWeaponAutoTarget(const CWeapon* weapon) const { return true; }
 	virtual int GetDefaultCmd(const CUnit* pointed, const CFeature* feature);
 	virtual void SlowUpdate();
+	virtual void SlowUpdateImpl();
 	virtual void GiveCommandReal(const Command& c, bool fromSynced = true);
 	virtual void FinishCommand();
 
@@ -142,7 +144,9 @@ protected:
 	bool IsAttackCapable() const;
 	bool SkipParalyzeTarget(const CUnit* target) const;
 
+public:
 	void GiveAllowedCommand(const Command& c, bool fromSynced = true);
+protected:
 	void GiveWaitCommand(const Command& c);
 	/**
 	 * @brief Returns the command that keeps the unit close to the path
@@ -151,7 +155,9 @@ protected:
 	 *   the location of the original command.
 	 */
 	void PushOrUpdateReturnFight(const float3& cmdPos1, const float3& cmdPos2);
+public:
 	int UpdateTargetLostTimer(int unitID);
+protected:
 	void DrawDefaultCommand(const Command& c) const;
 
 private:
@@ -163,6 +169,10 @@ private:
 	 * timer reaches 0
 	 */
 	int targetLostTimer;
+
+public:
+	std::vector<CBehaviourAI*> behaviourAIs;
+	template<class C> C* GetBehaviourAI() const;
 };
 
 inline void CCommandAI::SetOrderTarget(CUnit* o) {
@@ -177,5 +187,15 @@ inline void CCommandAI::SetOrderTarget(CUnit* o) {
 		AddDeathDependence(reinterpret_cast<CObject*>(orderTarget), DEPENDENCE_ORDERTARGET);
 	}
 }
+
+template<class C>
+inline C* CCommandAI::GetBehaviourAI() const
+{
+	for(auto behaviourAI: behaviourAIs) {
+		if (typeid(*behaviourAI) == typeid(C))
+			return dynamic_cast<C*>(behaviourAI);
+	}
+	return nullptr;
+};
 
 #endif // _COMMAND_AI_H

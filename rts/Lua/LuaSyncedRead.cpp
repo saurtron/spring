@@ -60,12 +60,13 @@
 #include "Sim/Units/UnitDefHandler.h"
 #include "Sim/Units/UnitLoader.h"
 #include "Sim/Units/UnitToolTipMap.hpp"
-#include "Sim/Units/UnitTypes/Builder.h"
-#include "Sim/Units/UnitTypes/Factory.h"
+#include "Sim/Units/Behaviour/BuilderBehaviour.h"
+#include "Sim/Units/Behaviour/FactoryBehaviour.h"
+#include "Sim/Units/BehaviourAI/BuilderBehaviourAI.h"
+#include "Sim/Units/BehaviourAI/FactoryBehaviourAI.h"
 #include "Sim/Units/CommandAI/Command.h"
 #include "Sim/Units/CommandAI/CommandDescription.h"
 #include "Sim/Units/CommandAI/CommandAI.h"
-#include "Sim/Units/CommandAI/FactoryCAI.h"
 #include "Sim/Units/CommandAI/MobileCAI.h"
 #include "Sim/Units/Scripts/UnitScript.h"
 #include "Sim/Weapons/PlasmaRepulser.h"
@@ -4543,14 +4544,15 @@ int LuaSyncedRead::GetUnitIsBuilding(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
-	const CBuilder* builder = dynamic_cast<const CBuilder*>(unit);
+	// TODO: Try with CBaseBuilderBehaviour
+	const CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>();
 
 	if (builder != nullptr && builder->curBuild) {
 		lua_pushnumber(L, builder->curBuild->id);
 		return 1;
 	}
 
-	const CFactory* factory = dynamic_cast<const CFactory*>(unit);
+	const CFactoryBehaviour* factory = unit->GetBehaviour<CFactoryBehaviour>();
 
 	if (factory != nullptr && factory->curBuild) {
 		lua_pushnumber(L, factory->curBuild->id);
@@ -4560,7 +4562,7 @@ int LuaSyncedRead::GetUnitIsBuilding(lua_State* L)
 	return 0;
 }
 
-static int GetBuilderWorkerTask(lua_State* L, const CBuilder *builder)
+static int GetBuilderWorkerTask(lua_State* L, const CBuilderBehaviour *builder)
 {
 	assert(builder != nullptr);
 
@@ -4599,7 +4601,7 @@ static int GetBuilderWorkerTask(lua_State* L, const CBuilder *builder)
 	}
 }
 
-static int GetFactoryWorkerTask(lua_State* L, const CFactory *factory)
+static int GetFactoryWorkerTask(lua_State* L, const CFactoryBehaviour *factory)
 {
 	assert(factory != nullptr);
 
@@ -4641,9 +4643,9 @@ int LuaSyncedRead::GetUnitWorkerTask(lua_State* L)
 		return 0;
 
 	// perhaps this should be some sort of virtual function of CUnit?
-	if (const auto builder = dynamic_cast <const CBuilder *> (unit); builder)
+	if (const CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>())
 		return GetBuilderWorkerTask(L, builder);
-	if (const auto factory = dynamic_cast <const CFactory *> (unit); factory)
+	if (const CFactoryBehaviour* factory = unit->GetBehaviour<CFactoryBehaviour>())
 		return GetFactoryWorkerTask(L, factory);
 
 	return 0;
@@ -4663,7 +4665,7 @@ int LuaSyncedRead::GetUnitEffectiveBuildRange(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
-	const auto builderCAI = dynamic_cast <const CBuilderCAI*> (unit->commandAI);
+	const auto builderCAI = unit->commandAI->GetBehaviourAI<CBuilderBehaviourAI>();
 	if (builderCAI == nullptr)
 		return 0;
 
@@ -4719,12 +4721,12 @@ int LuaSyncedRead::GetUnitCurrentBuildPower(lua_State* L)
 	const NanoPieceCache* pieceCache = nullptr;
 
 	{
-		const CBuilder* builder = dynamic_cast<const CBuilder*>(unit);
+		const CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>();
 
 		if (builder != nullptr)
 			pieceCache = &builder->GetNanoPieceCache();
 
-		const CFactory* factory = dynamic_cast<const CFactory*>(unit);
+		const CFactoryBehaviour* factory = unit->GetBehaviour<CFactoryBehaviour>();
 
 		if (factory != nullptr)
 			pieceCache = &factory->GetNanoPieceCache();
@@ -4775,7 +4777,7 @@ int LuaSyncedRead::GetUnitBuildParams(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
-	const CBuilder* builder = dynamic_cast<const CBuilder*>(unit);
+	const CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>();
 
 	if (builder == nullptr)
 		return 0;
@@ -4813,12 +4815,12 @@ int LuaSyncedRead::GetUnitInBuildStance(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
-	const CBuilder* builder = dynamic_cast<const CBuilder*>(unit);
+	const CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>();
 
 	if (builder == nullptr)
 		return 0;
 
-	lua_pushboolean(L, builder->inBuildStance);
+	lua_pushboolean(L, unit->inBuildStance);
 	return 1;
 }
 
@@ -4846,14 +4848,14 @@ int LuaSyncedRead::GetUnitNanoPieces(lua_State* L)
 	const std::vector<int>* nanoPieces = nullptr;
 
 	{
-		const CBuilder* builder = dynamic_cast<const CBuilder*>(unit);
+		const CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>();
 
 		if (builder != nullptr) {
 			pieceCache = &builder->GetNanoPieceCache();
 			nanoPieces = &pieceCache->GetNanoPieces();
 		}
 
-		const CFactory* factory = dynamic_cast<const CFactory*>(unit);
+		const CFactoryBehaviour* factory = unit->GetBehaviour<CFactoryBehaviour>();
 
 		if (factory != nullptr) {
 			pieceCache = &factory->GetNanoPieceCache();
@@ -6067,7 +6069,7 @@ int LuaSyncedRead::GetUnitCurrentCommand(lua_State* L)
 		return 0;
 
 	const CCommandAI* commandAI = unit->commandAI; // never null
-	const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
+	const CFactoryBehaviourAI* factoryCAI = commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
 	const CCommandQueue* queue = (factoryCAI == nullptr)? &commandAI->commandQue : &factoryCAI->newUnitCommands;
 
 	int cmdIndex = luaL_optint(L, 2, 1);
@@ -6137,7 +6139,7 @@ int LuaSyncedRead::GetUnitCommands(lua_State* L)
 
 	const CCommandAI* commandAI = unit->commandAI;
 	// send the new unit commands for factories, otherwise the normal commands
-	const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
+	const CFactoryBehaviourAI* factoryCAI = commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
 	const CCommandQueue* queue = (factoryCAI == nullptr)? &commandAI->commandQue : &factoryCAI->newUnitCommands;
 
 	const int  numCmds   = luaL_checkint(L, 2); // must always be given, -1 is a performance pitfall
@@ -6175,13 +6177,13 @@ int LuaSyncedRead::GetFactoryCommands(lua_State* L)
 		return 0;
 
 	const CCommandAI* commandAI = unit->commandAI;
-	const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
+	const CFactoryBehaviourAI* factoryCAI = commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
 
 	// bail if not a factory
 	if (factoryCAI == nullptr)
 		return 0;
 
-	const CCommandQueue& commandQue = factoryCAI->commandQue;
+	const CCommandQueue& commandQue = commandAI->commandQue;
 
 	const int  numCmds   = luaL_checkint(L, 2);
 	const bool cmdsTable = luaL_optboolean(L, 3, true); // deprecated, prefer to set 2nd arg to 0
@@ -6208,7 +6210,7 @@ int LuaSyncedRead::GetUnitCommandCount(lua_State* L)
 
 	const CCommandAI* commandAI = unit->commandAI;
 
-	const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
+	const CFactoryBehaviourAI* factoryCAI = commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
 	const CCommandQueue* queue = (factoryCAI == nullptr)? &commandAI->commandQue : &factoryCAI->newUnitCommands;
 
 	lua_pushnumber(L, queue->size());
@@ -6227,7 +6229,7 @@ int LuaSyncedRead::GetFactoryBuggerOff(lua_State* L)
 	if (u == nullptr)
 		return 0;
 
-	const CFactory* f = dynamic_cast<const CFactory*>(u);
+	const CFactoryBehaviour* f = u->GetBehaviour<CFactoryBehaviour>();
 	if (f == nullptr)
 		return 0;
 
@@ -6312,12 +6314,12 @@ int LuaSyncedRead::GetFactoryCounts(lua_State* L)
 		return 0;
 
 	const CCommandAI* commandAI = unit->commandAI;
-	const CFactoryCAI* factoryCAI = dynamic_cast<const CFactoryCAI*>(commandAI);
+	const CFactoryBehaviourAI* factoryCAI = commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
 
 	if (factoryCAI == nullptr)
 		return 0; // not a factory, bail
 
-	const CCommandQueue& commandQue = factoryCAI->commandQue;
+	const CCommandQueue& commandQue = commandAI->commandQue;
 
 	// get the desired number of commands to return
 	int count = luaL_optint(L, 2, -1);

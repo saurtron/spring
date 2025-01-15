@@ -1,10 +1,10 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#ifndef _FACTORY_AI_H_
-#define _FACTORY_AI_H_
+#ifndef _FACTORY_BEHAVIOUR_AI_H_
+#define _FACTORY_BEHAVIOUR_AI_H_
 
-#include "CommandAI.h"
-#include "CommandQueue.h"
+#include "BehaviourAI.h"
+#include "Sim/Units/CommandAI/CommandQueue.h"
 
 #include <string>
 #include "System/UnorderedMap.hpp"
@@ -13,18 +13,18 @@ class CUnit;
 class CFeature;
 struct Command;
 
-class CFactoryCAI : public CCommandAI
+class CFactoryBehaviourAI : public CBehaviourAI
 {
 public:
-	CR_DECLARE(CFactoryCAI)
+	CR_DECLARE(CFactoryBehaviourAI)
 
-	CFactoryCAI(CUnit* owner);
-	CFactoryCAI();
+	CFactoryBehaviourAI(CUnit* owner);
+	CFactoryBehaviourAI();
 
 	int GetDefaultCmd(const CUnit* pointed, const CFeature* feature);
-	void SlowUpdate();
+	virtual bool SlowUpdate() override;
 
-	void GiveCommandReal(const Command& c, bool fromSynced = true);
+	bool GiveCommandReal(const Command& c, bool fromSynced = true) override;
 
 	void InsertBuildCommand(CCommandQueue::iterator& it, const Command& c);
 	bool RemoveBuildCommand(CCommandQueue::iterator& it);
@@ -39,6 +39,8 @@ public:
 
 private:
 	void UpdateIconName(int id, const int& numQueued);
+private:
+	void FinishCommand();
 };
 
 #endif // _FACTORY_AI_H_

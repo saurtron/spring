@@ -8,17 +8,17 @@
 #include "UnitMemPool.h"
 #include "UnitToolTipMap.hpp"
 #include "UnitTypes/Building.h"
-#include "UnitTypes/ExtractorBuilding.h"
 #include "Scripts/NullUnitScript.h"
 #include "Scripts/UnitScriptFactory.h"
 #include "Scripts/CobInstance.h" // for TAANG2RAD
 
+#include "Behaviour/Behaviour.h"
+#include "Behaviour/ExtractorBehaviour.h"
+#include "BehaviourAI/FactoryBehaviourAI.h"
+#include "BehaviourAI/BuilderBehaviourAI.h"
+
 #include "CommandAI/CommandAI.h"
-#include "CommandAI/FactoryCAI.h"
 #include "CommandAI/AirCAI.h"
-#include "CommandAI/BuilderCAI.h"
-#include "CommandAI/CommandAI.h"
-#include "CommandAI/FactoryCAI.h"
 #include "CommandAI/MobileCAI.h"
 #include "CommandAI/BuilderCaches.h"
 
@@ -316,6 +316,10 @@ void CUnit::PreInit(const UnitLoadParams& params)
 		deathExpDamages = DynDamageArray::IncRef(&unitDef->deathExpWeaponDef->damages);
 
 	commandAI = CUnitLoader::NewCommandAI(this, unitDef);
+
+	/*for(auto behaviour: behaviours) {
+		behaviour->PreInit(params);
+	}*/
 }
 
 
@@ -369,7 +373,7 @@ void CUnit::PostInit(const CUnit* builder)
 		if (unitDef->fireState <= FIRESTATE_NONE) {
 			// inherit our builder's firestate (if it is a factory)
 			// if no builder, CUnit's default (fire-at-will) is set
-			if (builder != nullptr && dynamic_cast<CFactoryCAI*>(builder->commandAI) != nullptr)
+			if (builder != nullptr && builder->commandAI->GetBehaviourAI<CFactoryBehaviourAI>() != nullptr)
 				fireState = builder->fireState;
 
 		} else {
@@ -464,6 +468,9 @@ void CUnit::FinishedBuilding(bool postInit)
 void CUnit::KillUnit(CUnit* attacker, bool selfDestruct, bool reclaimed, int weaponDefID)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	for(auto behaviour: behaviours) {
+		behaviour->KillUnit(attacker, selfDestruct, reclaimed, weaponDefID);
+	}
 	if (IsCrashing() && !beingBuilt)
 		return;
 
@@ -660,6 +667,10 @@ void CUnit::Update()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	ASSERT_SYNCED(pos);
+
+	for(auto behaviour: behaviours) {
+		behaviour->UpdatePre();
+	}
 
 	UpdatePhysicalState(0.1f);
 	UpdatePosErrorParams(true, false);
@@ -960,6 +971,9 @@ void CUnit::SetStunned(bool stun) {
 void CUnit::SlowUpdate()
 {
 	ZoneScoped;
+	for(auto behaviour: behaviours) {
+		behaviour->SlowUpdate();
+	}
 	UpdatePosErrorParams(false, true);
 
 	DoWaterDamage();
@@ -1606,17 +1620,17 @@ void CUnit::ChangeTeamReset()
 
 	{
 		// clear the build commands for factories
-		CFactoryCAI* facAI = dynamic_cast<CFactoryCAI*>(commandAI);
+		CFactoryBehaviourAI* facAI = commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
 
 		if (facAI != nullptr) {
 			std::vector<Command> clearCommands;
-			clearCommands.reserve(facAI->commandQue.size());
+			clearCommands.reserve(commandAI->commandQue.size());
 
-			for (auto& cmd: facAI->commandQue) {
+			for (auto& cmd: commandAI->commandQue) {
 				clearCommands.emplace_back(cmd.GetID(), RIGHT_MOUSE_KEY);
 			}
 			for (auto& cmd: clearCommands) {
-				facAI->GiveCommand(cmd);
+				commandAI->GiveCommand(cmd);
 			}
 		}
 	}
@@ -1794,6 +1808,9 @@ void CUnit::SetLastAttacker(CUnit* attacker)
 void CUnit::DependentDied(CObject* o)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	for(auto behaviour: behaviours) {
+		behaviour->DependentDied(o);
+	}
 	TransporteeKilled(o);
 
 	if (o == curTarget.unit)
@@ -2056,7 +2073,7 @@ bool CUnit::AddBuildPower(CUnit* builder, float amount)
 			SetStorage(0.0f);
 
 			// make sure neighbor extractors update
-			CExtractorBuilding* extractor = dynamic_cast<CExtractorBuilding*>(this);
+			CExtractorBehaviour* extractor = GetBehaviour<CExtractorBehaviour>();
 			if (extractor != nullptr)
 				extractor->ResetExtraction();
 
@@ -2362,6 +2379,10 @@ void CUnit::Activate()
 
 	if (IsInLosForAllyTeam(gu->myAllyTeam))
 		Channels::General->PlayRandomSample(unitDef->sounds.activate, this);
+
+	for(auto behaviour: behaviours) {
+		behaviour->Activate();
+	}
 }
 
 
@@ -2379,6 +2400,10 @@ void CUnit::Deactivate()
 
 	if (IsInLosForAllyTeam(gu->myAllyTeam))
 		Channels::General->PlayRandomSample(unitDef->sounds.deactivate, this);
+
+	for(auto behaviour: behaviours) {
+		behaviour->Deactivate();
+	}
 }
 
 
@@ -2853,6 +2878,7 @@ short CUnit::GetTransporteeWantedHeading(const CUnit* unit) const {
 	// transported structures want to face a cardinal direction
 	return (GetHeadingFromFacing(unit->buildFacing));
 }
+
 
 /******************************************************************************/
 /******************************************************************************/

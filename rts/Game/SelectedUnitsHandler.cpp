@@ -24,7 +24,7 @@
 #include "Sim/Units/UnitDef.h"
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Units/UnitToolTipMap.hpp"
-#include "Sim/Units/CommandAI/BuilderCAI.h"
+#include "Sim/Units/BehaviourAI/BuilderBehaviourAI.h"
 #include "Sim/Units/CommandAI/CommandAI.h"
 #include "Game/UI/Groups/GroupHandler.h"
 #include "Game/UI/Groups/Group.h"
@@ -691,7 +691,7 @@ void CSelectedUnitsHandler::Draw()
 						glColor4fv(cmdColors.buildBox);
 						myColor = true;
 					}
-					commandDrawer->DrawQuedBuildingSquares(builderCAI);
+					commandDrawer->DrawQuedBuildingSquares(builder->commandAI);
 				}
 
 				else if (teamHandler.AlliedTeams(builder->team, gu->myTeam)) {
@@ -699,7 +699,7 @@ void CSelectedUnitsHandler::Draw()
 						glColor4fv(cmdColors.allyBuildBox);
 						myColor = false;
 					}
-					commandDrawer->DrawQuedBuildingSquares(builderCAI);
+					commandDrawer->DrawQuedBuildingSquares(builder->commandAI);
 				}
 			}
 		}

@@ -16,6 +16,7 @@
 #include "Sim/MoveTypes/HoverAirMoveType.h"
 #include "Sim/MoveTypes/MoveDefHandler.h"
 #include "Sim/MoveTypes/MoveMath/MoveMath.h"
+#include "Sim/Units/BehaviourAI/BehaviourAI.h"
 #include "Sim/Units/UnitDef.h"
 #include "Sim/Units/Unit.h"
 #include "Sim/Units/UnitHandler.h"
@@ -262,6 +263,11 @@ CMobileCAI::~CMobileCAI()
 void CMobileCAI::GiveCommandReal(const Command& c, bool fromSynced)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	for(auto behaviourAI: behaviourAIs) {
+		if (behaviourAI->GiveCommandReal(c, fromSynced))
+			return;
+	}
+
 	if (!AllowedCommand(c, fromSynced))
 		return;
 
@@ -333,7 +339,7 @@ void CMobileCAI::GiveCommandReal(const Command& c, bool fromSynced)
 }
 
 
-void CMobileCAI::SlowUpdate()
+void CMobileCAI::SlowUpdateImpl()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (gs->paused) // Commands issued may invoke SlowUpdate when paused
@@ -1013,6 +1019,11 @@ void CMobileCAI::StopMoveAndKeepPointing(const float3& p, const float r, bool b)
 void CMobileCAI::BuggerOff(const float3& pos, float radius)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	for(auto behaviourAI: behaviourAIs) {
+		if (behaviourAI->BuggerOff(pos, radius))
+			return;
+	}
+
 	if (radius < 0.0f) {
 		// AttachUnit call
 		lastBuggerOffTime = gs->frameNum - BUGGER_OFF_TTL;

@@ -33,7 +33,7 @@
 #include "Sim/Units/Unit.h"
 #include "Sim/Units/UnitDef.h"
 #include "Sim/Units/UnitHandler.h"
-#include "Sim/Units/UnitTypes/Builder.h"
+#include "Sim/Units/Behaviour/BuilderBehaviour.h"
 #include "Sim/Weapons/Weapon.h"
 #include "Sim/Weapons/WeaponDefHandler.h"
 #include "Map/ReadMap.h"
@@ -424,15 +424,15 @@ void DumpState(int newMinFrameNum, int newMaxFrameNum, int newFramePeriod, std::
 		#endif
 
 		#ifdef DUMP_UNIT_BUILDER_DATA
-		if (const CBuilder* b = dynamic_cast<const CBuilder*>(u); b != nullptr) {
-			file << "\t\t\tThe unit is CBuilder:\n";
+		if (const CBuilderBehaviour* b = u->GetBehaviour<CBuilderBehaviour>(); b != nullptr) {
+			file << "\t\t\tThe unit is Builder:\n";
 			file << "\t\t\t\tcurResurrect: " << DumpSolidObjectID(b->curResurrect);
 			file << "\t\t\t\tlastResurrected: " << b->lastResurrected << "\n";
 			file << "\t\t\t\tcurBuild: " << DumpSolidObjectID(b->curBuild);
 			file << "\t\t\t\tcurCapture: " << DumpSolidObjectID(b->curCapture);
 			file << "\t\t\t\tcurReclaim: " << DumpSolidObjectID(b->curReclaim);
 			file << "\t\t\t\treclaimingUnit: " << (b->reclaimingUnit ? 1 : 0) << "\n";
-			file << "\t\t\t\thelpTerraform: " << DumpSolidObjectID(b->helpTerraform);
+			file << "\t\t\t\thelpTerraform: " << DumpSolidObjectID(b->helpTerraform ? b->helpTerraform->owner : nullptr);
 			file << "\t\t\t\tterraforming: " << (b->terraforming ? 1 : 0) << "\n";
 			file << "\t\t\t\tterraformHelp: " << TapFloats(b->terraformHelp);
 			file << "\t\t\t\tmyTerraformLeft: " << TapFloats(b->myTerraformLeft);

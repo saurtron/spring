@@ -33,7 +33,7 @@
 #include "Rendering/Env/Particles/Classes/WreckProjectile.h"
 #include "Sim/Units/CommandAI/CommandAI.h"
 #include "Sim/Units/CommandAI/Command.h"
-#include "Sim/Units/UnitTypes/Factory.h"
+#include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "Sim/Units/UnitDef.h"
 #include "Sim/Units/Unit.h"
 #include "Sim/Units/UnitHandler.h"
@@ -1482,9 +1482,9 @@ void CUnitScript::SetUnitVal(int val, int param)
 
 		case BUGGER_OFF: {
 			if (param != 0) {
-				if (const auto* f = dynamic_cast<CFactory*>(unit)) {
-					float3 boDir = (f->boRelHeading == 0) ? static_cast<float3>(f->frontdir) : GetVectorFromHeading((f->heading + f->boRelHeading) % SPRING_MAX_HEADING);
-					CGameHelper::BuggerOff(f->pos + boDir * f->boOffset, f->boRadius, f->boSherical, f->boForced, f->team, nullptr);
+				if (const auto* f = unit->GetBehaviour<CFactoryBehaviour>()) {
+					float3 boDir = (f->boRelHeading == 0) ? static_cast<float3>(unit->frontdir) : GetVectorFromHeading((unit->heading + f->boRelHeading) % SPRING_MAX_HEADING);
+					CGameHelper::BuggerOff(unit->pos + boDir * f->boOffset, f->boRadius, f->boSherical, f->boForced, unit->team, nullptr);
 				} else {
 					assert(false); //should not be happening with non-factory units?
 					CGameHelper::BuggerOff(unit->pos + unit->frontdir * unit->radius, unit->radius * 1.5f, true, false, unit->team, nullptr);

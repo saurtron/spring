@@ -11,6 +11,7 @@ class CCommandQueue {
 
 	friend class CCommandAI;
 	friend class CFactoryCAI;
+	friend class CFactoryBehaviourAI;
 
 	// see CommandAI.cpp for further creg stuff for this class
 	CR_DECLARE_STRUCT(CCommandQueue)
@@ -104,6 +105,7 @@ class CCommandQueue {
 
 	private:
 		inline int GetNextTag();
+	public:
 		inline void SetQueueType(QueueType type) { queueType = type; }
 
 	private:

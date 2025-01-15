@@ -62,12 +62,11 @@
 #include "Sim/Units/UnitToolTipMap.hpp"
 #include "Sim/Units/Scripts/CobInstance.h"
 #include "Sim/Units/Scripts/LuaUnitScript.h"
-#include "Sim/Units/UnitTypes/Builder.h"
-#include "Sim/Units/UnitTypes/Factory.h"
+#include "Sim/Units/Behaviour/BuilderBehaviour.h"
+#include "Sim/Units/Behaviour/ExtractorBehaviour.h"
+#include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "Sim/Units/CommandAI/Command.h"
 #include "Sim/Units/CommandAI/CommandAI.h"
-#include "Sim/Units/CommandAI/FactoryCAI.h"
-#include "Sim/Units/UnitTypes/ExtractorBuilding.h"
 #include "Sim/Weapons/PlasmaRepulser.h"
 #include "Sim/Weapons/Weapon.h"
 #include "Sim/Weapons/WeaponDefHandler.h"
@@ -2796,7 +2795,8 @@ int LuaSyncedCtrl::SetUnitMetalExtraction(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
-	CExtractorBuilding* mex = dynamic_cast<CExtractorBuilding*>(unit);
+	//CExtractorBuilding* mex = dynamic_cast<CExtractorBuilding*>(unit);
+	CExtractorBehaviour* mex = unit->GetBehaviour<CExtractorBehaviour>();
 
 	if (mex == nullptr)
 		return 0;
@@ -2845,7 +2845,7 @@ int LuaSyncedCtrl::SetUnitBuildParams(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
-	CBuilder* builder = dynamic_cast<CBuilder*>(unit);
+	CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>();
 
 	if (builder == nullptr)
 		return 0;
@@ -2883,14 +2883,14 @@ int LuaSyncedCtrl::SetUnitBuildSpeed(lua_State* L)
 
 	const float buildSpeed = INV_GAME_SPEED * max(0.0f, luaL_checkfloat(L, 2));
 
-	CFactory* factory = dynamic_cast<CFactory*>(unit);
+	CFactoryBehaviour* factory = unit->GetBehaviour<CFactoryBehaviour>();
 
 	if (factory != nullptr) {
 		factory->buildSpeed = buildSpeed;
 		return 0;
 	}
 
-	CBuilder* builder = dynamic_cast<CBuilder*>(unit);
+	CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>();
 
 	if (builder == nullptr)
 		return 0;
@@ -2937,14 +2937,14 @@ int LuaSyncedCtrl::SetUnitNanoPieces(lua_State* L)
 	std::vector<int>* nanoPieces = nullptr;
 
 	{
-		CBuilder* builder = dynamic_cast<CBuilder*>(unit);
+		CBuilderBehaviour* builder = unit->GetBehaviour<CBuilderBehaviour>();
 
 		if (builder != nullptr) {
 			pieceCache = &builder->GetNanoPieceCache();
 			nanoPieces = &pieceCache->GetNanoPieces();
 		}
 
-		CFactory* factory = dynamic_cast<CFactory*>(unit);
+		CFactoryBehaviour* factory = unit->GetBehaviour<CFactoryBehaviour>();
 
 		if (factory != nullptr) {
 			pieceCache = &factory->GetNanoPieceCache();
@@ -3885,7 +3885,7 @@ int LuaSyncedCtrl::SetFactoryBuggerOff(lua_State* L)
 	if (u == nullptr)
 		return 0;
 
-	CFactory* f = dynamic_cast<CFactory*>(u);
+	CFactoryBehaviour* f = u->GetBehaviour<CFactoryBehaviour>();
 	if (f == nullptr)
 		return 0;
 

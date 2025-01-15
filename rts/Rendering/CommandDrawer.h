@@ -8,8 +8,6 @@
 struct Command;
 class CCommandAI;
 class CAirCAI;
-class CBuilderCAI;
-class CFactoryCAI;
 class CMobileCAI;
 class CUnit;
 
@@ -22,15 +20,15 @@ public:
 
 	void Draw(const CCommandAI*, int queueDrawDepth = -1) const;
 	void DrawLuaQueuedUnitSetCommands() const;
-	void DrawQuedBuildingSquares(const CBuilderCAI*) const;
+	void DrawQuedBuildingSquares(const CCommandAI*) const;
 
 	void AddLuaQueuedUnit(const CUnit* unit, int queueDrawDepth = 0);
 
 private:
 	void DrawCommands(const CCommandAI*, int queueDrawDepth) const;
 	void DrawAirCAICommands(const CAirCAI*, int queueDrawDepth) const;
-	void DrawBuilderCAICommands(const CBuilderCAI*, int queueDrawDepth) const;
-	void DrawFactoryCAICommands(const CFactoryCAI*, int queueDrawDepth) const;
+	void DrawBuilderCAICommands(const CCommandAI*, int queueDrawDepth) const;
+	void DrawFactoryCAICommands(const CCommandAI*, int queueDrawDepth) const;
 	void DrawMobileCAICommands(const CMobileCAI*, int queueDrawDepth) const;
 
 	void DrawWaitIcon(const Command&) const;

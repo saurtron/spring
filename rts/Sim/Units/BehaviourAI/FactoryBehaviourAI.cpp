@@ -1,7 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 
-#include "FactoryCAI.h"
+#include "FactoryBehaviourAI.h"
 #include "ExternalAI/EngineOutHandler.h"
 #include "Sim/Misc/GlobalSynced.h"
 #include "Game/GameHelper.h"
@@ -13,7 +13,8 @@
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Units/UnitLoader.h"
 #include "Sim/Units/UnitDefHandler.h"
-#include "Sim/Units/UnitTypes/Factory.h"
+//#include "Sim/Units/UnitTypes/Factory.h"
+#include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "System/Log/ILog.h"
 #include "System/creg/STL_Map.h"
 #include "System/StringUtil.h"
@@ -22,9 +23,11 @@
 
 #include "System/Misc/TracyDefs.h"
 
-CR_BIND_DERIVED(CFactoryCAI ,CCommandAI , )
+template CFactoryBehaviourAI* CCommandAI::GetBehaviourAI<CFactoryBehaviourAI>() const;
 
-CR_REG_METADATA(CFactoryCAI , (
+CR_BIND_DERIVED(CFactoryBehaviourAI, CBehaviourAI , )
+
+CR_REG_METADATA(CFactoryBehaviourAI , (
 	CR_MEMBER(newUnitCommands),
 	CR_MEMBER(buildOptions),
 	CR_PREALLOC(GetPreallocContainer)
@@ -50,12 +53,18 @@ static std::string GetUnitDefBuildOptionToolTip(const UnitDef* ud, bool disabled
 
 
 
-CFactoryCAI::CFactoryCAI(): CCommandAI()
-{}
-
-
-CFactoryCAI::CFactoryCAI(CUnit* owner): CCommandAI(owner)
+CFactoryBehaviourAI::CFactoryBehaviourAI(): CBehaviourAI()
 {
+	LOG("CFactoryBehaviourAI nil");
+}
+
+
+CFactoryBehaviourAI::CFactoryBehaviourAI(CUnit* owner): CBehaviourAI(owner)
+{
+	LOG("CFactoryBehaviourAI %d", owner->id);
+	auto& possibleCommands = owner->commandAI->possibleCommands;
+	auto& commandQue = owner->commandAI->commandQue;
+
 	commandQue.SetQueueType(CCommandQueue::BuildQueueType);
 	newUnitCommands.SetQueueType(CCommandQueue::NewUnitQueueType);
 
@@ -111,9 +120,10 @@ CFactoryCAI::CFactoryCAI(CUnit* owner): CCommandAI(owner)
 		possibleCommands.push_back(commandDescriptionCache.GetPtr(std::move(c)));
 	}
 
-	CFactory* fac = static_cast<CFactory*>(owner);
+	//CFactory* fac = static_cast<CFactory*>(owner);
+	//CFactoryBehaviour* fac = owner->GetBehaviour<CFactoryBehaviour>();
 
-	for (const auto& bi: fac->unitDef->buildOptions) {
+	for (const auto& bi: owner->unitDef->buildOptions) {
 		const std::string& name = bi.second;
 		const UnitDef* ud = unitDefHandler->GetUnitDefByName(name);
 
@@ -152,14 +162,17 @@ static constexpr int GetCountMultiplierFromOptions(int opts)
 	return ret;
 }
 
-void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
+bool CFactoryBehaviourAI::GiveCommandReal(const Command& c, bool fromSynced)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& repeatOrders = owner->commandAI->repeatOrders;
+	auto& commandQue = owner->commandAI->commandQue;
+	const auto& nonQueingCommands = owner->commandAI->nonQueingCommands;
 	const int cmdID = c.GetID();
 
 	// move is always allowed for factories (passed to units it produces)
-	if ((cmdID != CMD_MOVE) && !AllowedCommand(c, fromSynced))
-		return;
+	if ((cmdID != CMD_MOVE) && !owner->commandAI->AllowedCommand(c, fromSynced))
+		return true;
 
 	auto boi = buildOptions.find(cmdID);
 
@@ -167,30 +180,30 @@ void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
 	// factories of different types were selected) so queue it to built units
 	if (boi == buildOptions.end()) {
 		if (cmdID < 0)
-			return;
+			return true;
 
 		if (nonQueingCommands.find(cmdID) != nonQueingCommands.end()) {
-			CCommandAI::GiveAllowedCommand(c);
-			return;
+			owner->commandAI->GiveAllowedCommand(c);
+			return true;
 		}
 
 		if (cmdID == CMD_INSERT || cmdID == CMD_REMOVE) {
-			CCommandAI::GiveAllowedCommand(c);
-			return;
+			owner->commandAI->GiveAllowedCommand(c);
+			return true;
 		}
 
 		if (!(c.GetOpts() & SHIFT_KEY) && (cmdID == CMD_WAIT || cmdID == CMD_SELFD)) {
-			CCommandAI::GiveAllowedCommand(c);
-			return;
+			owner->commandAI->GiveAllowedCommand(c);
+			return true;
 		}
 
 		if (!(c.GetOpts() & SHIFT_KEY)) {
  			waitCommandsAI.ClearUnitQueue(owner, newUnitCommands);
-			CCommandAI::ClearCommandDependencies();
+			owner->commandAI->ClearCommandDependencies();
 			newUnitCommands.clear();
 		}
 
-		CCommandAI::AddCommandDependency(c);
+		owner->commandAI->AddCommandDependency(c);
 
 		if (cmdID != CMD_STOP) {
 			if ((cmdID == CMD_WAIT) || (cmdID == CMD_SELFD)) {
@@ -204,13 +217,13 @@ void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
 				}
 			} else {
 				bool dummy;
-				if (CancelCommands(c, newUnitCommands, dummy) > 0) {
-					return;
+				if (owner->commandAI->CancelCommands(c, newUnitCommands, dummy) > 0) {
+					return true;
 				} else {
-					if (GetOverlapQueued(c, newUnitCommands).empty()) {
+					if (owner->commandAI->GetOverlapQueued(c, newUnitCommands).empty()) {
 						newUnitCommands.push_back(c);
 					} else {
-						return;
+						return true;
 					}
 				}
 			}
@@ -231,7 +244,7 @@ void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
 			}
 		}
 
-		return;
+		return true;
 	}
 
 	int& numQueued = boi->second;
@@ -273,8 +286,10 @@ void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
 				}
 			}
 
-			if (!repeatOrders)
-				static_cast<CFactory*>(owner)->StopBuild();
+			if (!repeatOrders) {
+				CFactoryBehaviour* fac = owner->GetBehaviour<CFactoryBehaviour>();
+				fac->StopBuild();
+			}
 
 		} else {
 			for (int a = 0; a < numItems; ++a) {
@@ -286,13 +301,15 @@ void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
 
 	UpdateIconName(cmdID, numQueued);
 	SlowUpdate();
+	return true;
 }
 
 
-void CFactoryCAI::InsertBuildCommand(CCommandQueue::iterator& it,
+void CFactoryBehaviourAI::InsertBuildCommand(CCommandQueue::iterator& it,
                                      const Command& newCmd)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& commandQue = owner->commandAI->commandQue;
 	const auto boi = buildOptions.find(newCmd.GetID());
 	auto buildCount = GetCountMultiplierFromOptions(newCmd.GetOpts());
 	if (boi != buildOptions.end()) {
@@ -301,7 +318,8 @@ void CFactoryCAI::InsertBuildCommand(CCommandQueue::iterator& it,
 	}
 	if (!commandQue.empty() && (it == commandQue.begin())) {
 		// ExecuteStop(), without the pop_front()
-		CFactory* fac = static_cast<CFactory*>(owner);
+		//CFactory* fac = static_cast<CFactory*>(owner);
+		CFactoryBehaviour* fac = owner->GetBehaviour<CFactoryBehaviour>();
 		fac->StopBuild();
 	}
 	while (buildCount--)
@@ -309,9 +327,10 @@ void CFactoryCAI::InsertBuildCommand(CCommandQueue::iterator& it,
 }
 
 
-bool CFactoryCAI::RemoveBuildCommand(CCommandQueue::iterator& it)
+bool CFactoryBehaviourAI::RemoveBuildCommand(CCommandQueue::iterator& it)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& commandQue = owner->commandAI->commandQue;
 	Command& cmd = *it;
 	const auto boi = buildOptions.find(cmd.GetID());
 	if (boi != buildOptions.end()) {
@@ -332,9 +351,11 @@ bool CFactoryCAI::RemoveBuildCommand(CCommandQueue::iterator& it)
 }
 
 
-void CFactoryCAI::DecreaseQueueCount(const Command& buildCommand, int& numQueued)
+void CFactoryBehaviourAI::DecreaseQueueCount(const Command& buildCommand, int& numQueued)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& commandQue = owner->commandAI->commandQue;
+	auto& repeatOrders = owner->commandAI->repeatOrders;
 	// copy in case we get pop'ed
 	// NOTE: the queue should not be empty at this point!
 	const Command frontCommand = commandQue.empty()? Command(CMD_STOP): commandQue.front();
@@ -365,20 +386,21 @@ void CFactoryCAI::DecreaseQueueCount(const Command& buildCommand, int& numQueued
 // NOTE:
 //   only called if Factory::QueueBuild returned FACTORY_NEXT_BUILD_ORDER
 //   (meaning the order was not rejected and the callback was installed)
-void CFactoryCAI::FactoryFinishBuild(const Command& command) {
+void CFactoryBehaviourAI::FactoryFinishBuild(const Command& command) {
 	DecreaseQueueCount(command, buildOptions[command.GetID()]);
 }
 
-void CFactoryCAI::SlowUpdate()
+bool CFactoryBehaviourAI::SlowUpdate()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& commandQue = owner->commandAI->commandQue;
 	// Commands issued may invoke SlowUpdate when paused
 	if (gs->paused)
-		return;
+		return true;
 	if (commandQue.empty() || owner->beingBuilt)
-		return;
+		return true;
 
-	CFactory* fac = static_cast<CFactory*>(owner);
+	CFactoryBehaviour* fac = owner->GetBehaviour<CFactoryBehaviour>();
 
 	while (!commandQue.empty()) {
 		Command& c = commandQue.front();
@@ -388,7 +410,7 @@ void CFactoryCAI::SlowUpdate()
 		if (buildOptions.find(c.GetID()) != buildOptions.end()) {
 			// build-order
 			switch (fac->QueueBuild(unitDefHandler->GetUnitDefByID(-c.GetID()), c)) {
-				case CFactory::FACTORY_SKIP_BUILD_ORDER: {
+				case CFactoryBehaviour::FACTORY_SKIP_BUILD_ORDER: {
 					// order rejected and we want to skip it permanently
 					DecreaseQueueCount(c, buildOptions[c.GetID()]);
 				} break;
@@ -400,7 +422,7 @@ void CFactoryCAI::SlowUpdate()
 					ExecuteStop(c);
 				} break;
 				default: {
-					CCommandAI::SlowUpdate();
+					owner->commandAI->SlowUpdateImpl();
 				} break;
 			}
 		}
@@ -409,20 +431,23 @@ void CFactoryCAI::SlowUpdate()
 		if (oldQueueSize == commandQue.size())
 			break;
 	}
+	return true;
 }
 
 
-void CFactoryCAI::ExecuteStop(Command& c)
+void CFactoryBehaviourAI::ExecuteStop(Command& c)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	CFactory* fac = static_cast<CFactory*>(owner);
+	auto& commandQue = owner->commandAI->commandQue;
+	//CFactory* fac = static_cast<CFactory*>(owner);
+	CFactoryBehaviour* fac = owner->GetBehaviour<CFactoryBehaviour>();
 	fac->StopBuild();
 
 	commandQue.pop_front();
 }
 
 
-int CFactoryCAI::GetDefaultCmd(const CUnit* pointed, const CFeature* feature)
+int CFactoryBehaviourAI::GetDefaultCmd(const CUnit* pointed, const CFeature* feature)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (pointed == nullptr)
@@ -438,9 +463,10 @@ int CFactoryCAI::GetDefaultCmd(const CUnit* pointed, const CFeature* feature)
 }
 
 
-void CFactoryCAI::UpdateIconName(int cmdID, const int& numQueued)
+void CFactoryBehaviourAI::UpdateIconName(int cmdID, const int& numQueued)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& possibleCommands = owner->commandAI->possibleCommands;
 	for (const SCommandDescription*& cd: possibleCommands) {
 		if (cd->id != cmdID)
 			continue;
@@ -461,3 +487,8 @@ void CFactoryCAI::UpdateIconName(int cmdID, const int& numQueued)
 
 	selectedUnitsHandler.PossibleCommandChange(owner);
 }
+
+void CFactoryBehaviourAI::FinishCommand() {
+	owner->commandAI->FinishCommand();
+}
+

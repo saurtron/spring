@@ -1,7 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 
-#include "Factory.h"
+#include "FactoryBehaviour.h"
 #include "Game/GameHelper.h"
 #include "Game/WaitCommandsAI.h"
 #include "Map/Ground.h"
@@ -16,8 +16,9 @@
 #include "Sim/Projectiles/ProjectileHandler.h"
 #include "Sim/Units/Scripts/UnitScript.h"
 #include "Sim/Units/CommandAI/CommandAI.h"
-#include "Sim/Units/CommandAI/FactoryCAI.h"
+//#include "Sim/Units/CommandAI/FactoryCAI.h"
 #include "Sim/Units/CommandAI/MobileCAI.h"
+#include "Sim/Units/BehaviourAI/FactoryBehaviourAI.h"
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Units/UnitLoader.h"
 #include "System/EventHandler.h"
@@ -30,10 +31,10 @@
 
 #include "System/Misc/TracyDefs.h"
 
-CR_BIND_DERIVED(CFactory, CBuilding, )
-CR_REG_METADATA(CFactory, (
-	CR_MEMBER(buildSpeed),
+template CFactoryBehaviour* CUnit::GetBehaviour<CFactoryBehaviour>() const;
 
+CR_BIND_DERIVED(CFactoryBehaviour, CBaseBuilderBehaviour, )
+CR_REG_METADATA(CFactoryBehaviour, (
 	CR_MEMBER(boOffset),
 	CR_MEMBER(boRadius),
 	CR_MEMBER(boRelHeading),
@@ -43,30 +44,38 @@ CR_REG_METADATA(CFactory, (
 
 	CR_MEMBER(lastBuildUpdateFrame),
 	CR_MEMBER(curBuildDef),
-	CR_MEMBER(curBuild),
-	CR_MEMBER(finishedBuildCommand),
-	CR_MEMBER(nanoPieceCache)
+	CR_MEMBER(finishedBuildCommand)
 ))
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CFactory::CFactory()
-	: CBuilding()
-	, buildSpeed(100.0f)
+CFactoryBehaviour::CFactoryBehaviour()
+	: CBaseBuilderBehaviour()
 	, boOffset(0.0f) //can't set here
 	, boRadius(0.0f) //can't set here
 	, boRelHeading(0)
 	, boSherical(true)
 	, boForced(true)
 	, boPerform(true)
-	, curBuild(nullptr)
 	, curBuildDef(nullptr)
 	, lastBuildUpdateFrame(-1)
 { }
 
-void CFactory::KillUnit(CUnit* attacker, bool selfDestruct, bool reclaimed, int weaponDefID)
+CFactoryBehaviour::CFactoryBehaviour(CUnit *owner)
+	: CBaseBuilderBehaviour(owner)
+	, boOffset(0.0f) //can't set here
+	, boRadius(0.0f) //can't set here
+	, boRelHeading(0)
+	, boSherical(true)
+	, boForced(true)
+	, boPerform(true)
+	, curBuildDef(nullptr)
+	, lastBuildUpdateFrame(-1)
+{ }
+
+void CFactoryBehaviour::KillUnit(CUnit* attacker, bool selfDestruct, bool reclaimed, int weaponDefID)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (curBuild != nullptr) {
@@ -74,42 +83,52 @@ void CFactory::KillUnit(CUnit* attacker, bool selfDestruct, bool reclaimed, int 
 		curBuild = nullptr;
 	}
 
-	CUnit::KillUnit(attacker, selfDestruct, reclaimed, weaponDefID);
+	//CUnit::KillUnit(attacker, selfDestruct, reclaimed, weaponDefID);
 }
 
-void CFactory::PreInit(const UnitLoadParams& params)
+void CFactoryBehaviour::PreInit(const UnitLoadParams& params)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	unitDef = params.unitDef;
-	buildSpeed = unitDef->buildSpeed / GAME_SPEED;
+	LOG("CFactoryBehaviour::PreInit %d", owner->id);
+	//unitDef = params.unitDef;
+	//buildSpeed = unitDef->buildSpeed / GAME_SPEED;
 
-	CBuilding::PreInit(params);
+	//CBuilding::PreInit(params);
 
 	//radius is defined after CUnit::PreInit()
-	boOffset = radius * 0.5f;
-	boRadius = radius * 0.5f;
+	CBaseBuilderBehaviour::PreInit(params);
+	boOffset = owner->radius * 0.5f;
+	boRadius = owner->radius * 0.5f;
 }
 
 
 
-float3 CFactory::CalcBuildPos(int buildPiece)
+float3 CFactoryBehaviour::CalcBuildPos(int buildPiece)
 {
-	RECOIL_DETAILED_TRACY_ZONE;
+	auto& script = owner->script;
 	const float3 relBuildPos = script->GetPiecePos((buildPiece < 0)? script->QueryBuildInfo() : buildPiece);
-	const float3 absBuildPos = this->GetObjectSpacePos(relBuildPos);
+	const float3 absBuildPos = owner->GetObjectSpacePos(relBuildPos);
 	return absBuildPos;
 }
 
 
 
-void CFactory::Update()
+void CFactoryBehaviour::UpdatePre()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	nanoPieceCache.Update();
+	auto team = owner->team;
+	auto& script = owner->script;
+	auto& pos = owner->pos;
+	auto& frontdir = owner->frontdir;
+	auto& heading = owner->heading;
+	auto& yardOpen = owner->yardOpen;
+	auto& inBuildStance = owner->inBuildStance;
+	auto beingBuilt = owner->beingBuilt;
+	CBaseBuilderBehaviour::UpdatePre(); // nanoPieceCache.Update();
 
 	if (beingBuilt) {
 		// factory is under construction, cannot build anything yet
-		CUnit::Update();
+		//owner->Update(); // TODO ORDER THIS PROPERLY! -> does this really need to go before StopBuild below this?
 
 		// this can happen if we started being reclaimed *while* building a
 		// unit, in which case our buildee can either be allowed to finish
@@ -132,12 +151,12 @@ void CFactory::Update()
 		// builders around the factory will be disturbed by this
 		if ((gs->frameNum & (UNIT_SLOWUPDATE_RATE >> 1)) == 0 && boPerform) {
 			float3 boDir = (boRelHeading == 0) ? static_cast<float3>(frontdir) : GetVectorFromHeading((heading + boRelHeading) % SPRING_MAX_HEADING);
-			CGameHelper::BuggerOff(pos + boDir * boOffset, boRadius, boSherical, boForced, team, this);
+			CGameHelper::BuggerOff(pos + boDir * boOffset, boRadius, boSherical, boForced, team, owner);
 		}
 
 		if (!yardOpen && !IsStunned()) {
-			if (groundBlockingObjectMap.CanOpenYard(this)) {
-				groundBlockingObjectMap.OpenBlockingYard(this); // set yardOpen
+			if (groundBlockingObjectMap.CanOpenYard(owner)) {
+				groundBlockingObjectMap.OpenBlockingYard(owner); // set yardOpen
 				script->Activate(); // set buildStance
 
 				// make sure the idle-check does not immediately trigger
@@ -157,23 +176,28 @@ void CFactory::Update()
 	}
 
 	const bool wantClose = (!IsStunned() && yardOpen && (gs->frameNum >= (lastBuildUpdateFrame + GAME_SPEED * (UNIT_SLOWUPDATE_RATE >> 1))));
-	const bool closeYard = (wantClose && curBuild == nullptr && groundBlockingObjectMap.CanCloseYard(this));
+	const bool closeYard = (wantClose && curBuild == nullptr && groundBlockingObjectMap.CanCloseYard(owner));
 
 	if (closeYard) {
 		// close the factory after inactivity
-		groundBlockingObjectMap.CloseBlockingYard(this);
+		groundBlockingObjectMap.CloseBlockingYard(owner);
 		script->Deactivate();
 	}
 
-	CBuilding::Update();
+	//CBuilding::Update();
 }
 
 
 
-void CFactory::StartBuild(const UnitDef* buildeeDef) {
+void CFactoryBehaviour::StartBuild(const UnitDef* buildeeDef) {
 	RECOIL_DETAILED_TRACY_ZONE;
-	if (isDead)
+	if (owner->isDead)
 		return;
+	auto& unitDef = owner->unitDef;
+	auto team = owner->team;
+	auto& script = owner->script;
+	auto& losStatus = owner->losStatus;
+	auto buildFacing = owner->buildFacing;
 
 	const float3& buildPos = CalcBuildPos(script->QueryBuildInfo());
 
@@ -182,15 +206,15 @@ void CFactory::StartBuild(const UnitDef* buildeeDef) {
 	// it might rarely be the case that a unit got stuck inside the factory
 	// or died right after completion and left some wreckage, but that is up
 	// to players to fix
-	if (groundBlockingObjectMap.GroundBlocked(buildPos, this))
+	if (groundBlockingObjectMap.GroundBlocked(buildPos, owner))
 		return;
 
-	UnitLoadParams buildeeParams = {buildeeDef, this, buildPos, ZeroVector, -1, team, buildFacing, true, false};
+	UnitLoadParams buildeeParams = {buildeeDef, owner, buildPos, ZeroVector, -1, team, buildFacing, true, false};
 	CUnit* buildee = unitLoader->LoadUnit(buildeeParams);
 
 	if (!unitDef->canBeAssisted) {
-		buildee->soloBuilder = this;
-		buildee->AddDeathDependence(this, DEPENDENCE_BUILDER);
+		buildee->soloBuilder = owner;
+		buildee->AddDeathDependence(owner, DEPENDENCE_BUILDER);
 	}
 
 	AddDeathDependence(buildee, DEPENDENCE_BUILD);
@@ -206,10 +230,13 @@ void CFactory::StartBuild(const UnitDef* buildeeDef) {
 	}
 }
 
-void CFactory::UpdateBuild(CUnit* buildee) {
+void CFactoryBehaviour::UpdateBuild(CUnit* buildee) {
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (IsStunned())
 		return;
+	auto& script = owner->script;
+	auto& commandAI = owner->commandAI;
+	auto buildFacing = owner->buildFacing;
 
 	// factory not under construction and
 	// nanolathing unit: continue building
@@ -239,26 +266,27 @@ void CFactory::UpdateBuild(CUnit* buildee) {
 	const CCommandQueue& queue = commandAI->commandQue;
 
 	if (!queue.empty() && (queue.front().GetID() == CMD_WAIT)) {
-		buildee->AddBuildPower(this, 0.0f);
+		buildee->AddBuildPower(owner, 0.0f);
 		return;
 	}
 
-	if (!buildee->AddBuildPower(this, buildSpeed))
+	if (!buildee->AddBuildPower(owner, buildSpeed))
 		return;
 
 	CreateNanoParticle();
 }
 
-void CFactory::FinishBuild(CUnit* buildee) {
+void CFactoryBehaviour::FinishBuild(CUnit* buildee) {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& unitDef = owner->unitDef;
 	if (buildee->beingBuilt)
 		return;
 	if (unitDef->fullHealthFactory && buildee->health < buildee->maxHealth)
 		return;
 
 	// assign buildee to same group as us
-	if (GetGroup() != nullptr && buildee->GetGroup() != nullptr)
-		buildee->SetGroup(GetGroup(), true);
+	if (owner->GetGroup() != nullptr && buildee->GetGroup() != nullptr)
+		buildee->SetGroup(owner->GetGroup(), true);
 
 	const CCommandAI* bcai = buildee->commandAI;
 	// if not idle, the buildee already has user orders
@@ -267,22 +295,25 @@ void CFactory::FinishBuild(CUnit* buildee) {
 
 	if (buildeeIdle || buildeeMobile) {
 		AssignBuildeeOrders(buildee);
-		waitCommandsAI.AddLocalUnit(buildee, this);
+		waitCommandsAI.AddLocalUnit(buildee, owner);
 	}
 
 	// inform our commandAI
-	CFactoryCAI* factoryCAI = static_cast<CFactoryCAI*>(commandAI);
+	CFactoryBehaviourAI* factoryCAI = owner->commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
+	//CFactoryCAI* factoryCAI = static_cast<CFactoryCAI*>(commandAI);
 	factoryCAI->FactoryFinishBuild(finishedBuildCommand);
 
-	eventHandler.UnitFromFactory(buildee, this, !buildeeIdle);
+	eventHandler.UnitFromFactory(buildee, owner, !buildeeIdle);
 	StopBuild();
 }
 
 
 
-unsigned int CFactory::QueueBuild(const UnitDef* buildeeDef, const Command& buildCmd)
+unsigned int CFactoryBehaviour::QueueBuild(const UnitDef* buildeeDef, const Command& buildCmd)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto team = owner->team;
+	auto beingBuilt = owner->beingBuilt;
 	assert(!beingBuilt);
 	assert(buildeeDef != nullptr);
 
@@ -293,7 +324,7 @@ unsigned int CFactory::QueueBuild(const UnitDef* buildeeDef, const Command& buil
 	if (teamHandler.Team(team)->AtUnitLimit())
 		return FACTORY_KEEP_BUILD_ORDER;
 
-	const auto [allow, drop] = eventHandler.AllowUnitCreation(buildeeDef, this, nullptr);
+	const auto [allow, drop] = eventHandler.AllowUnitCreation(buildeeDef, owner, nullptr);
 	if (!allow)
 		return drop ? FACTORY_SKIP_BUILD_ORDER : FACTORY_KEEP_BUILD_ORDER;
 
@@ -304,15 +335,16 @@ unsigned int CFactory::QueueBuild(const UnitDef* buildeeDef, const Command& buil
 	return FACTORY_NEXT_BUILD_ORDER;
 }
 
-void CFactory::StopBuild()
+void CFactoryBehaviour::StopBuild()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& script = owner->script;
 	// cancel a build-in-progress
 	script->StopBuilding();
 
 	if (curBuild) {
 		if (curBuild->beingBuilt) {
-			AddMetal(curBuild->cost.metal * curBuild->buildProgress, false);
+			owner->AddMetal(curBuild->cost.metal * curBuild->buildProgress, false);
 			curBuild->KillUnit(nullptr, false, true, -CSolidObject::DAMAGE_FACTORY_CANCEL);
 		}
 		DeleteDeathDependence(curBuild, DEPENDENCE_BUILD);
@@ -322,7 +354,7 @@ void CFactory::StopBuild()
 	curBuildDef = nullptr;
 }
 
-void CFactory::DependentDied(CObject* o)
+void CFactoryBehaviour::DependentDied(CObject* o)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (o == curBuild) {
@@ -330,14 +362,18 @@ void CFactory::DependentDied(CObject* o)
 		StopBuild();
 	}
 
-	CUnit::DependentDied(o);
+	//CUnit::DependentDied(o);
 }
 
 
 
-void CFactory::SendToEmptySpot(CUnit* unit)
+void CFactoryBehaviour::SendToEmptySpot(CUnit* unit)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& pos = owner->pos;
+	auto& frontdir = owner->frontdir;
+	auto& rightdir = owner->rightdir;
+	auto radius = owner->radius;
 	constexpr int numSteps = 100;
 
 	const float searchRadius = radius * 4.0f + unit->radius * 4.0f;
@@ -429,12 +465,17 @@ void CFactory::SendToEmptySpot(CUnit* unit)
 	unit->commandAI->GiveCommand(Command(CMD_MOVE, SHIFT_KEY, foundPos));
 }
 
-void CFactory::AssignBuildeeOrders(CUnit* unit) {
+void CFactoryBehaviour::AssignBuildeeOrders(CUnit* unit) {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& pos = owner->pos;
+	auto& frontdir = owner->frontdir;
+	auto radius = owner->radius;
+	auto& unitDef = owner->unitDef;
 	CCommandAI* unitCAI = unit->commandAI;
 	CCommandQueue& unitCmdQue = unitCAI->commandQue;
 
-	const CFactoryCAI* factoryCAI = static_cast<CFactoryCAI*>(commandAI);
+	//const CFactoryCAI* factoryCAI = static_cast<CFactoryCAI*>(commandAI);
+	CFactoryBehaviourAI* factoryCAI = owner->commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
 	const CCommandQueue& factoryCmdQue = factoryCAI->newUnitCommands;
 
 	if (factoryCmdQue.empty() && unitCmdQue.empty()) {
@@ -504,10 +545,12 @@ void CFactory::AssignBuildeeOrders(CUnit* unit) {
 
 
 
-bool CFactory::ChangeTeam(int newTeam, ChangeType type)
+bool CFactoryBehaviour::ChangeTeam(int newTeam, CUnit::ChangeType type) //TODO
+//bool CFactoryBehaviour::ChangeTeam(int newTeam, int type)
 {
+	// TODO: needs override
 	RECOIL_DETAILED_TRACY_ZONE;
-	if (!CBuilding::ChangeTeam(newTeam, type))
+	if (!owner->ChangeTeam(newTeam, type))
 		return false;
 
 	if (curBuild)
@@ -517,17 +560,26 @@ bool CFactory::ChangeTeam(int newTeam, ChangeType type)
 }
 
 
-void CFactory::CreateNanoParticle(bool highPriority)
+void CFactoryBehaviour::CreateNanoParticle(bool highPriority)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	auto& script = owner->script;
+	auto unitDef = owner->unitDef;
+	auto team = owner->team;
+	auto& localModel = owner->localModel;
 	const int modelNanoPiece = nanoPieceCache.GetNanoPiece(script);
 
 	if (!localModel.Initialized() || !localModel.HasPiece(modelNanoPiece))
 		return;
 
 	const float3 relNanoFirePos = localModel.GetRawPiecePos(modelNanoPiece);
-	const float3 nanoPos = this->GetObjectSpacePos(relNanoFirePos);
+	const float3 nanoPos = owner->GetObjectSpacePos(relNanoFirePos);
 
 	// unsynced
 	projectileHandler.AddNanoParticle(nanoPos, curBuild->midPos, unitDef, team, highPriority);
+}
+
+bool CFactoryBehaviour::IsStunned()
+{
+	return owner->IsStunned();
 }

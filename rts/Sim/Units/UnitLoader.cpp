@@ -6,12 +6,21 @@
 #include "UnitDef.h"
 #include "UnitDefHandler.h"
 #include "UnitHandler.h"
+#include "UnitMemPool.h"
+
+#include "UnitTypes/Building.h"
 
 #include "CommandAI/AirCAI.h"
-#include "CommandAI/BuilderCAI.h"
+//#include "CommandAI/BuilderCAI.h"
 #include "CommandAI/CommandAI.h"
-#include "CommandAI/FactoryCAI.h"
+//#include "CommandAI/FactoryCAI.h"
 #include "CommandAI/MobileCAI.h"
+
+#include "Behaviour/BuilderBehaviour.h"
+#include "Behaviour/FactoryBehaviour.h"
+#include "Behaviour/ExtractorBehaviour.h"
+#include "BehaviourAI/BuilderBehaviourAI.h"
+#include "BehaviourAI/FactoryBehaviourAI.h"
 
 #include "Game/GameHelper.h"
 #include "Map/Ground.h"
@@ -43,17 +52,19 @@ CUnitLoader* CUnitLoader::GetInstance()
 CCommandAI* CUnitLoader::NewCommandAI(CUnit* u, const UnitDef* ud)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	static_assert(sizeof(CFactoryCAI) <= sizeof(u->caiMemBuffer), "");
-	static_assert(sizeof(CBuilderCAI) <= sizeof(u->caiMemBuffer), "");
+	//static_assert(sizeof(CFactoryCAI) <= sizeof(u->caiMemBuffer), "");
+	//static_assert(sizeof(CBuilderCAI) <= sizeof(u->caiMemBuffer), "");
 	static_assert(sizeof(    CAirCAI) <= sizeof(u->caiMemBuffer), "");
 	static_assert(sizeof( CMobileCAI) <= sizeof(u->caiMemBuffer), "");
 	static_assert(sizeof( CCommandAI) <= sizeof(u->caiMemBuffer), "");
 
 	if (ud->IsFactoryUnit())
-		return (new (u->caiMemBuffer) CFactoryCAI(u));
+		return (new (u->caiMemBuffer) CCommandAI(u));
+		//return (new (u->caiMemBuffer) CFactoryCAI(u));
 
 	if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit())
-		return (new (u->caiMemBuffer) CBuilderCAI(u));
+		return (new (u->caiMemBuffer) CMobileCAI(u));
+		//return (new (u->caiMemBuffer) CBuilderCAI(u));
 
 	// non-hovering fighter or bomber aircraft; coupled to StrafeAirMoveType
 	if (ud->IsStrafingAirUnit())
@@ -77,6 +88,45 @@ CUnit* CUnitLoader::LoadUnit(const std::string& name, const UnitLoadParams& para
 		throw content_error("Couldn't find unittype " +  name);
 
 	return (LoadUnit(params));
+}
+
+void CUnitLoader::CreateUnitBehaviours(CUnit *u)
+{
+	static_assert(sizeof(CFactoryBehaviour) <= sizeof(CBuilding), "");
+	static_assert(sizeof(CBuilderBehaviour) <= sizeof(CBuilding), "");
+	static_assert(sizeof(CExtractorBehaviour) <= sizeof(CBuilding), "");
+	const auto& ud = u->unitDef;
+
+	if (ud->IsFactoryUnit())
+		u->behaviours.emplace_back(unitMemPool.alloc<CFactoryBehaviour>(u));
+
+	// all other types of non-structure "builders", including hubs and
+	// nano-towers (the latter should not have any build-options at all,
+	// whereas the former should be unable to build any mobile units)
+	else if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit())
+		u->behaviours.emplace_back(unitMemPool.alloc<CBuilderBehaviour>(u));
+
+	// static non-builder structures
+	if (ud->IsBuildingUnit()) {
+		if (ud->IsExtractorUnit())
+			u->behaviours.emplace_back(unitMemPool.alloc<CExtractorBehaviour>(u));
+	}
+}
+
+void CUnitLoader::CreateUnitBehaviourAIs(CUnit *u)
+{
+	static_assert(sizeof(CFactoryBehaviourAI) <= sizeof(CBuilding), "");
+	static_assert(sizeof(CBuilderBehaviourAI) <= sizeof(CBuilding), "");
+	const auto& ud = u->unitDef;
+
+	if (ud->IsFactoryUnit())
+		u->commandAI->behaviourAIs.emplace_back(unitMemPool.alloc<CFactoryBehaviourAI>(u));
+
+	// all other types of non-structure "builders", including hubs and
+	// nano-towers (the latter should not have any build-options at all,
+	// whereas the former should be unable to build any mobile units)
+	else if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit())
+		u->commandAI->behaviourAIs.emplace_back(unitMemPool.alloc<CBuilderBehaviourAI>(u));
 }
 
 CUnit* CUnitLoader::LoadUnit(const UnitLoadParams& params)
@@ -106,6 +156,11 @@ CUnit* CUnitLoader::LoadUnit(const UnitLoadParams& params)
 		unit->entityReference = Sim::registry.create();
 
 		unit->PreInit(params);
+		CreateUnitBehaviours(unit);
+	        for(auto behaviour: unit->behaviours) {
+			behaviour->PreInit(params);
+		}
+		CreateUnitBehaviourAIs(unit);
 		unit->PostInit(params.builder);
 	}
 

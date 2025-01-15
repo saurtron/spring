@@ -21,7 +21,7 @@
 #include "Sim/MoveTypes/ScriptMoveType.h"
 
 // for caiMemBuffer
-#include "Sim/Units/CommandAI/BuilderCAI.h"
+#include "Sim/Units/CommandAI/AirCAI.h"
 
 // for usMemBuffer
 #include "Sim/Units/Scripts/LuaUnitScript.h"
@@ -32,6 +32,7 @@ class CCommandAI;
 class CGroup;
 class CMissileProjectile;
 class AMoveType;
+class CBehaviour;
 class CWeapon;
 class CUnitScript;
 class DamageArray;
@@ -64,11 +65,15 @@ static constexpr uint8_t LOS_ALL_BITS = \
 static constexpr uint8_t LOS_ALL_MASK_BITS = \
 	(LOS_INLOS_MASK | LOS_INRADAR_MASK | LOS_PREVLOS_MASK | LOS_CONTRADAR_MASK);
 
-
 class CUnit : public CSolidObject
 {
 public:
 	CR_DECLARE(CUnit)
+enum ChangeType {
+	ChangeGiven,
+	ChangeCaptured
+};
+
 
 	CUnit();
 	virtual ~CUnit();
@@ -201,10 +206,6 @@ public:
 	bool ScriptDecloak(const CSolidObject* object, const CWeapon* weapon);
 	bool GetNewCloakState(bool checkStun);
 
-	enum ChangeType {
-		ChangeGiven,
-		ChangeCaptured
-	};
 	virtual bool ChangeTeam(int team, ChangeType type);
 	virtual void StopAttackingAllyTeam(int ally);
 
@@ -319,10 +320,10 @@ public:
 	// need two buffers since ScriptMoveType might be enabled
 	uint8_t amtMemBuffer[sizeof(CGroundMoveType)];
 	uint8_t smtMemBuffer[sizeof(CScriptMoveType)];
-	// sufficient for the largest CommandAI type (CBuilderCAI)
+	// sufficient for the largest CommandAI type (CBuildingCAI)
 	// knowing the exact CAI object size here is not required;
 	// static asserts will catch any overflow
-	uint8_t caiMemBuffer[sizeof(CBuilderCAI)];
+	uint8_t caiMemBuffer[sizeof(CAirCAI)];
 
 
 	std::vector<CWeapon*> weapons;
@@ -561,6 +562,8 @@ public:
 	icon::CIconData* myIcon = nullptr;
 
 	bool drawIcon = true;
+	std::vector<CBehaviour*> behaviours;
+	template<class BehaviourClass> BehaviourClass* GetBehaviour() const;
 private:
 	// if we are stunned by a weapon or for other reason, access via IsStunned/SetStunned(bool)
 	bool stunned = false;
@@ -571,6 +574,16 @@ private:
 	static float expHealthScale;
 	static float expReloadScale;
 	static float expGrade;
+};
+
+template<class C>
+inline C* CUnit::GetBehaviour() const
+{
+	for(auto behaviour: behaviours) {
+		if (typeid(*behaviour) == typeid(C))
+			return dynamic_cast<C*>(behaviour);
+	}
+	return nullptr;
 };
 
 #endif // UNIT_H

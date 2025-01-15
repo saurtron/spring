@@ -46,6 +46,9 @@ public:
 
 	void FlattenGround(const CUnit* unit);
 	void RestoreGround(const CUnit* unit);
+private:
+	void CreateUnitBehaviours(CUnit *unit);
+	void CreateUnitBehaviourAIs(CUnit *unit);
 };
 
 #define unitLoader (CUnitLoader::GetInstance())

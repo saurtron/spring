@@ -1,9 +1,10 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#ifndef _BUILDER_CAI_H_
-#define _BUILDER_CAI_H_
+#ifndef _BUILDER_BEHAVIOUR_AI_H_
+#define _BUILDER_BEHAVIOUR_AI_H_
 
-#include "MobileCAI.h"
+#include "BehaviourAI.h"
+#include "Sim/Units/CommandAI/MobileCAI.h"
 #include "Sim/Units/BuildInfo.h"
 #include "System/Misc/BitwiseEnum.h"
 #include "System/UnorderedSet.hpp"
@@ -11,7 +12,7 @@
 #include <vector>
 
 class CUnit;
-class CBuilder;
+class CBuilderBehaviour;
 class CFeature;
 class CSolidObject;
 class CWorldObject;
@@ -19,22 +20,22 @@ struct Command;
 struct UnitDef;
 
 
-class CBuilderCAI : public CMobileCAI
+class CBuilderBehaviourAI : public CBehaviourAI
 {
 public:
-	CR_DECLARE(CBuilderCAI)
-	CBuilderCAI(CUnit* owner);
-	CBuilderCAI();
-	~CBuilderCAI();
+	CR_DECLARE(CBuilderBehaviourAI)
+	CBuilderBehaviourAI(CUnit* owner);
+	CBuilderBehaviourAI();
+	~CBuilderBehaviourAI();
 
 	void PostLoad();
 
-	int GetDefaultCmd(const CUnit* unit, const CFeature* feature);
-	void SlowUpdate();
+	virtual int GetDefaultCmd(const CUnit* unit, const CFeature* feature) override;
+	virtual bool SlowUpdate() override;
 
-	void FinishCommand();
-	void GiveCommandReal(const Command& c, bool fromSynced = true);
-	void BuggerOff(const float3& pos, float radius);
+	virtual void FinishCommand() override;
+	bool GiveCommandReal(const Command& c, bool fromSynced = true) override;
+	virtual bool BuggerOff(const float3& pos, float radius);
 	bool TargetInterceptable(const CUnit* unit, float uspeed);
 
 	void ExecuteBuildCmd(Command& c);
@@ -126,7 +127,7 @@ private:
 	float GetBuildOptionRadius(const UnitDef* unitdef, int cmdId);
 
 private:
-	CBuilder* ownerBuilder;
+	CBuilderBehaviour* ownerBuilder;
 
 	bool building;
 	BuildInfo build;
@@ -142,6 +143,17 @@ private:
 	int lastPC3;
 
 	bool range3D;
+
+	void PushOrUpdateReturnFight();
+	void StopMove();
+	void StopMoveAndFinishCommand();
+	void StopMoveAndKeepPointing(const float3& p, const float r, bool b);
+	void NonMoving();
+	void SetGoal(const float3& pos, const float3& curPos, float goalRadius = SQUARE_SIZE);
+	void SetGoal(const float3& pos, const float3& curPos, float goalRadius, float speed);
+	void StartSlowGuard(float speed);
+	void StopSlowGuard();
+	int UpdateTargetLostTimer(int unitID);
 };
 
-#endif // _BUILDER_CAI_H_
+#endif // _BUILDER_BEHAVIOUR_AI_H_

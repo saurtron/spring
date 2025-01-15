@@ -15,8 +15,8 @@
 #include "Sim/Units/CommandAI/CommandQueue.h"
 #include "Sim/Units/CommandAI/CommandAI.h"
 #include "Sim/Units/CommandAI/AirCAI.h"
-#include "Sim/Units/CommandAI/BuilderCAI.h"
-#include "Sim/Units/CommandAI/FactoryCAI.h"
+#include "Sim/Units/BehaviourAI/BuilderBehaviourAI.h"
+#include "Sim/Units/BehaviourAI/FactoryBehaviourAI.h"
 #include "Sim/Units/CommandAI/MobileCAI.h"
 #include "Sim/Units/Unit.h"
 #include "Sim/Units/UnitHandler.h"
@@ -45,8 +45,8 @@ CommandDrawer* CommandDrawer::GetInstance() {
 void CommandDrawer::Draw(const CCommandAI* cai, int queueDrawDepth) const {
 	// note: {Air,Builder}CAI inherit from MobileCAI, so test that last
 	if ((dynamic_cast<const     CAirCAI*>(cai)) != nullptr) {     DrawAirCAICommands(static_cast<const     CAirCAI*>(cai), queueDrawDepth); return; }
-	if ((dynamic_cast<const CBuilderCAI*>(cai)) != nullptr) { DrawBuilderCAICommands(static_cast<const CBuilderCAI*>(cai), queueDrawDepth); return; }
-	if ((dynamic_cast<const CFactoryCAI*>(cai)) != nullptr) { DrawFactoryCAICommands(static_cast<const CFactoryCAI*>(cai), queueDrawDepth); return; }
+	if (cai->GetBehaviourAI<CBuilderBehaviourAI>() != nullptr) { DrawBuilderCAICommands(cai, queueDrawDepth); return; }
+	if (cai->GetBehaviourAI<CFactoryBehaviourAI>() != nullptr) { DrawFactoryCAICommands(cai, queueDrawDepth); return; }
 	if ((dynamic_cast<const  CMobileCAI*>(cai)) != nullptr) {  DrawMobileCAICommands(static_cast<const  CMobileCAI*>(cai), queueDrawDepth); return; }
 
 	DrawCommands(cai, queueDrawDepth);
@@ -234,9 +234,10 @@ void CommandDrawer::DrawAirCAICommands(const CAirCAI* cai, int queueDrawDepth) c
 
 
 
-void CommandDrawer::DrawBuilderCAICommands(const CBuilderCAI* cai, int queueDrawDepth) const
+void CommandDrawer::DrawBuilderCAICommands(const CCommandAI* cai, int queueDrawDepth) const
 {
 	const CUnit* owner = cai->owner;
+	const CBuilderBehaviourAI* builderCAI = cai->GetBehaviourAI<CBuilderBehaviourAI>();
 	const CCommandQueue& commandQue = cai->commandQue;
 
 	if (queueDrawDepth <= 0)
@@ -254,7 +255,7 @@ void CommandDrawer::DrawBuilderCAICommands(const CBuilderCAI* cai, int queueDraw
 		const int cmdID = ci->GetID();
 
 		if (cmdID < 0) {
-			if (cai->buildOptions.find(cmdID) != cai->buildOptions.end()) {
+			if (builderCAI->buildOptions.find(cmdID) != builderCAI->buildOptions.end()) {
 				BuildInfo bi;
 
 				if (!bi.Parse(*ci))
@@ -402,11 +403,12 @@ void CommandDrawer::DrawBuilderCAICommands(const CBuilderCAI* cai, int queueDraw
 
 
 
-void CommandDrawer::DrawFactoryCAICommands(const CFactoryCAI* cai, int queueDrawDepth) const
+void CommandDrawer::DrawFactoryCAICommands(const CCommandAI* cai, int queueDrawDepth) const
 {
 	const CUnit* owner = cai->owner;
+	const CFactoryBehaviourAI* factoryCAI = cai->GetBehaviourAI<CFactoryBehaviourAI>();
 	const CCommandQueue& commandQue = cai->commandQue;
-	const CCommandQueue& newUnitCommands = cai->newUnitCommands;
+	const CCommandQueue& newUnitCommands = factoryCAI->newUnitCommands;
 
 	if (queueDrawDepth <= 0)
 		queueDrawDepth = newUnitCommands.size();
@@ -652,10 +654,11 @@ void CommandDrawer::DrawDefaultCommand(const Command& c, const CUnit* owner) con
 	lineDrawer.DrawLineAndIcon(dd->cmdIconID, unit->GetObjDrawErrorPos(owner->allyteam), dd->color);
 }
 
-void CommandDrawer::DrawQuedBuildingSquares(const CBuilderCAI* cai) const
+void CommandDrawer::DrawQuedBuildingSquares(const CCommandAI* cai) const
 {
 	const CCommandQueue& commandQue = cai->commandQue;
-	const auto& buildOptions = cai->buildOptions;
+	const CBuilderBehaviourAI* builderCAI = cai->GetBehaviourAI<CBuilderBehaviourAI>();
+	const auto& buildOptions = builderCAI->buildOptions;
 
 	unsigned int  buildCommands = 0;
 	unsigned int uwaterCommands = 0;

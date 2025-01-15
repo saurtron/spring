@@ -16,8 +16,7 @@
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Units/CommandAI/CommandQueue.h"
 #include "Sim/Units/CommandAI/CommandAI.h"
-#include "Sim/Units/CommandAI/FactoryCAI.h"
-#include "Sim/Units/UnitTypes/Factory.h"
+#include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "System/Object.h"
 #include "System/StringUtil.h"
 #include "System/creg/STL_Map.h"
@@ -512,7 +511,7 @@ CWaitCommandsAI::TimeWait::TimeWait(const Command& cmd, CUnit* _unit)
 	enabled = false;
 	endFrame = 0;
 	duration = GAME_SPEED * (int)cmd.GetParam(0);
-	factory = (dynamic_cast<CFactory*>(unit) != nullptr);
+	factory = (unit->GetBehaviour<CFactoryBehaviour>() != nullptr);
 
 	Command waitCmd(CMD_WAIT, cmd.GetOpts(), code);
 	waitCmd.PushParam(GetFloatFromKey(key));
@@ -862,7 +861,7 @@ CWaitCommandsAI::SquadWait::SquadWait(const Command& cmd)
 	for (const int unitID: selUnits) {
 		const CUnit* unit = unitHandler.GetUnit(unitID);
 
-		if (dynamic_cast<const CFactory*>(unit) != nullptr) {
+		if (unit->GetBehaviour<CFactoryBehaviour>() != nullptr) {
 			buildUnits.insert(unitID);
 		} else {
 			waitUnits.insert(unitID);
@@ -1011,7 +1010,7 @@ CWaitCommandsAI::GatherWait::GatherWait(const Command& cmd)
 		const CUnit* unit = unitHandler.GetUnit(unitID);
 		const UnitDef* ud = unit->unitDef;
 
-		if (ud->canmove && (dynamic_cast<const CFactory*>(unit) == nullptr)) {
+		if (ud->canmove && unit->GetBehaviour<CFactoryBehaviour>() == nullptr) {
 			waitUnits.insert(unitID);
 		}
 	}

@@ -37,7 +37,7 @@ public:
 
 	bool AllowedCommand(const Command& c, bool fromSynced) override;
 	int GetDefaultCmd(const CUnit* pointed, const CFeature* feature) override;
-	void SlowUpdate() override;
+	void SlowUpdateImpl() override;
 	void GiveCommandReal(const Command& c, bool fromSynced = true) override;
 	void NonMoving();
 	void FinishCommand() override;
@@ -118,10 +118,12 @@ protected:
 		UNLOAD_LANDFLOOD = 2,
 	};
 
+public:
 	void PushOrUpdateReturnFight() {
 		CCommandAI::PushOrUpdateReturnFight(commandPos1, commandPos2);
 	}
 
+protected:
 	void CalculateCancelDistance();
 
 private:

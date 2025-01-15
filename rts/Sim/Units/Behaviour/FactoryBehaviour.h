@@ -3,21 +3,21 @@
 #ifndef _FACTORY_H
 #define _FACTORY_H
 
-#include "Building.h"
-#include "Sim/Misc/NanoPieceCache.h"
+#include "Sim/Units/Unit.h"
+#include "BaseBuilderBehaviour.h"
 #include "Sim/Units/CommandAI/Command.h"
 #include "System/float3.h"
 
 struct UnitDef;
 struct Command;
-class CFactory;
 
-class CFactory : public CBuilding
+class CFactoryBehaviour : public CBaseBuilderBehaviour
 {
 public:
-	CR_DECLARE(CFactory)
+	CR_DECLARE(CFactoryBehaviour)
 
-	CFactory();
+	CFactoryBehaviour();
+	CFactoryBehaviour(CUnit* owner);
 
 	void StartBuild(const UnitDef* buildeeDef);
 	void UpdateBuild(CUnit* buildee);
@@ -26,9 +26,9 @@ public:
 	/// @return whether the to-be-built unit is enqueued
 	unsigned int QueueBuild(const UnitDef* buildeeDef, const Command& buildCmd);
 
-	void Update();
+	virtual void UpdatePre() override;
 
-	void DependentDied(CObject* o);
+	virtual void DependentDied(CObject* o) override;
 	void CreateNanoParticle(bool highPriority = false);
 
 	/// supply the build piece to speed up
@@ -36,18 +36,14 @@ public:
 
 	void KillUnit(CUnit* attacker, bool selfDestruct, bool reclaimed, int weaponDefID);
 	void PreInit(const UnitLoadParams& params);
-	bool ChangeTeam(int newTeam, ChangeType type);
-
-	const NanoPieceCache& GetNanoPieceCache() const { return nanoPieceCache; }
-	      NanoPieceCache& GetNanoPieceCache()       { return nanoPieceCache; }
+	bool ChangeTeam(int newTeam, CUnit::ChangeType type);
+	//bool ChangeTeam(int newTeam, int type); //TODO
 
 private:
 	void SendToEmptySpot(CUnit* unit);
 	void AssignBuildeeOrders(CUnit* unit);
 
 public:
-	float buildSpeed;
-
 	//BuggerOff fine tuning
 	float boOffset;
 	float boRadius;
@@ -55,8 +51,6 @@ public:
 	bool boSherical;
 	bool boForced;
 	bool boPerform;
-
-	CUnit* curBuild;
 
 	enum {
 		FACTORY_SKIP_BUILD_ORDER = 0,
@@ -70,7 +64,7 @@ private:
 
 	Command finishedBuildCommand;
 
-	NanoPieceCache nanoPieceCache;
+	bool IsStunned();
 };
 
 #endif // _FACTORY_H

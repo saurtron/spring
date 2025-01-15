@@ -3,8 +3,6 @@
 
 #include "CommandAI.h"
 
-#include "BuilderCAI.h"
-#include "FactoryCAI.h"
 #include "ExternalAI/EngineOutHandler.h"
 #include "ExternalAI/SkirmishAIHandler.h"
 #include "Game/GlobalUnsynced.h"
@@ -19,6 +17,10 @@
 #include "Sim/Misc/ModInfo.h"
 #include "Sim/Misc/TeamHandler.h"
 #include "Sim/MoveTypes/MoveType.h"
+#include "Sim/Units/Behaviour/Behaviour.h"
+#include "Sim/Units/BehaviourAI/BehaviourAI.h"
+#include "Sim/Units/BehaviourAI/BuilderBehaviourAI.h"
+#include "Sim/Units/BehaviourAI/FactoryBehaviourAI.h"
 #include "Sim/Units/BuildInfo.h"
 #include "Sim/Units/UnitDef.h"
 #include "Sim/Units/Unit.h"
@@ -505,9 +507,9 @@ bool CCommandAI::HandleBuildOptionInsertion(int cmdId)
 	if (cmdId >= 0)
 		return false;
 
-	if (auto* bcai = dynamic_cast<CBuilderCAI*>(this); bcai != nullptr)
+	if (auto* bcai = this->GetBehaviourAI<CBuilderBehaviourAI>(); bcai != nullptr)
 		bcai->buildOptions.insert(cmdId);
-	else if (auto* fcai = dynamic_cast<CFactoryCAI*>(this); fcai != nullptr)
+	else if (auto* fcai = this->GetBehaviourAI<CFactoryBehaviourAI>(); fcai != nullptr)
 		fcai->buildOptions.insert(cmdId, 0);
 
 	return true;
@@ -519,21 +521,21 @@ bool CCommandAI::HandleBuildOptionRemoval(int cmdId)
 	if (cmdId >= 0)
 		return false;
 
-	if (auto* bcai = dynamic_cast<CBuilderCAI*>(this); bcai != nullptr) {
+	if (auto* bcai = this->GetBehaviourAI<CBuilderBehaviourAI>(); bcai != nullptr) {
 		// clear the removed unitDef from the construction queue
-		for (size_t i = 0; i < bcai->commandQue.size(); /*NOOP*/) {
-			if (const auto& q = bcai->commandQue[i]; q.GetID() == cmdId)
-				bcai->commandQue.erase(commandQue.begin() + i);
+		for (size_t i = 0; i < commandQue.size(); /*NOOP*/) {
+			if (const auto& q = commandQue[i]; q.GetID() == cmdId)
+				commandQue.erase(commandQue.begin() + i);
 			else
 				++i;
 		}
 		bcai->buildOptions.erase(cmdId);
 	}
-	else if (auto* fcai = dynamic_cast<CFactoryCAI*>(this); fcai != nullptr) {
+	else if (auto* fcai = this->GetBehaviourAI<CFactoryBehaviourAI>(); fcai != nullptr) {
 		// clear the removed unitDef from the construction queue
-		for (size_t i = 0; i < fcai->commandQue.size(); /*NOOP*/) {
-			if (const auto& q = fcai->commandQue[i]; q.GetID() == cmdId)
-				fcai->commandQue.erase(commandQue.begin() + i);
+		for (size_t i = 0; i < commandQue.size(); /*NOOP*/) {
+			if (const auto& q = commandQue[i]; q.GetID() == cmdId)
+				commandQue.erase(commandQue.begin() + i);
 			else
 				++i;
 		}
@@ -661,8 +663,8 @@ bool CCommandAI::AllowedCommand(const Command& c, bool fromSynced)
 				if (!IsCommandInMap(c))
 					return false;
 
-				const CBuilderCAI* bcai = dynamic_cast<const CBuilderCAI*>(this);
-				const CFactoryCAI* fcai = dynamic_cast<const CFactoryCAI*>(this);
+				const CBuilderBehaviourAI* bcai = this->GetBehaviourAI<CBuilderBehaviourAI>();
+				const CFactoryBehaviourAI* fcai = this->GetBehaviourAI<CFactoryBehaviourAI>();
 
 				// non-builders cannot ever execute these
 				// we can get here if a factory is selected along with the
@@ -832,6 +834,10 @@ void CCommandAI::GiveCommand(const Command& c, int playerNum, bool fromSynced, b
 void CCommandAI::GiveCommandReal(const Command& c, bool fromSynced)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	for(auto behaviourAI: behaviourAIs) {
+		if (behaviourAI->GiveCommandReal(c, fromSynced))
+			return;
+	}
 	if (!AllowedCommand(c, fromSynced))
 		return;
 
@@ -1132,7 +1138,7 @@ void CCommandAI::ExecuteInsert(const Command& c, bool fromSynced)
 	CCommandQueue* queue = &commandQue;
 
 	bool facBuildQueue = false;
-	CFactoryCAI* facCAI = dynamic_cast<CFactoryCAI*>(this);
+	CFactoryBehaviourAI* facCAI = this->GetBehaviourAI<CFactoryBehaviourAI>();
 	if (facCAI != nullptr) {
 		if (c.GetOpts() & CONTROL_KEY) {
 			// check the build order
@@ -1217,7 +1223,7 @@ void CCommandAI::ExecuteRemove(const Command& c)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	CCommandQueue* queue = &commandQue;
-	CFactoryCAI* facCAI = dynamic_cast<CFactoryCAI*>(this);
+	CFactoryBehaviourAI* facCAI = this->GetBehaviourAI<CFactoryBehaviourAI>();
 
 	// if false, remove commands by tag
 	const bool removeByID = (c.GetOpts() & ALT_KEY);
@@ -1546,6 +1552,16 @@ void CCommandAI::SlowUpdate()
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (gs->paused) // Commands issued may invoke SlowUpdate when paused
 		return;
+	for(auto behaviourAI: behaviourAIs) {
+		if (behaviourAI->SlowUpdate())
+			// TODO: maybe should let other behaviourAIs run
+			return;
+	}
+	this->SlowUpdateImpl();
+}
+
+void CCommandAI::SlowUpdateImpl()
+{
 	if (commandQue.empty()) {
 		return;
 	}
@@ -1577,6 +1593,9 @@ void CCommandAI::SlowUpdate()
 			ExecuteAttack(c);
 			return;
 		}
+	}
+	for(auto behaviourAI: behaviourAIs) {
+		behaviourAI->Execute(c);
 	}
 
 	if (ExecuteStateCommand(c)) {
@@ -1637,7 +1656,7 @@ void CCommandAI::DependentDied(CObject* o)
 	}
 
 	if (commandDeathDependences.erase(o) && o != owner) {
-		CFactoryCAI* facCAI = dynamic_cast<CFactoryCAI*>(this);
+		CFactoryBehaviourAI* facCAI = this->GetBehaviourAI<CFactoryBehaviourAI>();
 		CCommandQueue& dq = facCAI ? facCAI->newUnitCommands : commandQue;
 		int lastTag;
 		int curTag = -1;
@@ -1661,6 +1680,10 @@ void CCommandAI::FinishCommand()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	assert(!commandQue.empty());
+
+	for(auto behaviourAI: behaviourAIs) {
+		behaviourAI->FinishCommand();
+	}
 
 	const Command cmd = commandQue.front(); // copy is needed here
 

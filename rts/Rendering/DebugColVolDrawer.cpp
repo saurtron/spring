@@ -15,7 +15,7 @@
 #include "Sim/Misc/CollisionVolume.h"
 #include "Sim/Misc/QuadField.h"
 #include "Sim/Units/Unit.h"
-#include "Sim/Units/UnitTypes/Factory.h"
+#include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "Sim/Weapons/PlasmaRepulser.h"
 #include "Sim/Weapons/Weapon.h"
 #include "System/UnorderedSet.hpp"
@@ -271,10 +271,11 @@ static inline void DrawUnitColVol(const CUnit* u)
 			GL::shapes.DrawWireSphere(20, 20, m, DEFAULT_CUSTCV_COLOR);
 		}
 
-		if (const CFactory* f = dynamic_cast<const CFactory*>(u)) {
+		if (const CFactoryBehaviour* f = u->GetBehaviour<const CFactoryBehaviour>()) { // dynamic_cast<const CFactory*>(u)) {
+			const auto& owner = f->owner;
 			if (f->boPerform) {
 				float3 boRelDir = (f->boRelHeading == 0) ? FwdVector : GetVectorFromHeading(f->boRelHeading % SPRING_MAX_HEADING);
-				float3 boPos = f->pos + boRelDir * f->boOffset;
+				float3 boPos = owner->pos + boRelDir * f->boOffset;
 
 				CMatrix44f boMat(boPos);
 
