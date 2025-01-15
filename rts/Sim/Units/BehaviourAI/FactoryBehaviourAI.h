@@ -40,7 +40,7 @@ public:
 private:
 	void UpdateIconName(int id, const int& numQueued);
 private:
-	void FinishCommand();
+	void DoFinishCommand();
 };
 
 #endif // _FACTORY_AI_H_

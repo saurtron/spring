@@ -375,7 +375,7 @@ void CFactoryBehaviourAI::DecreaseQueueCount(const Command& buildCommand, int& n
 	// we still have it in our queue (FinishCommand also
 	// asserts this)
 	if (!commandQue.empty())
-		FinishCommand();
+		DoFinishCommand();
 
 	if (frontCommand.GetID() == CMD_WAIT)
 		commandQue.push_front(frontCommand);
@@ -488,7 +488,7 @@ void CFactoryBehaviourAI::UpdateIconName(int cmdID, const int& numQueued)
 	selectedUnitsHandler.PossibleCommandChange(owner);
 }
 
-void CFactoryBehaviourAI::FinishCommand() {
+void CFactoryBehaviourAI::DoFinishCommand() {
 	owner->commandAI->FinishCommand();
 }
 
