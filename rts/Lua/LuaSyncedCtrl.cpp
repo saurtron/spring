@@ -63,6 +63,7 @@
 #include "Sim/Units/Scripts/CobInstance.h"
 #include "Sim/Units/Scripts/LuaUnitScript.h"
 #include "Sim/Units/Behaviour/BuilderBehaviour.h"
+#include "Sim/Units/Behaviour/BuilderCmdBehaviour.h"
 #include "Sim/Units/Behaviour/ExtractorBehaviour.h"
 #include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "Sim/Units/CommandAI/Command.h"
@@ -2896,20 +2897,24 @@ int LuaSyncedCtrl::SetUnitBuildSpeed(lua_State* L)
 		return 0;
 
 	builder->buildSpeed = buildSpeed;
+
+	CBuilderCmdBehaviour* builderCmd = unit->GetBehaviour<CBuilderCmdBehaviour>();
+	if (builderCmd == nullptr)
+		return 0;
 	if (lua_isnumber(L, 3)) {
-		builder->repairSpeed    = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 3));
+		builderCmd->repairSpeed    = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 3));
 	}
 	if (lua_isnumber(L, 4)) {
-		builder->reclaimSpeed   = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 4));
+		builderCmd->reclaimSpeed   = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 4));
 	}
 	if (lua_isnumber(L, 5)) {
-		builder->resurrectSpeed = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 5));
+		builderCmd->resurrectSpeed = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 5));
 	}
 	if (lua_isnumber(L, 6)) {
-		builder->captureSpeed   = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 6));
+		builderCmd->captureSpeed   = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 6));
 	}
 	if (lua_isnumber(L, 7)) {
-		builder->terraformSpeed = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 7));
+		builderCmd->terraformSpeed = INV_GAME_SPEED * max(0.0f, lua_tofloat(L, 7));
 	}
 	return 0;
 }

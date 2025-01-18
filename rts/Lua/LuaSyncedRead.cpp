@@ -61,6 +61,7 @@
 #include "Sim/Units/UnitLoader.h"
 #include "Sim/Units/UnitToolTipMap.hpp"
 #include "Sim/Units/Behaviour/BuilderBehaviour.h"
+#include "Sim/Units/Behaviour/BuilderCmdBehaviour.h"
 #include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "Sim/Units/BehaviourAI/BuilderBehaviourAI.h"
 #include "Sim/Units/BehaviourAI/FactoryBehaviourAI.h"
@@ -4573,27 +4574,31 @@ static int GetBuilderWorkerTask(lua_State* L, const CBuilderBehaviour *builder)
 		);
 		lua_pushnumber(L, builder->curBuild->id);
 		return 2;
-	} else if (builder->curCapture) {
+	}
+	CBuilderCmdBehaviour* builderCmd = builder->owner->GetBehaviour<CBuilderCmdBehaviour>();
+	if (builderCmd == nullptr)
+		return 0;
+	if (builderCmd->curCapture) {
 		lua_pushnumber(L, CMD_CAPTURE);
-		lua_pushnumber(L, builder->curCapture->id);
+		lua_pushnumber(L, builderCmd->curCapture->id);
 		return 2;
-	} else if (builder->curResurrect) {
+	} else if (builderCmd->curResurrect) {
 		lua_pushnumber(L, CMD_RESURRECT);
-		lua_pushnumber(L, builder->curResurrect->id + unitHandler.MaxUnits());
+		lua_pushnumber(L, builderCmd->curResurrect->id + unitHandler.MaxUnits());
 		return 2;
-	} else if (builder->curReclaim) {
+	} else if (builderCmd->curReclaim) {
 		lua_pushnumber(L, CMD_RECLAIM);
-		if (builder->reclaimingUnit) {
-			const auto reclaimee = dynamic_cast <const CUnit*> (builder->curReclaim);
+		if (builderCmd->reclaimingUnit) {
+			const auto reclaimee = dynamic_cast <const CUnit*> (builderCmd->curReclaim);
 			assert(reclaimee);
 			lua_pushnumber(L, reclaimee->id);
 		} else {
-			const auto reclaimee = dynamic_cast <const CFeature*> (builder->curReclaim);
+			const auto reclaimee = dynamic_cast <const CFeature*> (builderCmd->curReclaim);
 			assert(reclaimee);
 			lua_pushnumber(L, reclaimee->id + unitHandler.MaxUnits());
 		}
 		return 2;
-	} else if (builder->helpTerraform || builder->terraforming) {
+	} else if (builderCmd->helpTerraform || builderCmd->terraforming) {
 		lua_pushnumber(L, CMD_RESTORE); // FIXME: could also be leveling ground before construction
 		return 1;
 	} else {

@@ -2,6 +2,7 @@
 
 
 #include "FactoryBehaviourAI.h"
+#include "BuilderCmdBehaviourAI.h"
 #include "ExternalAI/EngineOutHandler.h"
 #include "Sim/Misc/GlobalSynced.h"
 #include "Game/GameHelper.h"
@@ -13,7 +14,6 @@
 #include "Sim/Units/UnitHandler.h"
 #include "Sim/Units/UnitLoader.h"
 #include "Sim/Units/UnitDefHandler.h"
-//#include "Sim/Units/UnitTypes/Factory.h"
 #include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "System/Log/ILog.h"
 #include "System/creg/STL_Map.h"
@@ -25,7 +25,7 @@
 
 template CFactoryBehaviourAI* CCommandAI::GetBehaviourAI<CFactoryBehaviourAI>() const;
 
-CR_BIND_DERIVED(CFactoryBehaviourAI, CBehaviourAI , )
+CR_BIND_DERIVED(CFactoryBehaviourAI, CBaseBuilderBehaviourAI , )
 
 CR_REG_METADATA(CFactoryBehaviourAI , (
 	CR_MEMBER(newUnitCommands),
@@ -33,32 +33,13 @@ CR_REG_METADATA(CFactoryBehaviourAI , (
 	CR_PREALLOC(GetPreallocContainer)
 ))
 
-static std::string GetUnitDefBuildOptionToolTip(const UnitDef* ud, bool disabled) {
-	std::string tooltip;
 
-	if (disabled) {
-		tooltip = "\xff\xff\x22\x22" "DISABLED: " "\xff\xff\xff\xff";
-	} else {
-		tooltip = "Build: ";
-	}
-
-	tooltip += (ud->humanName + " - " + ud->tooltip);
-	tooltip += ("\nHealth "      + FloatToString(ud->health,      "%.0f"));
-	tooltip += ("\nMetal cost "  + FloatToString(ud->cost.metal,  "%.0f"));
-	tooltip += ("\nEnergy cost " + FloatToString(ud->cost.energy, "%.0f"));
-	tooltip += ("\nBuild time "  + FloatToString(ud->buildTime,   "%.0f"));
-
-	return tooltip;
-}
-
-
-
-CFactoryBehaviourAI::CFactoryBehaviourAI(): CBehaviourAI()
+CFactoryBehaviourAI::CFactoryBehaviourAI(): CBaseBuilderBehaviourAI()
 {
 }
 
 
-CFactoryBehaviourAI::CFactoryBehaviourAI(CUnit* owner): CBehaviourAI(owner)
+CFactoryBehaviourAI::CFactoryBehaviourAI(CUnit* owner): CBaseBuilderBehaviourAI(owner)
 {
 	auto& possibleCommands = owner->commandAI->possibleCommands;
 	auto& commandQue = owner->commandAI->commandQue;
@@ -117,6 +98,7 @@ CFactoryBehaviourAI::CFactoryBehaviourAI(CUnit* owner): CBehaviourAI(owner)
 		c.mouseicon = c.name;
 		possibleCommands.push_back(commandDescriptionCache.GetPtr(std::move(c)));
 	}
+	// TODO: HERE DUPLICATE CMDS!
 
 	//CFactory* fac = static_cast<CFactory*>(owner);
 	//CFactoryBehaviour* fac = owner->GetBehaviour<CFactoryBehaviour>();
@@ -172,6 +154,10 @@ bool CFactoryBehaviourAI::GiveCommandReal(const Command& c, bool fromSynced)
 	if ((cmdID != CMD_MOVE) && !owner->commandAI->AllowedCommand(c, fromSynced))
 		return true;
 
+	CCommandQueue* queue = &commandQue;
+	if (buildOptions.size() > 0)
+		queue = &newUnitCommands;
+
 	auto boi = buildOptions.find(cmdID);
 
 	// not a build order (or a build order we do not support, eg. if multiple
@@ -196,30 +182,30 @@ bool CFactoryBehaviourAI::GiveCommandReal(const Command& c, bool fromSynced)
 		}
 
 		if (!(c.GetOpts() & SHIFT_KEY)) {
- 			waitCommandsAI.ClearUnitQueue(owner, newUnitCommands);
+ 			waitCommandsAI.ClearUnitQueue(owner, *queue);
 			owner->commandAI->ClearCommandDependencies();
-			newUnitCommands.clear();
+			queue->clear();
 		}
 
 		owner->commandAI->AddCommandDependency(c);
 
 		if (cmdID != CMD_STOP) {
 			if ((cmdID == CMD_WAIT) || (cmdID == CMD_SELFD)) {
-				if (!newUnitCommands.empty() && (newUnitCommands.back().GetID() == cmdID)) {
+				if (!queue->empty() && (queue->back().GetID() == cmdID)) {
 					if (cmdID == CMD_WAIT) {
 						waitCommandsAI.RemoveWaitCommand(owner, c);
 					}
-					newUnitCommands.pop_back();
+					queue->pop_back();
 				} else {
-					newUnitCommands.push_back(c);
+					queue->push_back(c);
 				}
 			} else {
 				bool dummy;
-				if (owner->commandAI->CancelCommands(c, newUnitCommands, dummy) > 0) {
+				if (owner->commandAI->CancelCommands(c, *queue, dummy) > 0) {
 					return true;
 				} else {
-					if (owner->commandAI->GetOverlapQueued(c, newUnitCommands).empty()) {
-						newUnitCommands.push_back(c);
+					if (owner->commandAI->GetOverlapQueued(c, *queue).empty()) {
+						queue->push_back(c);
 					} else {
 						return true;
 					}
@@ -228,15 +214,15 @@ bool CFactoryBehaviourAI::GiveCommandReal(const Command& c, bool fromSynced)
 		}
 
 		// the first new-unit build order can not be WAIT or SELFD
-		while (!newUnitCommands.empty()) {
-			const Command& newUnitCommand = newUnitCommands.front();
+		while (!queue->empty()) {
+			const Command& newUnitCommand = queue->front();
 			const int id = newUnitCommand.GetID();
 
 			if ((id == CMD_WAIT) || (id == CMD_SELFD)) {
 				if (cmdID == CMD_WAIT) {
 					waitCommandsAI.RemoveWaitCommand(owner, c);
 				}
-				newUnitCommands.pop_front();
+				queue->pop_front();
 			} else {
 				break;
 			}
@@ -415,14 +401,22 @@ bool CFactoryBehaviourAI::SlowUpdate()
 			}
 		} else {
 			// regular order (move/wait/etc)
-			switch (c.GetID()) {
-				case CMD_STOP: {
-					ExecuteStop(c);
-				} break;
-				default: {
-					owner->commandAI->SlowUpdate();
-				} break;
+			if (c.GetID() == CMD_STOP)
+				ExecuteStop(c);
+			auto* builderCmdAI = owner->commandAI->GetBehaviourAI<CBuilderCmdBehaviourAI>();
+			if (builderCmdAI) {
+				switch (c.GetID()) {
+					case CMD_REPAIR:    { builderCmdAI->ExecuteRepair(c);    } break;
+					case CMD_CAPTURE:   { builderCmdAI->ExecuteCapture(c);   } break;
+					case CMD_GUARD:     { builderCmdAI->ExecuteGuard(c);     } break;
+					case CMD_RECLAIM:   { builderCmdAI->ExecuteReclaim(c);   } break;
+					case CMD_RESURRECT: { builderCmdAI->ExecuteResurrect(c); } break;
+					case CMD_PATROL:    { builderCmdAI->ExecutePatrol(c);    } break;
+					case CMD_FIGHT:     { builderCmdAI->ExecuteFight(c);     } break;
+					case CMD_RESTORE:   { builderCmdAI->ExecuteRestore(c);   } break;
+				}
 			}
+			owner->commandAI->SlowUpdate();
 		}
 
 		// exit if no command was consumed

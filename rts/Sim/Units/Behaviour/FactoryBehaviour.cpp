@@ -2,6 +2,7 @@
 
 
 #include "FactoryBehaviour.h"
+#include "BuilderCmdBehaviour.h"
 #include "Game/GameHelper.h"
 #include "Game/WaitCommandsAI.h"
 #include "Map/Ground.h"
@@ -134,7 +135,7 @@ void CFactoryBehaviour::UpdatePre()
 		// construction (by assisting builders) or has to be killed --> the
 		// latter is easier
 		if (curBuild != nullptr)
-			StopBuild();
+			StopBuild(true);
 
 		return;
 	}
@@ -172,6 +173,20 @@ void CFactoryBehaviour::UpdatePre()
 	if (curBuild != nullptr) {
 		UpdateBuild(curBuild);
 		FinishBuild(curBuild);
+	} else if (!IsStunned()) {
+		const CCommandQueue& cQueue = owner->commandAI->commandQue;
+		const Command& fCommand = (!cQueue.empty())? cQueue.front(): Command(CMD_STOP);
+		CBuilderCmdBehaviour* builderCmd = owner->GetBehaviour<CBuilderCmdBehaviour>();
+
+		if (builderCmd != nullptr) {
+			bool updated = false;
+			updated = updated || builderCmd->UpdateTerraform(fCommand);
+			updated = updated || builderCmd->AssistTerraform(fCommand);
+			updated = updated || builderCmd->UpdateBuild(fCommand);
+			updated = updated || builderCmd->UpdateReclaim(fCommand);
+			updated = updated || builderCmd->UpdateResurrect(fCommand);
+			updated = updated || builderCmd->UpdateCapture(fCommand);
+		}
 	}
 
 	const bool wantClose = (!IsStunned() && yardOpen && (gs->frameNum >= (lastBuildUpdateFrame + GAME_SPEED * (UNIT_SLOWUPDATE_RATE >> 1))));
@@ -198,6 +213,7 @@ void CFactoryBehaviour::StartBuild(const UnitDef* buildeeDef) {
 	auto& losStatus = owner->losStatus;
 	auto buildFacing = owner->buildFacing;
 
+	// TODO: REFACTOR HERE, queue and buildPos
 	const float3& buildPos = CalcBuildPos(script->QueryBuildInfo());
 
 	// wait until buildPos is no longer blocked (eg. by a previous buildee)
@@ -252,7 +268,19 @@ void CFactoryBehaviour::UpdateBuild(CUnit* buildee) {
 	const int buildPieceHeading = GetHeadingFromVector(buildPieceMat[8], buildPieceMat[10]);
 	const int buildFaceHeading = GetHeadingFromFacing(buildFacing);
 
-	float3 buildeePos = buildPos;
+	const CCommandQueue& queue = commandAI->commandQue;
+
+	if (!queue.empty() && (queue.front().GetID() < 0)) {
+		float3 buildeePos = buildPos;
+		// note: basically StaticMoveType::SlowUpdate()
+		if (buildee->FloatOnWater() && buildee->IsInWater())
+			buildeePos.y = -buildee->moveType->GetWaterline();
+
+		// rotate unit nanoframe with platform
+		buildee->Move(buildeePos, false);
+		buildee->SetHeading((-buildPieceHeading + buildFaceHeading) & (SPRING_CIRCLE_DIVS - 1), false, false, 0.0f);
+	}
+	/*float3 buildeePos = buildPos;
 
 	// note: basically StaticMoveType::SlowUpdate()
 	if (buildee->FloatOnWater() && buildee->IsInWater())
@@ -260,9 +288,7 @@ void CFactoryBehaviour::UpdateBuild(CUnit* buildee) {
 
 	// rotate unit nanoframe with platform
 	buildee->Move(buildeePos, false);
-	buildee->SetHeading((-buildPieceHeading + buildFaceHeading) & (SPRING_CIRCLE_DIVS - 1), false, false, 0.0f);
-
-	const CCommandQueue& queue = commandAI->commandQue;
+	buildee->SetHeading((-buildPieceHeading + buildFaceHeading) & (SPRING_CIRCLE_DIVS - 1), false, false, 0.0f);*/
 
 	if (!queue.empty() && (queue.front().GetID() == CMD_WAIT)) {
 		buildee->AddBuildPower(owner, 0.0f);
@@ -284,26 +310,41 @@ void CFactoryBehaviour::FinishBuild(CUnit* buildee) {
 		return;
 
 	// assign buildee to same group as us
-	if (owner->GetGroup() != nullptr && buildee->GetGroup() != nullptr)
-		buildee->SetGroup(owner->GetGroup(), true);
+	// TODO REFACTO: here add isOurs checks
+	/*if (owner->GetGroup() != nullptr && buildee->GetGroup() != nullptr)
+		buildee->SetGroup(owner->GetGroup(), true);*/
+	bool isOurs = false;
+	const CCommandQueue& queue = owner->commandAI->commandQue;
+	if (!queue.empty() && (queue.front().GetID() < 0)) {
+		// assign buildee to same group as us
+		if (owner->GetGroup() != nullptr && buildee->GetGroup() != nullptr)
+			buildee->SetGroup(owner->GetGroup(), true);
+		isOurs = true;
+	}
 
 	const CCommandAI* bcai = buildee->commandAI;
 	// if not idle, the buildee already has user orders
 	const bool buildeeIdle = (bcai->commandQue.empty());
 	const bool buildeeMobile = (dynamic_cast<const CMobileCAI*>(bcai) != nullptr);
 
-	if (buildeeIdle || buildeeMobile) {
+	if (isOurs && (buildeeIdle || buildeeMobile)) {
 		AssignBuildeeOrders(buildee);
 		waitCommandsAI.AddLocalUnit(buildee, owner);
 	}
 
-	// inform our commandAI
+	if (isOurs) {
+		// inform our commandAI
+		CFactoryBehaviourAI* factoryCAI = owner->commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
+		factoryCAI->FactoryFinishBuild(finishedBuildCommand);
+		eventHandler.UnitFromFactory(buildee, owner, !buildeeIdle);
+	}
+	/*// inform our commandAI
 	CFactoryBehaviourAI* factoryCAI = owner->commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
 	//CFactoryCAI* factoryCAI = static_cast<CFactoryCAI*>(commandAI);
 	factoryCAI->FactoryFinishBuild(finishedBuildCommand);
 
-	eventHandler.UnitFromFactory(buildee, owner, !buildeeIdle);
-	StopBuild();
+	eventHandler.UnitFromFactory(buildee, owner, !buildeeIdle);*/
+	StopBuild(true);
 }
 
 
@@ -334,12 +375,13 @@ unsigned int CFactoryBehaviour::QueueBuild(const UnitDef* buildeeDef, const Comm
 	return FACTORY_NEXT_BUILD_ORDER;
 }
 
-void CFactoryBehaviour::StopBuild()
+void CFactoryBehaviour::StopBuild(bool callScript) // TODO: refactor, maybe can reuse??
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	auto& script = owner->script;
 	// cancel a build-in-progress
-	script->StopBuilding();
+	if (callScript)
+		script->StopBuilding();
 
 	if (curBuild) {
 		if (curBuild->beingBuilt) {
@@ -351,6 +393,13 @@ void CFactoryBehaviour::StopBuild()
 
 	curBuild = nullptr;
 	curBuildDef = nullptr;
+
+	CBuilderCmdBehaviour* builderCmd = owner->GetBehaviour<CBuilderCmdBehaviour>();
+
+	if (builderCmd != nullptr)
+		builderCmd->StopBuild(callScript);
+
+	// TODO REFACTOR: CLEANUP DEPENDENCIES FOR CMDS TOO
 }
 
 void CFactoryBehaviour::DependentDied(CObject* o)
@@ -358,7 +407,7 @@ void CFactoryBehaviour::DependentDied(CObject* o)
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (o == curBuild) {
 		curBuild = nullptr;
-		StopBuild();
+		StopBuild(true);
 	}
 
 	//CUnit::DependentDied(o);

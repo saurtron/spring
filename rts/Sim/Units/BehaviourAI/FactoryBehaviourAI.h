@@ -3,7 +3,7 @@
 #ifndef _FACTORY_BEHAVIOUR_AI_H_
 #define _FACTORY_BEHAVIOUR_AI_H_
 
-#include "BehaviourAI.h"
+#include "BaseBuilderBehaviourAI.h"
 #include "Sim/Units/CommandAI/CommandQueue.h"
 
 #include <string>
@@ -13,7 +13,7 @@ class CUnit;
 class CFeature;
 struct Command;
 
-class CFactoryBehaviourAI : public CBehaviourAI
+class CFactoryBehaviourAI : public CBaseBuilderBehaviourAI
 {
 public:
 	CR_DECLARE(CFactoryBehaviourAI)
@@ -34,7 +34,6 @@ public:
 	void ExecuteStop(Command& c);
 
 	CCommandQueue newUnitCommands;
-
 	spring::unordered_map<int, int> buildOptions;
 
 private:

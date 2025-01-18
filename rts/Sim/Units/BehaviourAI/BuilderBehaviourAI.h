@@ -3,7 +3,7 @@
 #ifndef _BUILDER_BEHAVIOUR_AI_H_
 #define _BUILDER_BEHAVIOUR_AI_H_
 
-#include "BehaviourAI.h"
+#include "BaseBuilderBehaviourAI.h"
 #include "Sim/Units/CommandAI/MobileCAI.h"
 #include "Sim/Units/BuildInfo.h"
 #include "System/Misc/BitwiseEnum.h"
@@ -20,7 +20,7 @@ struct Command;
 struct UnitDef;
 
 
-class CBuilderBehaviourAI : public CBehaviourAI
+class CBuilderBehaviourAI : public CBaseBuilderBehaviourAI
 {
 public:
 	CR_DECLARE(CBuilderBehaviourAI)
@@ -36,66 +36,17 @@ public:
 	virtual void FinishCommand() override;
 	bool GiveCommandReal(const Command& c, bool fromSynced = true) override;
 	virtual bool BuggerOff(const float3& pos, float radius);
-	bool TargetInterceptable(const CUnit* unit, float uspeed);
 
 	void ExecuteBuildCmd(Command& c);
-	void ExecutePatrol(Command& c);
-	void ExecuteFight(Command& c);
-	void ExecuteGuard(Command& c);
 	void ExecuteStop(Command& c);
-	virtual void ExecuteRepair(Command& c);
-	virtual void ExecuteCapture(Command& c);
-	virtual void ExecuteReclaim(Command& c);
-	virtual void ExecuteResurrect(Command& c);
-	virtual void ExecuteRestore(Command& c);
-
-	bool ReclaimObject(CSolidObject* o);
-	bool ResurrectObject(CFeature* feature);
 
 	bool IsInBuildRange(const CWorldObject* obj) const;
 	bool IsInBuildRange(const float3& pos, const float radius) const;
 	float GetBuildRange(const float targetRadius) const;
 
-public:
 	spring::unordered_set<int> buildOptions;
 
 private:
-	enum ReclaimOptions {
-		REC_NORESCHECK = 1<<0,
-		REC_UNITS      = 1<<1,
-		REC_NONREZ     = 1<<2,
-		REC_ENEMY      = 1<<3,
-		REC_ENEMYONLY  = 1<<4,
-		REC_SPECIAL    = 1<<5
-	};
-	typedef Bitwise::BitwiseEnum<ReclaimOptions> ReclaimOption;
-
-private:
-	/**
-	 * @param pos position where to reclaim
-	 * @param radius radius to search for objects to reclaim
-	 * @param cmdopts command options
-	 * @param recoptions reclaim optioons
-	 */
-	bool FindReclaimTargetAndReclaim(const float3& pos, float radius, unsigned char cmdopt, ReclaimOption recoptions);
-	/**
-	 * @param freshOnly reclaims only corpses that have rez progress or all the metal left
-	 */
-	bool FindResurrectableFeatureAndResurrect(const float3& pos, float radius, unsigned char options, bool freshOnly);
-
-	/**
-	 * @param builtOnly skips units that are under construction
-	 */
-	bool FindRepairTargetAndRepair(const float3& pos, float radius, unsigned char options, bool attackEnemy, bool builtOnly);
-	/**
-	 * @param pos         position where to search for units to capture
-	 * @param radius      radius in which are searched units to capture
-	 * @param options     command options
-	 * @param healthyOnly only capture units with capture progress or 100% health remaining
-	 */
-	bool FindCaptureTargetAndCapture(const float3& pos, float radius, unsigned char options, bool healthyOnly);
-
-	int FindReclaimTarget(const float3& pos, float radius, unsigned char cmdopt, ReclaimOption recoptions, float bestStartDist = 1.0e30f) const;
 
 	bool MoveInBuildRange(const CWorldObject* obj, const bool checkMoveTypeForFailed = false);
 	bool MoveInBuildRange(const float3& pos, float radius, const bool checkMoveTypeForFailed = false);
@@ -107,9 +58,6 @@ private:
 	}
 
 	void CancelRestrictedUnit();
-	bool OutOfImmobileRange(const Command& cmd) const;
-	/// add a command to reclaim a feature that is blocking our build-site
-	void ReclaimFeature(CFeature* f);
 
 	inline float f3Dist(const float3& a, const float3& b) const {
 		return range3D ? a.distance(b) : a.distance2D(b);
@@ -138,22 +86,14 @@ private:
 	int buildRetries;
 	int randomCounter; ///< used to balance intervals of time intensive ai optimizations
 
-	int lastPC1; ///< helps avoid infinite loops
-	int lastPC2;
-	int lastPC3;
-
 	bool range3D;
 
-	void PushOrUpdateReturnFight();
 	void StopMove();
 	void StopMoveAndFinishCommand();
 	void StopMoveAndKeepPointing(const float3& p, const float r, bool b);
 	void NonMoving();
 	void SetGoal(const float3& pos, const float3& curPos, float goalRadius = SQUARE_SIZE);
 	void SetGoal(const float3& pos, const float3& curPos, float goalRadius, float speed);
-	void StartSlowGuard(float speed);
-	void StopSlowGuard();
-	int UpdateTargetLostTimer(int unitID);
 };
 
 #endif // _BUILDER_BEHAVIOUR_AI_H_
