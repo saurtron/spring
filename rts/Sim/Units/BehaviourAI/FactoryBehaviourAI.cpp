@@ -414,9 +414,9 @@ bool CFactoryBehaviourAI::SlowUpdate()
 					case CMD_PATROL:    { builderCmdAI->ExecutePatrol(c);    } break;
 					case CMD_FIGHT:     { builderCmdAI->ExecuteFight(c);     } break;
 					case CMD_RESTORE:   { builderCmdAI->ExecuteRestore(c);   } break;
+					default: { owner->commandAI->SlowUpdateImpl(); } break;
 				}
 			}
-			return false;
 		}
 
 		// exit if no command was consumed
