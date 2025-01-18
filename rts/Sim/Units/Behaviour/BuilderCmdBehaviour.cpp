@@ -1,5 +1,7 @@
 #include "BuilderCmdBehaviour.h"
 #include "BaseBuilderBehaviour.h"
+#include "BuilderBehaviour.h"
+#include "FactoryBehaviour.h"
 
 #include "Sim/Units/CommandAI/Command.h"
 #include "Sim/Units/Unit.h"
@@ -146,6 +148,12 @@ void CBuilderCmdBehaviour::PreInit(const UnitLoadParams& params)
 	terraformSpeed = INV_GAME_SPEED * unitDef->terraformSpeed;
 
 	baseBuilder = owner->GetBehaviour<CBaseBuilderBehaviour>();
+	CBuilderBehaviour *builder = owner->GetBehaviour<CBuilderBehaviour>();
+	if (builder)
+		baseBuilder = builder;
+	CFactoryBehaviour *factory = owner->GetBehaviour<CFactoryBehaviour>();
+	if (factory)
+		baseBuilder = factory;
 	//baseBuilder-PreInit(params);
 }
 
