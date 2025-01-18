@@ -13,6 +13,7 @@
 
 class CUnit;
 class CBuilderCmdBehaviour;
+class CBaseBuilderBehaviour;
 class CFeature;
 class CSolidObject;
 class CWorldObject;
@@ -128,6 +129,7 @@ private:
 	float GetBuildOptionRadius(const UnitDef* unitdef, int cmdId);
 */
 private:
+	CBaseBuilderBehaviour* baseBuilder;
 	CBuilderCmdBehaviour* ownerBuilder;
 /*
 	bool building;

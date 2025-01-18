@@ -18,6 +18,7 @@
 #include "Sim/Misc/Team.h"
 #include "Sim/Misc/TeamHandler.h"
 #include "Sim/MoveTypes/MoveType.h"
+#include "Sim/Units/Behaviour/BaseBuilderBehaviour.h"
 #include "Sim/Units/Behaviour/BuilderCmdBehaviour.h"
 #include "Sim/Units/Behaviour/FactoryBehaviour.h"
 #include "Sim/Units/UnitDefHandler.h"
@@ -106,7 +107,9 @@ CBuilderCmdBehaviourAI::CBuilderCmdBehaviourAI(CUnit* owner):
 	lastPC3(-1),
 	range3D(owner->unitDef->buildRange3D)
 {
-	//ownerBuilder = owner->GetBehaviour<CBuilderCmdBehaviour>();
+	// TODO REFACTOR: need to get builder when other constructor is used
+	ownerBuilder = owner->GetBehaviour<CBuilderCmdBehaviour>();
+	baseBuilder = owner->GetBehaviour<CBaseBuilderBehaviour>();
 	auto& possibleCommands = owner->commandAI->possibleCommands;
 
 	if (owner->unitDef->canRepair) {
@@ -744,7 +747,7 @@ void CBuilderCmdBehaviourAI::ExecuteRepair(Command& c)
 			const float radius = c.GetParam(4) + 100.0f; // do not walk too far outside repair area
 
 			if ((pos - unit->pos).SqLength2D() > radius * radius ||
-				(unit->IsMoving() && ((c.IsInternalOrder() && !TargetInterceptable(unit, unit->speed.Length2D())) || ownerBuilder->curBuild == unit)
+				(unit->IsMoving() && ((c.IsInternalOrder() && !TargetInterceptable(unit, unit->speed.Length2D())) || baseBuilder->curBuild == unit)
 				&& !IsInBuildRange(unit))) {
 				StopMoveAndFinishCommand();
 				return;
@@ -871,6 +874,7 @@ void CBuilderCmdBehaviourAI::ExecuteGuard(Command& c)
 	}
 
 	auto& commandQue = owner->commandAI->commandQue;
+	auto* base = guardee->GetBehaviour<CBaseBuilderBehaviour>();
 	auto* b = guardee->GetBehaviour<CBuilderCmdBehaviour>();
 
 	//if (CBuilder* b = dynamic_cast<CBuilder*>(guardee)) {
@@ -899,15 +903,15 @@ void CBuilderCmdBehaviourAI::ExecuteGuard(Command& c)
 		}
 
 		const bool pushRepairCommand =
-			(  b->curBuild != nullptr) &&
-			(  b->curBuild->soloBuilder == nullptr || b->curBuild->soloBuilder == owner) &&
-			(( b->curBuild->beingBuilt && owner->unitDef->canAssist) ||
-			( !b->curBuild->beingBuilt && owner->unitDef->canRepair));
+			(  base->curBuild != nullptr) &&
+			(  base->curBuild->soloBuilder == nullptr || base->curBuild->soloBuilder == owner) &&
+			(( base->curBuild->beingBuilt && owner->unitDef->canAssist) ||
+			( !base->curBuild->beingBuilt && owner->unitDef->canRepair));
 
 		if (pushRepairCommand) {
 			StopSlowGuard();
 
-			Command nc(CMD_REPAIR, c.GetOpts(), b->curBuild->id);
+			Command nc(CMD_REPAIR, c.GetOpts(), base->curBuild->id);
 
 			commandQue.push_front(nc);
 			inCommand = false;

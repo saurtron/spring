@@ -3,7 +3,7 @@
 #ifndef BUILDER_CMD_BEHAVIOUR_H
 #define BUILDER_CMD_BEHAVIOUR_H
 
-#include "BaseBuilderBehaviour.h"
+#include "Behaviour.h"
 
 #include <string>
 
@@ -17,7 +17,7 @@ class CFeature;
 class CSolidObject;
 class CBaseBuilderBehaviour;
 
-class CBuilderCmdBehaviour : public CBaseBuilderBehaviour
+class CBuilderCmdBehaviour : public CBehaviour
 {
 public:
 	CR_DECLARE(CBuilderCmdBehaviour)
@@ -83,7 +83,8 @@ public:
 	int tx1,tx2,tz1,tz2;
 	float3 terraformCenter;
 	float terraformRadius;
-
+private:
+	CBaseBuilderBehaviour* baseBuilder = nullptr;
 };
 
 #endif // BUILDER_CMD_BEHAVIOUR_H
