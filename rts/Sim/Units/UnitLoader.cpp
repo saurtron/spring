@@ -17,9 +17,11 @@
 #include "CommandAI/MobileCAI.h"
 
 #include "Behaviour/BuilderBehaviour.h"
+#include "Behaviour/BuilderCmdBehaviour.h"
 #include "Behaviour/FactoryBehaviour.h"
 #include "Behaviour/ExtractorBehaviour.h"
 #include "BehaviourAI/BuilderBehaviourAI.h"
+#include "BehaviourAI/BuilderCmdBehaviourAI.h"
 #include "BehaviourAI/FactoryBehaviourAI.h"
 
 #include "Game/GameHelper.h"
@@ -94,17 +96,22 @@ void CUnitLoader::CreateUnitBehaviours(CUnit *u)
 {
 	static_assert(sizeof(CFactoryBehaviour) <= sizeof(CBuilding), "");
 	static_assert(sizeof(CBuilderBehaviour) <= sizeof(CBuilding), "");
+	static_assert(sizeof(CBuilderCmdBehaviour) <= sizeof(CBuilding), "");
 	static_assert(sizeof(CExtractorBehaviour) <= sizeof(CBuilding), "");
 	const auto& ud = u->unitDef;
 
-	if (ud->IsFactoryUnit())
+	if (ud->IsFactoryUnit()) {
 		u->behaviours.emplace_back(unitMemPool.alloc<CFactoryBehaviour>(u));
+		u->behaviours.emplace_back(unitMemPool.alloc<CBuilderCmdBehaviour>(u));
+	}
 
 	// all other types of non-structure "builders", including hubs and
 	// nano-towers (the latter should not have any build-options at all,
 	// whereas the former should be unable to build any mobile units)
-	else if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit())
+	else if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit()) {
 		u->behaviours.emplace_back(unitMemPool.alloc<CBuilderBehaviour>(u));
+		u->behaviours.emplace_back(unitMemPool.alloc<CBuilderCmdBehaviour>(u));
+	}
 
 	// static non-builder structures
 	if (ud->IsBuildingUnit()) {
@@ -117,16 +124,21 @@ void CUnitLoader::CreateUnitBehaviourAIs(CUnit *u)
 {
 	static_assert(sizeof(CFactoryBehaviourAI) <= sizeof(CBuilding), "");
 	static_assert(sizeof(CBuilderBehaviourAI) <= sizeof(CBuilding), "");
+	static_assert(sizeof(CBuilderCmdBehaviourAI) <= sizeof(CBuilding), "");
 	const auto& ud = u->unitDef;
 
-	if (ud->IsFactoryUnit())
+	if (ud->IsFactoryUnit()) {
 		u->commandAI->behaviourAIs.emplace_back(unitMemPool.alloc<CFactoryBehaviourAI>(u));
+		u->commandAI->behaviourAIs.emplace_back(unitMemPool.alloc<CBuilderCmdBehaviourAI>(u));
+	}
 
 	// all other types of non-structure "builders", including hubs and
 	// nano-towers (the latter should not have any build-options at all,
 	// whereas the former should be unable to build any mobile units)
-	else if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit())
+	else if (ud->IsMobileBuilderUnit() || ud->IsStaticBuilderUnit()) {
 		u->commandAI->behaviourAIs.emplace_back(unitMemPool.alloc<CBuilderBehaviourAI>(u));
+		u->commandAI->behaviourAIs.emplace_back(unitMemPool.alloc<CBuilderCmdBehaviourAI>(u));
+	}
 }
 
 CUnit* CUnitLoader::LoadUnit(const UnitLoadParams& params)
