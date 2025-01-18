@@ -1,5 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
+#include <ranges>
+
 #include "UnitDef.h"
 #include "Unit.h"
 #include "UnitHandler.h"
@@ -108,7 +110,7 @@ CUnit::~CUnit()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	assert(unitMemPool.mapped(this));
-	for(auto behaviour: behaviours) {
+	for(auto behaviour: behaviours | std::views::reverse) {
 		spring::SafeDestruct(behaviour);
 
 	}
@@ -473,7 +475,7 @@ void CUnit::FinishedBuilding(bool postInit)
 void CUnit::KillUnit(CUnit* attacker, bool selfDestruct, bool reclaimed, int weaponDefID)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	for(auto behaviour: behaviours) {
+	for(auto behaviour: behaviours | std::views::reverse) {
 		behaviour->KillUnit(attacker, selfDestruct, reclaimed, weaponDefID);
 	}
 	if (IsCrashing() && !beingBuilt)
@@ -976,7 +978,8 @@ void CUnit::SetStunned(bool stun) {
 void CUnit::SlowUpdate()
 {
 	ZoneScoped;
-	for(auto behaviour: behaviours) {
+	// TODO REFACTOR: check if this needs to be reverse
+	for(auto behaviour: behaviours | std::views::reverse) {
 		behaviour->SlowUpdate();
 	}
 	UpdatePosErrorParams(false, true);
@@ -2406,7 +2409,7 @@ void CUnit::Deactivate()
 	if (IsInLosForAllyTeam(gu->myAllyTeam))
 		Channels::General->PlayRandomSample(unitDef->sounds.deactivate, this);
 
-	for(auto behaviour: behaviours) {
+	for(auto behaviour: behaviours | std::views::reverse) {
 		behaviour->Deactivate();
 	}
 }

@@ -1,5 +1,6 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
+#include <ranges>
 
 #include "CommandAI.h"
 
@@ -374,7 +375,7 @@ CCommandAI::CCommandAI(CUnit* owner):
 
 CCommandAI::~CCommandAI()
 {
-	for(auto behaviourAI: behaviourAIs) {
+	for(auto behaviourAI: behaviourAIs | std::views::reverse) {
 		spring::SafeDestruct(behaviourAI);
 	}
 	behaviourAIs.clear();
@@ -838,7 +839,7 @@ void CCommandAI::GiveCommand(const Command& c, int playerNum, bool fromSynced, b
 void CCommandAI::GiveCommandReal(const Command& c, bool fromSynced)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	for(auto behaviourAI: behaviourAIs) {
+	for(auto behaviourAI: behaviourAIs | std::views::reverse) {
 		if (behaviourAI->GiveCommandReal(c, fromSynced))
 			return;
 	}
@@ -1556,7 +1557,7 @@ void CCommandAI::SlowUpdate()
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (gs->paused) // Commands issued may invoke SlowUpdate when paused
 		return;
-	for(auto behaviourAI: behaviourAIs) {
+	for(auto behaviourAI: behaviourAIs | std::views::reverse) {
 		if (behaviourAI->SlowUpdate())
 			// TODO: maybe should let other behaviourAIs run
 			return;
@@ -1619,7 +1620,7 @@ int CCommandAI::GetDefaultCmd(const CUnit* pointed, const CFeature* feature)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	int newCmd = CMDTYPE_NEXT; // TODO: find a better way to signal this, maybe std::optional
-	for(auto behaviourAI: behaviourAIs) {
+	for(auto behaviourAI: behaviourAIs | std::views::reverse) {
 		newCmd = behaviourAI->GetDefaultCmd(pointed, feature);
 		if (newCmd != CMDTYPE_NEXT)
 			return newCmd;
