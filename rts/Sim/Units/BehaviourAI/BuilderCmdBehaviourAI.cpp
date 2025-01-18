@@ -546,7 +546,7 @@ void CBuilderCmdBehaviourAI::ReclaimFeature(CFeature* f)
 		commandQue.push_front(Command(CMD_RECLAIM, 0, f->id + unitHandler.MaxUnits()));
 		// this assumes that the reclaim command can never return directly
 		// without having reclaimed the target
-		SlowUpdate();
+		owner->commandAI->SlowUpdate();
 	}
 }
 
@@ -727,12 +727,10 @@ void CBuilderCmdBehaviourAI::ExecuteRepair(Command& c)
 	CMobileCAI* cai = dynamic_cast<CMobileCAI*>(owner->commandAI);
 	auto& inCommand = owner->commandAI->inCommand;
 	// not all builders are repair-capable by default
-	LOG("EXECUTE REPAIR PRE");
 	if (!owner->unitDef->canRepair)
 		return;
 
 	if (c.GetNumParams() == 1 || c.GetNumParams() == 5) {
-		LOG("EXECUTE REPAIR 0");
 		// repair unit
 		CUnit* unit = unitHandler.GetUnit(c.GetParam(0));
 
@@ -777,7 +775,6 @@ void CBuilderCmdBehaviourAI::ExecuteRepair(Command& c)
 			StopMoveAndFinishCommand();
 		}
 	} else if (c.GetNumParams() == 4) {
-		LOG("EXECUTE REPAIR 1");
 		// area repair
 		const float3 pos = c.GetPos(0);
 		const float radius = c.GetParam(3);
@@ -785,7 +782,7 @@ void CBuilderCmdBehaviourAI::ExecuteRepair(Command& c)
 		ownerBuilder->StopBuild();
 		if (FindRepairTargetAndRepair(pos, radius, c.GetOpts(), false, (c.GetOpts() & META_KEY))) {
 			inCommand = false;
-			SlowUpdate();
+			owner->commandAI->SlowUpdate();
 			return;
 		}
 
@@ -793,7 +790,6 @@ void CBuilderCmdBehaviourAI::ExecuteRepair(Command& c)
 			StopMoveAndFinishCommand();
 
 	} else {
-		LOG("EXECUTE REPAIR 2");
 		StopMoveAndFinishCommand();
 	}
 }
@@ -843,7 +839,7 @@ void CBuilderCmdBehaviourAI::ExecuteCapture(Command& c)
 
 		if (FindCaptureTargetAndCapture(pos, radius, c.GetOpts(), (c.GetOpts() & META_KEY))) {
 			inCommand = false;
-			SlowUpdate();
+			owner->commandAI->SlowUpdate();
 			return;
 		}
 
@@ -928,11 +924,10 @@ void CBuilderCmdBehaviourAI::ExecuteGuard(Command& c)
 			StopSlowGuard();
 
 			Command nc(CMD_REPAIR, c.GetOpts(), base->curBuild->id);
-			LOG("PUSH CMD 0");
 
 			commandQue.push_front(nc);
 			inCommand = false;
-			SlowUpdate();
+			owner->commandAI->SlowUpdate();
 			return;
 		}
 	}
@@ -946,11 +941,10 @@ void CBuilderCmdBehaviourAI::ExecuteGuard(Command& c)
 
 		if (pushRepairCommand) {
 			StopSlowGuard();
-			LOG("PUSH CMD 1");
 
 			commandQue.push_front(Command(CMD_REPAIR, c.GetOpts(), fac->curBuild->id));
 			inCommand = false;
-			// SlowUpdate();
+			owner->commandAI->SlowUpdate();
 			return;
 		}
 	}
@@ -972,7 +966,6 @@ void CBuilderCmdBehaviourAI::ExecuteGuard(Command& c)
 
 		if (pushRepairCommand) {
 			StopSlowGuard();
-			LOG("PUSH CMD 2");
 			commandQue.push_front(Command(CMD_REPAIR, c.GetOpts(), guardee->id));
 			inCommand = false;
 			return;
@@ -1113,7 +1106,7 @@ void CBuilderCmdBehaviourAI::ExecuteReclaim(Command& c)
 
 		if (FindReclaimTargetAndReclaim(pos, radius, c.GetOpts(), recopt)) {
 			inCommand = false;
-			SlowUpdate();
+			owner->commandAI->SlowUpdate();
 			return;
 		}
 
@@ -1172,7 +1165,7 @@ void CBuilderCmdBehaviourAI::ExecuteResurrect(Command& c)
 
 					ownerBuilder->lastResurrected = 0;
 					inCommand = false;
-					SlowUpdate();
+					owner->commandAI->SlowUpdate();
 					return;
 				}
 
@@ -1189,7 +1182,7 @@ void CBuilderCmdBehaviourAI::ExecuteResurrect(Command& c)
 
 		if (FindResurrectableFeatureAndResurrect(pos, radius, c.GetOpts(), (c.GetOpts() & META_KEY))) {
 			inCommand = false;
-			SlowUpdate();
+			owner->commandAI->SlowUpdate();
 			return;
 		}
 
@@ -1222,7 +1215,7 @@ void CBuilderCmdBehaviourAI::ExecutePatrol(Command& c)
 	commandQue.push_front(temp);
 	Command tmpC(CMD_PATROL);
 	eoh->CommandFinished(*owner, tmpC);
-	SlowUpdate();
+	owner->commandAI->SlowUpdate();
 }
 
 
@@ -1312,7 +1305,7 @@ void CBuilderCmdBehaviourAI::ExecuteFight(Command& c)
 
 		if (lastPC1 != gs->frameNum) {  //avoid infinite loops
 			lastPC1 = gs->frameNum;
-			SlowUpdate();
+			owner->commandAI->SlowUpdate();
 		}
 
 		return;
@@ -1326,7 +1319,7 @@ void CBuilderCmdBehaviourAI::ExecuteFight(Command& c)
 
 		if (lastPC2 != gs->frameNum) {  //avoid infinite loops
 			lastPC2 = gs->frameNum;
-			SlowUpdate();
+			owner->commandAI->SlowUpdate();
 		}
 
 		return;
@@ -1340,7 +1333,7 @@ void CBuilderCmdBehaviourAI::ExecuteFight(Command& c)
 
 		if (lastPC3 != gs->frameNum) {  //avoid infinite loops
 			lastPC3 = gs->frameNum;
-			SlowUpdate();
+			owner->commandAI->SlowUpdate();
 		}
 
 		return;
