@@ -994,29 +994,6 @@ bool CBuilderCmdBehaviour::ScriptStartBuilding(float3 pos, bool silent)
 	return inBuildStance;
 }
 
-/*
-bool CBuilderCmdBehaviour::ScriptStartBuilding(float3 pos, bool silent)
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	if (script->HasStartBuilding()) {
-		const float3 wantedDir = (pos - midPos).Normalize();
-		const float h = GetHeadingFromVectorF(wantedDir.x, wantedDir.z);
-		const float p = math::asin(wantedDir.dot(updir));
-		const float pitch = math::asin(frontdir.dot(updir));
-
-		// clamping p - pitch not needed, range of asin is -PI/2..PI/2,
-		// so max difference between two asin calls is PI.
-		// FIXME: convert CSolidObject::heading to radians too.
-		script->StartBuilding(ClampRad(h - heading * TAANG2RAD), p - pitch);
-	}
-
-	if ((!silent || inBuildStance) && IsInLosForAllyTeam(gu->myAllyTeam))
-		Channels::General->PlayRandomSample(unitDef->sounds.build, pos);
-
-	return inBuildStance;
-}*/
-
-
 void CBuilderCmdBehaviour::HelpTerraform(CBuilderCmdBehaviour* unit)
 {
 	RECOIL_DETAILED_TRACY_ZONE;

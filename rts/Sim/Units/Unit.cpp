@@ -324,9 +324,9 @@ void CUnit::PreInit(const UnitLoadParams& params)
 
 	commandAI = CUnitLoader::NewCommandAI(this, unitDef);
 
-	/*for(auto behaviour: behaviours) {
+	for(auto behaviour: behaviours) {
 		behaviour->PreInit(params);
-	}*/
+	}
 }
 
 
@@ -978,10 +978,12 @@ void CUnit::SetStunned(bool stun) {
 void CUnit::SlowUpdate()
 {
 	ZoneScoped;
+	LOG("COMMAND AI SLOW UPDATE PRE BE");
 	// TODO REFACTOR: check if this needs to be reverse
 	for(auto behaviour: behaviours | std::views::reverse) {
 		behaviour->SlowUpdate();
 	}
+	LOG("COMMAND AI SLOW UPDATE POST BE");
 	UpdatePosErrorParams(false, true);
 
 	DoWaterDamage();
@@ -1060,7 +1062,9 @@ void CUnit::SlowUpdate()
 	}
 
 	// below is stuff that should not be run while being built
+	LOG("COMMAND AI SLOW UPDATE");
 	commandAI->SlowUpdate();
+	LOG("MOVE TYPE SLOW UPDATE");
 	moveType->SlowUpdate();
 
 

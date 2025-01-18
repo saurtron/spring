@@ -17,7 +17,6 @@
 #include "Sim/Projectiles/ProjectileHandler.h"
 #include "Sim/Units/Scripts/UnitScript.h"
 #include "Sim/Units/CommandAI/CommandAI.h"
-//#include "Sim/Units/CommandAI/FactoryCAI.h"
 #include "Sim/Units/CommandAI/MobileCAI.h"
 #include "Sim/Units/BehaviourAI/FactoryBehaviourAI.h"
 #include "Sim/Units/UnitHandler.h"
@@ -90,10 +89,6 @@ void CFactoryBehaviour::KillUnit(CUnit* attacker, bool selfDestruct, bool reclai
 void CFactoryBehaviour::PreInit(const UnitLoadParams& params)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	//unitDef = params.unitDef;
-	//buildSpeed = unitDef->buildSpeed / GAME_SPEED;
-
-	//CBuilding::PreInit(params);
 
 	//radius is defined after CUnit::PreInit()
 	CBaseBuilderBehaviour::PreInit(params);
@@ -280,15 +275,6 @@ void CFactoryBehaviour::UpdateBuild(CUnit* buildee) {
 		buildee->Move(buildeePos, false);
 		buildee->SetHeading((-buildPieceHeading + buildFaceHeading) & (SPRING_CIRCLE_DIVS - 1), false, false, 0.0f);
 	}
-	/*float3 buildeePos = buildPos;
-
-	// note: basically StaticMoveType::SlowUpdate()
-	if (buildee->FloatOnWater() && buildee->IsInWater())
-		buildeePos.y = -buildee->moveType->GetWaterline();
-
-	// rotate unit nanoframe with platform
-	buildee->Move(buildeePos, false);
-	buildee->SetHeading((-buildPieceHeading + buildFaceHeading) & (SPRING_CIRCLE_DIVS - 1), false, false, 0.0f);*/
 
 	if (!queue.empty() && (queue.front().GetID() == CMD_WAIT)) {
 		buildee->AddBuildPower(owner, 0.0f);
@@ -310,9 +296,6 @@ void CFactoryBehaviour::FinishBuild(CUnit* buildee) {
 		return;
 
 	// assign buildee to same group as us
-	// TODO REFACTO: here add isOurs checks
-	/*if (owner->GetGroup() != nullptr && buildee->GetGroup() != nullptr)
-		buildee->SetGroup(owner->GetGroup(), true);*/
 	bool isOurs = false;
 	const CCommandQueue& queue = owner->commandAI->commandQue;
 	if (!queue.empty() && (queue.front().GetID() < 0)) {
@@ -338,12 +321,7 @@ void CFactoryBehaviour::FinishBuild(CUnit* buildee) {
 		factoryCAI->FactoryFinishBuild(finishedBuildCommand);
 		eventHandler.UnitFromFactory(buildee, owner, !buildeeIdle);
 	}
-	/*// inform our commandAI
-	CFactoryBehaviourAI* factoryCAI = owner->commandAI->GetBehaviourAI<CFactoryBehaviourAI>();
-	//CFactoryCAI* factoryCAI = static_cast<CFactoryCAI*>(commandAI);
-	factoryCAI->FactoryFinishBuild(finishedBuildCommand);
 
-	eventHandler.UnitFromFactory(buildee, owner, !buildeeIdle);*/
 	StopBuild(true);
 }
 

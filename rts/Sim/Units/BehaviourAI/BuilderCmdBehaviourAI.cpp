@@ -24,9 +24,6 @@
 #include "Sim/Units/Behaviour/BuilderBehaviour.h"
 #include "Sim/Units/UnitDefHandler.h"
 #include "Sim/Units/UnitHandler.h"
-//#include "Sim/Units/UnitTypes/Builder.h"
-//#include "Sim/Units/UnitTypes/Building.h"
-//#include "Sim/Units/UnitTypes/Factory.h"
 #include "Sim/Units/CommandAI/BuilderCaches.h"
 #include "System/SpringMath.h"
 #include "System/StringUtil.h"
@@ -42,16 +39,9 @@ template CBuilderCmdBehaviourAI* CCommandAI::GetBehaviourAI<CBuilderCmdBehaviour
 CR_BIND_DERIVED(CBuilderCmdBehaviourAI, CBehaviourAI , )
 
 CR_REG_METADATA(CBuilderCmdBehaviourAI , (
-	/*CR_MEMBER(ownerBuilder),
-	CR_MEMBER(building),*/
+	CR_MEMBER(ownerBuilder),
+	CR_MEMBER(baseBuilder),
 	CR_MEMBER(range3D),
-/*	CR_IGNORED(build),
-	CR_IGNORED(buildOptions),
-
-	CR_MEMBER(cachedRadiusId),
-	CR_MEMBER(cachedRadius),
-
-	CR_MEMBER(buildRetries),*/
 	CR_MEMBER(randomCounter),
 
 	CR_MEMBER(lastPC1),
@@ -61,33 +51,10 @@ CR_REG_METADATA(CBuilderCmdBehaviourAI , (
 	CR_PREALLOC(GetPreallocContainer)
 ))
 
-/*static std::string GetUnitDefBuildOptionToolTip(const UnitDef* ud, bool disabled) {
-	RECOIL_DETAILED_TRACY_ZONE;
-	std::string tooltip;
-
-	if (disabled) {
-		tooltip = "\xff\xff\x22\x22" "DISABLED: " "\xff\xff\xff\xff";
-	} else {
-		tooltip = "Build: ";
-	}
-
-	tooltip += (ud->humanName + " - " + ud->tooltip);
-	tooltip += ("\nHealth "      + FloatToString(ud->health,      "%.0f"));
-	tooltip += ("\nMetal cost "  + FloatToString(ud->cost.metal,  "%.0f"));
-	tooltip += ("\nEnergy cost " + FloatToString(ud->cost.energy, "%.0f"));
-	tooltip += ("\nBuild time "  + FloatToString(ud->buildTime,   "%.0f"));
-
-	return tooltip;
-}*/
-
-
 CBuilderCmdBehaviourAI::CBuilderCmdBehaviourAI():
 	CBehaviourAI(),
-/*	ownerBuilder(nullptr),
-	building(false),
-	cachedRadiusId(0),
-	cachedRadius(0),
-	buildRetries(0),*/
+	ownerBuilder(nullptr),
+	baseBuilder(nullptr),
 	randomCounter(0),
 	lastPC1(-1),
 	lastPC2(-1),
@@ -98,10 +65,6 @@ CBuilderCmdBehaviourAI::CBuilderCmdBehaviourAI():
 
 CBuilderCmdBehaviourAI::CBuilderCmdBehaviourAI(CUnit* owner):
 	CBehaviourAI(owner),
-/*	building(false),
-	cachedRadiusId(0),
-	cachedRadius(0),
-	buildRetries(0),*/
 	randomCounter(0),
 	lastPC1(-1),
 	lastPC2(-1),
@@ -291,74 +254,7 @@ bool CBuilderCmdBehaviourAI::MoveInBuildRange(const float3& objPos, float objRad
 
 	return true;
 }
-/*
 
-bool CBuilderCmdBehaviourAI::IsBuildPosBlocked(const BuildInfo& bi, const CUnit** nanoFrame) const
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	CFeature* feature = nullptr;
-	CGameHelper::BuildSquareStatus status = CGameHelper::TestUnitBuildSquare(bi, feature, owner->allyteam, true);
-
-	// buildjob is a feature and it is finished already
-	if (feature != nullptr && bi.def->isFeature && bi.def->wreckName == feature->def->name)
-		return true;
-
-	// open area, reclaimable feature or movable unit
-	if (status != CGameHelper::BUILDSQUARE_BLOCKED)
-		return false;
-
-	const CSolidObject* s = nullptr;
-	const CUnit* u = nullptr;
-
-	const int2 mins = CSolidObject::GetMapPosStatic(bi.pos, bi.GetXSize(), bi.GetZSize());
-	const int2 maxs = mins + int2(bi.GetXSize(), bi.GetZSize());
-	for (int z = mins.y; z < maxs.y; ++z) {
-		for (int x = mins.x; x < maxs.x; ++x) {
-			s = groundBlockingObjectMap.GroundBlocked(float3{
-				static_cast<float>(x * SQUARE_SIZE),
-				0.0f,
-				static_cast<float>(z * SQUARE_SIZE) }
-			);
-
-			if (s == nullptr)
-				continue;
-
-			// just ourselves, does not count
-			if (s == owner)
-				continue;
-
-			if (u = dynamic_cast<const CUnit*>(s), u == nullptr)
-				continue;
-
-			// figure out if object is soft- or hard-blocking
-			if (u->beingBuilt) {
-				// we can't or don't want assist finishing the nanoframe
-				// if a mobile unit blocks the position, wait until it is
-				// finished & moved
-				if (!ownerBuilder->CanAssistUnit(u, bi.def))
-					continue;
-
-				// unfinished nanoframe, assist it
-				if (nanoFrame != nullptr && teamHandler.Ally(owner->allyteam, u->allyteam))
-					*nanoFrame = u;
-
-				return false; //be greedy here
-			}
-		}
-	}
-
-	// if a *unit* object is not present, then either
-	// there is a feature or the terrain is unsuitable
-	// (in the former case feature must be reclaimable)
-	if (u == nullptr)
-		return (feature == nullptr || !feature->def->reclaimable);
-
-	// unit blocks the pos, can it move away?
-	return (u->immobile);
-}
-
-
-*/
 // TODO: removed inline -> maybe can be moved to CBuilderBehaviourAI??
 bool CBuilderCmdBehaviourAI::OutOfImmobileRange(const Command& cmd) const
 {
@@ -396,144 +292,7 @@ bool CBuilderCmdBehaviourAI::OutOfImmobileRange(const Command& cmd) const
 
 	return false;
 }
-/*
 
-float CBuilderCmdBehaviourAI::GetBuildOptionRadius(const UnitDef* ud, int cmdId)
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	float radius = cachedRadius;
-
-	if (cachedRadiusId != cmdId) {
-		radius = ud->GetModelRadius();
-		cachedRadius = radius;
-		cachedRadiusId = cmdId;
-	}
-
-	return radius;
-}
-
-
-void CBuilderCmdBehaviourAI::CancelRestrictedUnit()
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	if (owner->team == gu->myTeam) {
-		LOG_L(L_WARNING, "%s: Build failed, unit type limit reached", owner->unitDef->humanName.c_str());
-		eventHandler.LastMessagePosition(owner->pos);
-	}
-	StopMoveAndFinishCommand();
-}
-
-
-bool CBuilderCmdBehaviourAI::GiveCommandReal(const Command& c, bool fromSynced)
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	const auto& nonQueingCommands = owner->commandAI->nonQueingCommands;
-	if (!owner->commandAI->AllowedCommand(c, fromSynced))
-		return true;
-
-	// don't guard yourself
-	if ((c.GetID() == CMD_GUARD) &&
-	    (c.GetNumParams() == 1) && ((int)c.GetParam(0) == owner->id)) {
-		return true;
-	}
-
-	// stop building/reclaiming/... if the new command is not queued, i.e. replaces our current activity
-	// FIXME should happen just before CMobileCAI::GiveCommandReal? (the new cmd can still be skipped!)
-	if ((c.GetID() != CMD_WAIT) && !(c.GetOpts() & SHIFT_KEY)) {
-		if (nonQueingCommands.find(c.GetID()) == nonQueingCommands.end()) {
-			building = false;
-			ownerBuilder->StopBuild();
-		}
-	}
-
-	if (buildOptions.find(c.GetID()) != buildOptions.end()) {
-		if (c.GetNumParams() < 3)
-			return true;
-
-		BuildInfo bi;
-		bi.pos = c.GetPos(0);
-
-		if (c.GetNumParams() == 4)
-			bi.buildFacing = abs((int)c.GetParam(3)) % NUM_FACINGS;
-
-		bi.def = unitDefHandler->GetUnitDefByID(-c.GetID());
-		bi.pos = CGameHelper::Pos2BuildPos(bi, true);
-
-		// We are a static building, check if the buildcmd is in range
-		if (!owner->unitDef->canmove) {
-			if (!IsInBuildRange(bi.pos, GetBuildOptionRadius(bi.def, c.GetID())))
-				return true;
-		}
-
-		const CUnit* nanoFrame = nullptr;
-
-		// check if the buildpos is blocked
-		if (IsBuildPosBlocked(bi, &nanoFrame))
-			return true;
-
-		// if it is a nanoframe help to finish it
-		if (nanoFrame != nullptr) {
-			Command c2(CMD_REPAIR, c.GetOpts() | INTERNAL_ORDER, nanoFrame->id);
-			CMobileCAI* cai = static_cast<CMobileCAI*>(owner->commandAI);
-			cai->GiveCommandReal(c2, fromSynced);
-			cai->GiveCommandReal(c, fromSynced);
-			return true;
-		}
-	} else {
-		if (c.GetID() < 0)
-			return true;
-	}
-	return false;
-}
-
-
-bool CBuilderCmdBehaviourAI::SlowUpdate()
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	auto& commandQue = owner->commandAI->commandQue;
-	if (gs->paused) // Commands issued may invoke SlowUpdate when paused
-		return true;
-
-	if (commandQue.empty()) {
-		//CMobileCAI::SlowUpdate();
-		return false;
-	}
-
-	if (owner->beingBuilt || owner->IsStunned())
-		return true;
-
-	Command& c = commandQue.front();
-
-	if (OutOfImmobileRange(c)) {
-		FinishCommand();
-		return true;
-	}
-
-	switch (c.GetID()) {
-		case CMD_STOP:      { ExecuteStop(c);      return true; }
-		case CMD_REPAIR:    { ExecuteRepair(c);    return true; }
-		case CMD_CAPTURE:   { ExecuteCapture(c);   return true; }
-		case CMD_GUARD:     { ExecuteGuard(c);     return true; }
-		case CMD_RECLAIM:   { ExecuteReclaim(c);   return true; }
-		case CMD_RESURRECT: { ExecuteResurrect(c); return true; }
-		case CMD_PATROL:    { ExecutePatrol(c);    return true; }
-		case CMD_FIGHT:     { ExecuteFight(c);     return true; }
-		case CMD_RESTORE:   { ExecuteRestore(c);   return true; }
-		default: {
-			if (c.GetID() < 0) {
-				ExecuteBuildCmd(c);
-			} else {
-				//CMobileCAI::SlowUpdate();
-				return false;
-			}
-
-			return true;
-		}
-	}
-	return false;
-}
-
-*/
 void CBuilderCmdBehaviourAI::ReclaimFeature(CFeature* f)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
@@ -550,166 +309,6 @@ void CBuilderCmdBehaviourAI::ReclaimFeature(CFeature* f)
 	}
 }
 
-/*
-void CBuilderCmdBehaviourAI::FinishCommand()
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	buildRetries = 0;
-	//CMobileCAI* cai = static_cast<CMobileCAI*>(owner->commandAI);
-	//cai->FinishCommand();
-}*/
-
-/*
-void CBuilderCmdBehaviourAI::ExecuteStop(Command& c)
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	building = false;
-	ownerBuilder->StopBuild();
-	CMobileCAI* cai = static_cast<CMobileCAI*>(owner->commandAI);
-	cai->ExecuteStop(c);
-}
-
-
-void CBuilderCmdBehaviourAI::ExecuteBuildCmd(Command& c)
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	auto& inCommand = owner->commandAI->inCommand;
-	if (buildOptions.find(c.GetID()) == buildOptions.end())
-		return;
-
-	if (!inCommand) {
-		BuildInfo bi;
-
-		// note:
-		//   need at least 3 parameters or BuildInfo will fail to parse
-		//   this usually indicates a malformed command inserted by Lua
-		//   (most common with patrolling pseudo-factory hubs)
-		if (!bi.Parse(c)) {
-			StopMoveAndFinishCommand();
-			return;
-		}
-
-		#if 1
-		// snap build-position to multiples of SQUARE_SIZE
-		bi.pos.x = math::floor(c.GetParam(0) / SQUARE_SIZE) * SQUARE_SIZE;
-		bi.pos.z = math::floor(c.GetParam(2) / SQUARE_SIZE) * SQUARE_SIZE;
-		#endif
-
-		CFeature* f = nullptr;
-		CGameHelper::TestUnitBuildSquare(bi, f, owner->allyteam, true);
-
-		if (f != nullptr) {
-			if (!bi.def->isFeature || bi.def->wreckName != f->def->name) {
-				ReclaimFeature(f);
-			} else {
-				StopMoveAndFinishCommand();
-			}
-			return;
-		}
-
-		// <build> is never parsed (except in PostLoad) so just copy it
-		build = bi;
-		inCommand = true;
-	}
-
-	assert(build.def != nullptr);
-	assert(build.def->id == -c.GetID() && build.def->id != 0);
-
-	float objRadius = build.def->buildeeBuildRadius;
-	if (objRadius < 0.f) {
-		auto* model = build.def->LoadModel();
-		objRadius = std::max(0.f, model->radius);
-	}
-
-	if (building) {
-		// keep moving until 3D distance to buildPos is LEQ our buildDistance
-		MoveInBuildRange(build.pos, objRadius);
-
-		if (ownerBuilder->curBuild == nullptr && !ownerBuilder->terraforming) {
-			building = false;
-			StopMoveAndFinishCommand();
-		}
-
-		return;
-	}
-
-	// keep moving until 3D distance to buildPos is LEQ our buildDistance
-	if (MoveInBuildRange(build.pos = CGameHelper::Pos2BuildPos(build, true), objRadius, true)) {
-		if (IsBuildPosBlocked(build)) {
-			StopMoveAndFinishCommand();
-			return;
-		}
-
-		const auto [allow, drop] = eventHandler.AllowUnitCreation(build.def, owner, &build);
-		if (!allow) {
-			if (drop)
-				StopMoveAndFinishCommand();
-			return;
-		}
-
-		if (teamHandler.Team(owner->team)->AtUnitLimit())
-			return;
-
-		CFeature* f = nullptr;
-
-		bool inWaitStance = false;
-		bool limitReached = false;
-
-		if (ownerBuilder->StartBuild(build, f, inWaitStance, limitReached) || (++buildRetries > 30)) {
-			building = true;
-			return;
-		}
-
-		// we can't reliably check if the unit-limit has been reached until
-		// the builder has reached the construction site, which is somewhat
-		// annoying (since greyed-out icons can still be clicked, etc)
-		if (limitReached) {
-			CancelRestrictedUnit();
-			StopMove();
-			return;
-		}
-
-		if (f != nullptr && (!build.def->isFeature || build.def->wreckName != f->def->name)) {
-			inCommand = false;
-			ReclaimFeature(f);
-			return;
-		}
-
-		if (!inWaitStance) {
-			const float xhalf = (((build.buildFacing & 1) == 0) ? build.def->xsize : build.def->zsize)* 0.5f * SQUARE_SIZE;
-			const float zhalf = (((build.buildFacing & 1) == 1) ? build.def->xsize : build.def->zsize)* 0.5f * SQUARE_SIZE;
-
-			const float3 mins{build.pos.x - xhalf, build.pos.y, build.pos.z - zhalf};
-			const float3 maxs{build.pos.x + xhalf, build.pos.y, build.pos.z + zhalf};
-
-			CGameHelper::BuggerOffRectangle(mins, maxs, true, owner->team, nullptr);
-
-			NonMoving();
-			return;
-		}
-
-		return;
-	}
-
-	if (owner->moveType->progressState == AMoveType::Failed) {
-		if (++buildRetries > 5) {
-			StopMoveAndFinishCommand();
-			return;
-		}
-	}
-
-	// we are on the way to the buildpos, meanwhile it can happen
-	// that another builder already finished our buildcmd or blocked
-	// the buildpos with another building (skip our buildcmd then)
-	if ((++randomCounter % 5) == 0) {
-		if (IsBuildPosBlocked(build)) {
-			StopMoveAndFinishCommand();
-			return;
-		}
-	}
-}
-
-*/
 bool CBuilderCmdBehaviourAI::TargetInterceptable(const CUnit* unit, float targetSpeed) {
 	RECOIL_DETAILED_TRACY_ZONE;
 	// if the target is moving away at a higher speed than we can manage, there is little point in chasing it
@@ -1224,10 +823,7 @@ void CBuilderCmdBehaviourAI::ExecuteFight(Command& c)
 	RECOIL_DETAILED_TRACY_ZONE;
 	auto& inCommand = owner->commandAI->inCommand;
 	CMobileCAI* cai = dynamic_cast<CMobileCAI*>(owner->commandAI);
-	/*
-	auto& tempOrder = cai->tempOrder;
-	auto& commandPos1 = cai->commandPos1;
-	auto& commandPos2 = cai->commandPos2;*/
+
 	float3 cPos1;
 	float3 cPos2;
 	if (cai) {
