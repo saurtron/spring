@@ -416,7 +416,7 @@ bool CFactoryBehaviourAI::SlowUpdate()
 					case CMD_RESTORE:   { builderCmdAI->ExecuteRestore(c);   } break;
 				}
 			}
-			owner->commandAI->SlowUpdate();
+			return false;
 		}
 
 		// exit if no command was consumed
