@@ -417,13 +417,14 @@ void CBuilderBehaviourAI::FinishCommand()
 }
 
 
-void CBuilderBehaviourAI::ExecuteStop(Command& c)
+bool CBuilderBehaviourAI::ExecuteStop(Command& c)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	building = false;
 	ownerBuilder->StopBuild();
 	CMobileCAI* cai = static_cast<CMobileCAI*>(owner->commandAI);
 	cai->ExecuteStop(c);
+	return true;
 }
 
 

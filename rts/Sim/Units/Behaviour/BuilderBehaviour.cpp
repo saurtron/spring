@@ -78,8 +78,6 @@ void CBuilderBehaviour::PreInit(const UnitLoadParams& params)
 	range3D = unitDef->buildRange3D;
 	buildDistance = (params.unitDef)->buildDistance;
 
-	buildSpeed     = INV_GAME_SPEED * unitDef->buildSpeed;
-
 	CBaseBuilderBehaviour::PreInit(params);
 }
 

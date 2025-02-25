@@ -1542,6 +1542,16 @@ void CCommandAI::ExecuteAttack(Command& c)
 void CCommandAI::ExecuteStop(Command& c)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	for(auto behaviourAI: behaviourAIs | std::views::reverse) {
+		if (behaviourAI->ExecuteStop(c))
+			// TODO: maybe should let other behaviourAIs run
+			return;
+	}
+	ExecuteStopImpl(c);
+}
+
+void CCommandAI::ExecuteStopImpl(Command& c)
+{
 	owner->DropCurrentAttackTarget();
 
 	for (CWeapon* w: owner->weapons) {
@@ -1697,6 +1707,9 @@ void CCommandAI::FinishCommand()
 	}
 
 	const Command cmd = commandQue.front(); // copy is needed here
+	if (cmd.GetID() == CMD_REPAIR) {
+		LOG("FINISH REPAIR COMMAND");
+	}
 
 	const bool dontRepeat = (cmd.IsInternalOrder());
 	const bool pushCommand = (cmd.GetID() != CMD_STOP && cmd.GetID() != CMD_PATROL);

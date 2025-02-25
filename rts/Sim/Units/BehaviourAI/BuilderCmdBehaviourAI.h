@@ -39,7 +39,6 @@ public:
 	void ExecutePatrol(Command& c);
 	void ExecuteFight(Command& c);
 	void ExecuteGuard(Command& c);
-	void ExecuteStop(Command& c);
 	virtual void ExecuteRepair(Command& c);
 	virtual void ExecuteCapture(Command& c);
 	virtual void ExecuteReclaim(Command& c);

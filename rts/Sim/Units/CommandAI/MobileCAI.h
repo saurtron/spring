@@ -44,7 +44,7 @@ public:
 	void StopSlowGuard();
 	void StartSlowGuard(float speed);
 	void ExecuteAttack(Command& c) override;
-	void ExecuteStop(Command& c) override;
+	void ExecuteStopImpl(Command& c) override;
 
 	virtual void Execute();
 	virtual void ExecuteGuard(Command& c);

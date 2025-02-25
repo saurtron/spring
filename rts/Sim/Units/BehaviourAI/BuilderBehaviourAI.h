@@ -38,7 +38,7 @@ public:
 	virtual bool BuggerOff(const float3& pos, float radius);
 
 	void ExecuteBuildCmd(Command& c);
-	void ExecuteStop(Command& c);
+	bool ExecuteStop(Command& c) override;
 
 	bool IsInBuildRange(const CWorldObject* obj) const;
 	bool IsInBuildRange(const float3& pos, const float radius) const;

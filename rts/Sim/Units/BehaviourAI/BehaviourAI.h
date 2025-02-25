@@ -27,6 +27,7 @@ public:
 	virtual bool SlowUpdate() { return false; };
 	virtual void Execute(Command& c) {};
 	virtual void FinishCommand() {};
+	virtual bool ExecuteStop(Command& c) { return false; };
 	virtual bool GiveCommandReal(const Command& c, bool fromSynced = true) { return false; };
 	virtual int GetDefaultCmd(const CUnit* pointed, const CFeature* feature) = 0;
 	virtual bool BuggerOff(const float3& pos, float radius) { return false; };

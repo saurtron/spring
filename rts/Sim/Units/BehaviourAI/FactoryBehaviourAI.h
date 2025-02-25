@@ -31,7 +31,7 @@ public:
 
 	void DecreaseQueueCount(const Command& c, int& buildOption);
 	void FactoryFinishBuild(const Command& command);
-	void ExecuteStop(Command& c);
+	bool ExecuteStop(Command& c) override;
 
 	CCommandQueue newUnitCommands;
 	spring::unordered_map<int, int> buildOptions;

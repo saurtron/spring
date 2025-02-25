@@ -427,7 +427,7 @@ bool CFactoryBehaviourAI::SlowUpdate()
 }
 
 
-void CFactoryBehaviourAI::ExecuteStop(Command& c)
+bool CFactoryBehaviourAI::ExecuteStop(Command& c)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	auto& commandQue = owner->commandAI->commandQue;
@@ -436,6 +436,7 @@ void CFactoryBehaviourAI::ExecuteStop(Command& c)
 	fac->StopBuild();
 
 	commandQue.pop_front();
+	return true;
 }
 
 

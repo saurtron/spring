@@ -615,6 +615,7 @@ bool CMobileCAI::IsValidTarget(const CUnit* enemy, CWeapon* weapon) const {
 void CMobileCAI::ExecuteGuard(Command& c)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
+	LOG("MOBILE AI EXECUTEGUARD");
 	assert(owner->unitDef->canGuard);
 	assert(c.GetNumParams() != 0);
 
@@ -671,11 +672,11 @@ void CMobileCAI::ExecuteGuard(Command& c)
 }
 
 
-void CMobileCAI::ExecuteStop(Command& c)
+void CMobileCAI::ExecuteStopImpl(Command& c)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	StopMove();
-	return CCommandAI::ExecuteStop(c);
+	return CCommandAI::ExecuteStopImpl(c);
 }
 
 

@@ -94,7 +94,8 @@ public:
 	/**
 	 * @brief executes the stop command c
 	 */
-	virtual void ExecuteStop(Command& c);
+	void ExecuteStop(Command& c);
+	virtual void ExecuteStopImpl(Command& c);
 
 	void UpdateCommandDescription(unsigned int cmdDescIdx, const Command& cmd);
 	void UpdateCommandDescription(unsigned int cmdDescIdx, SCommandDescription&& modCmdDesc);
