@@ -688,16 +688,17 @@ void TBitmapAction<T, ch>::Blur(int iterations, float weight)
 		std::tuple(&tmp, tempTypedAction, currTypedAction)  // vertical   pass
 	};
 
-	const auto w0 = BLUR_KERNEL[BLUR_KERNEL_HS] * BLUR_KERNEL[BLUR_KERNEL_HS] * (weight - 1.0f);
+	const auto w0 = (weight - 1.0f);
 
 	#define MT_EXECUTION 1
 
 	for (int iter = 0; iter < iterations; ++iter) {
 		for (size_t bpi = 0; bpi < blurPassTuples.size(); ++bpi) {
 			// everything is a pointer here, can assign with just auto
+			bool isLast = iter == iterations -1;
 			auto [src, srcAction, dstAction] = blurPassTuples[bpi];
 		#if MT_EXECUTION == 1
-			for_mt_chunk(0, src->ysize, [this, src, srcAction, dstAction, bpi, w0](int y) {
+			for_mt_chunk(0, src->ysize, [this, src, srcAction, dstAction, bpi, w0, isLast](int y) {
 		#else
 			for (int y = 0; y < src->ysize; y++) {
 		#endif
@@ -725,10 +726,16 @@ void TBitmapAction<T, ch>::Blur(int iterations, float weight)
 
 					auto& dstRef = dstAction->GetRef(x * src->ysize + y);
 					for (int a = 0; a < ch; a++) {
-						auto rawDstVal = val[a] / wSum;
+						float rawDstVal = val[a] / wSum;
 
+						if constexpr (std::is_same_v<ChanType, float>) {
+							rawDstVal = static_cast<ChanType>(std::max(rawDstVal, 0.0f));
+						}
+						else {
+							rawDstVal = static_cast<ChanType>(std::clamp(rawDstVal + 0.5f, 0.0f, static_cast<float>(GetMaxNormValue())));
+						}
 						// apply extra (> 1.0f) weight
-						rawDstVal += w0 * dstRef[a] * (bpi == 1 && w0 > 0.0f);
+						rawDstVal += w0 * rawDstVal * (bpi == 1 && w0 > 0.0f && isLast);
 
 						if constexpr (std::is_same_v<ChanType, float>) {
 							dstRef[a] = static_cast<ChanType>(std::max(rawDstVal, 0.0f));
