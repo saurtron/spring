@@ -653,7 +653,10 @@ void CUnit::Update()
 	RECOIL_DETAILED_TRACY_ZONE;
 	ASSERT_SYNCED(pos);
 
-	UpdatePhysicalState(0.1f);
+	// buildings update physical state less frequently in SlowUpdate
+	if (!unitDef->IsImmobileUnit()) {
+		UpdatePhysicalState(0.1f);
+	}
 	UpdatePosErrorParams(true, false);
 	UpdateTransportees(); // none if already dead
 
@@ -950,6 +953,9 @@ void CUnit::SetStunned(bool stun) {
 void CUnit::SlowUpdate()
 {
 	ZoneScoped;
+	if (unitDef->IsImmobileUnit()) {
+		UpdatePhysicalState(0.1f);
+	}
 	UpdatePosErrorParams(false, true);
 
 	DoWaterDamage();
