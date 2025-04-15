@@ -536,7 +536,8 @@ bool QTPFS::QTNode::UpdateMoveCost(
 	assert(int(zmin()) >= r.z1);
 	assert(int(zmax()) <= r.z2);
 
-	const SpeedBinType refSpeedBin = curSpeedBins[zmin() * mapDims.mapx + xmin()];
+	const int rw = r.GetWidth();
+	const SpeedBinType refSpeedBin = curSpeedBins[(zmin() - r.z1) * rw + (xmin() - r.x1)];
 
 	// <this> can either just have been merged or added as
 	// new child of split parent; in the former case we can
@@ -549,7 +550,7 @@ bool QTPFS::QTNode::UpdateMoveCost(
 
 	for (unsigned int hmz = zmin(); hmz < zmax(); hmz++) {
 		for (unsigned int hmx = xmin(); hmx < xmax(); hmx++) {
-			const unsigned int sqrIdx = hmz * mapDims.mapx + hmx;
+			const unsigned int sqrIdx = (hmz - r.z1) * rw + (hmx - r.x1);
 
 			assert(sqrIdx >= 0);
 			assert(sqrIdx < curSpeedBins.size());
@@ -608,13 +609,11 @@ bool QTPFS::QTNode::UpdateMoveCost(
 		nl.IncreaseOpenNodeCounter();
 	}
 
-	// Impassable squares don't impact search performance, but the larger they are the bigger the
-	// impact on updating. For example, sea units will often have large impassable areas for the
-	// land and we'll be recalculating across these larger areas every time those areas are damaged
-	// despite it not changing the impassability as far as ships are concerned. So make these areas
-	// as small as possible (i.e. same size as the damage quads) to minimize update performance
-	// impact.
-	needSplit |= (AllSquaresImpassable() && xsize() > 16); // TODO: magic number for size of damage quads
+	// For performance reasons, the maximum node size should match the damage size because mutliple damaged regions
+	// that doesn't result in a subdivision will cause the entire node to be re-evaluated over several frames. The
+	// larger the node, the larger the performance impact. This often occurs for impassable terrain or hard terrain
+	// such as metal.
+	needSplit |= (xsize() > QTPFS_MAP_DAMAGE_SIZE);
 
 	wantSplit &= (xsize() > 16); // try not to split below 16 if possible.
 	wantSplit &= !(nl.UseShortestPath());

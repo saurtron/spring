@@ -122,7 +122,11 @@ namespace Threading {
 	 */
 	int GetPhysicalCpuCores(); /// physical cores only (excluding hyperthreading)
 	int GetLogicalCpuCores();  /// physical + hyperthreading
+	int GetPerformanceCpuCores(); /// performance physical cores only (excluding hyperthreading or efficiency cores)
 	bool HasHyperThreading();
+
+	uint32_t GetSystemAffinityMask();
+	uint32_t GetPreferredMainThreadMask();
 
 	/**
 	 * Inform the OS kernel that we are a cpu-intensive task

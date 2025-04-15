@@ -195,8 +195,11 @@ void CProjectileDrawer::Init() {
 		ParseAtlasTextures(false, mapResGroundFXTexturesTable, blockedTexNames, groundFXAtlas);
 	}
 
-	if (!textureAtlas->Finalize())
+	if (!textureAtlas->Finalize()) {
+#ifndef HEADLESS
 		LOG_L(L_ERROR, "Could not finalize projectile-texture atlas. Use fewer/smaller textures.");
+#endif
+	}
 
 
 	flaretex        = &textureAtlas->GetTexture("flare");
@@ -426,9 +429,9 @@ void CProjectileDrawer::UpdateDrawFlags()
 							p->AddDrawFlag(DrawFlags::SO_REFLEC_FLAG);
 					} break;
 					case CCamera::CAMTYPE_SHADOW: {
-						if (p->HasDrawFlag(DrawFlags::SO_OPAQUE_FLAG))
+						if unlikely(hasModel)
 							p->AddDrawFlag(DrawFlags::SO_SHOPAQ_FLAG);
-						else if (p->HasDrawFlag(DrawFlags::SO_ALPHAF_FLAG))
+						else
 							p->AddDrawFlag(DrawFlags::SO_SHTRAN_FLAG);
 					} break;
 				}
@@ -442,7 +445,7 @@ bool CProjectileDrawer::CheckSoftenExt()
 	RECOIL_DETAILED_TRACY_ZONE;
 	static bool result =
 		FBO::IsSupported() &&
-		GLEW_EXT_framebuffer_blit; //eval once
+		GLAD_GL_EXT_framebuffer_blit; //eval once
 	return result;
 }
 

@@ -44,6 +44,7 @@
 #include "Rml/RmlInputReceiver.h"
 #include "Rml/SolLua/RmlSolLua.h"
 #include "RmlUi_Backend.h"
+#include "Rml/SVG/SVGPlugin.h"
 
 #ifndef HEADLESS
 #include "RmlUi_Renderer_GL3_Recoil.h"
@@ -112,7 +113,8 @@ public:
 	lua_State* ls = nullptr;
 	Rml::SolLua::SolLuaPlugin* luaPlugin = nullptr;
 
-    Rml::UniquePtr<Rml::ElementInstancerGeneric<RmlGui::ElementLuaTexture>> element_lua_texture_instancer;
+	RmlGui::SVG::DynamicSVGPlugin* svgPlugin;
+	Rml::UniquePtr<Rml::ElementInstancerGeneric<RmlGui::ElementLuaTexture>> element_lua_texture_instancer;
 };
 
 static Rml::UniquePtr<BackendState> state;
@@ -153,19 +155,21 @@ bool RmlGui::Initialize()
 	state->element_lua_texture_instancer = Rml::MakeUnique<Rml::ElementInstancerGeneric<ElementLuaTexture>>();
 	Rml::Factory::RegisterElementInstancer("texture", state->element_lua_texture_instancer.get());
 
+	state->svgPlugin = RmlGui::SVG::Initialise();
+	Rml::RegisterPlugin(state->svgPlugin);
 	Rml::RegisterPlugin(state.get());
 
 	return true;
 }
 
 bool RmlGui::InitializeLua(lua_State* lua_state)
-{	
+{
 	if (!RmlInitialized()) {
 		RmlGui::Initialize();
 	} else if (state->ls != nullptr) {
 		return false;
 	}
-	
+
 	LOG_L(L_INFO, "[RmlGui::%s] Initializing RmlUi Lua Bindings", __func__);
 
 	sol::state_view lua(lua_state);
@@ -215,6 +219,7 @@ void RmlGui::Shutdown()
 
 	// note: during SpringApp shutdown, RmlGui::RemoveLua() was already called when LuaUI was shutdown
 	RemoveLua();
+	Rml::UnregisterPlugin(state->svgPlugin);
 	Rml::UnregisterPlugin(state.get());
 
 	// removes all contexts, interfaces must be alive at this point
@@ -308,6 +313,35 @@ void RmlGui::OnContextDestroy(Rml::Context* context)
 	state->contexts.erase(std::ranges::find(state->contexts, context));
 }
 
+Rml::Context* RmlGui::GetOrCreateContext(const std::string& name)
+{
+	if (!RmlInitialized()) {
+		return nullptr;
+	}
+
+	Rml::Context* context = Rml::GetContext(name);
+	if (context == nullptr) {
+		context = Rml::CreateContext(name, {0, 0});
+	} else {
+		// can happen if name reused on the same frame
+		state->contexts_to_remove.erase(context);
+	}
+
+	return context;
+}
+
+Rml::Context* RmlGui::GetContext(const std::string& name) {
+	if (!RmlInitialized()) {
+		return nullptr;
+	}
+
+	Rml::Context* context = Rml::GetContext(name);
+	if (context != nullptr && !state->contexts_to_remove.contains(context)) {
+		return context;
+	}
+	return nullptr;
+}
+
 void RmlGui::MarkContextForRemoval(Rml::Context *context) {
 	if (!RmlInitialized() || context == nullptr) {
 		return;
@@ -327,15 +361,13 @@ void RmlGui::Update()
 		context->Update();
 	}
 
+	// move clicked context to top
 	if (state->clicked_context) {
-		auto context_pos = std::ranges::find(state->contexts, state->clicked_context);
-		if (context_pos != state->contexts.end()) {
-			// debug context is always to be on top
-			auto start = state->contexts.begin() + (state->debug_host_context ? 1 : 0);
-			if (context_pos != start) {
-				state->contexts.erase(context_pos);
-				state->contexts.insert(start, state->clicked_context);
-			}
+		// debug context is always to be at index 0 so it renders on top
+		auto start = state->contexts.begin() + (state->debug_host_context ? 1 : 0);
+		auto context_pos = std::ranges::find(start, state->contexts.end(), state->clicked_context);
+		if (context_pos != start && context_pos != state->contexts.end()) {
+			std::ranges::rotate(start, context_pos, context_pos + 1);
 		}
 		state->clicked_context = nullptr;
 	}

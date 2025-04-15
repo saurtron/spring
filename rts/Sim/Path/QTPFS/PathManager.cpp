@@ -314,8 +314,8 @@ void QTPFS::PathManager::Load() {
 	// numPrevExecutedSearches.resize(teamHandler.ActiveTeams() + 1, 0);
 
 	{
-		const sha512::raw_digest& mapCheckSum = archiveScanner->GetArchiveCompleteChecksumBytes(gameSetup->mapName);
-		const sha512::raw_digest& modCheckSum = archiveScanner->GetArchiveCompleteChecksumBytes(gameSetup->modName);
+		const sha512::raw_digest mapCheckSum = archiveScanner->GetArchiveCompleteChecksumBytes(gameSetup->mapName);
+		const sha512::raw_digest modCheckSum = archiveScanner->GetArchiveCompleteChecksumBytes(gameSetup->modName);
 
 		sha512::hex_digest mapCheckSumHex;
 		sha512::hex_digest modCheckSumHex;
@@ -494,7 +494,7 @@ void QTPFS::PathManager::InitRootSize(const SRectangle& r) {
 
 	assert(rootSize != QTPFS_BAD_ROOT_NODE_SIZE);
 	if (rootSize == QTPFS_BAD_ROOT_NODE_SIZE)
-		LOG("%s: Warning! Map width and height are supposed to be multiples of 1024 elmos.", __func__);
+		LOG("%s: Warning! Map width and height highest common factor is smaller than QTPFS is designed to handle.", __func__);
 
 	// Prevent too big a size being picked due to 15 levels of node Indexing possible: 2^(steps -1) (steps=(bits-2)/2)
 	constexpr float maxNodeLevels = ((sizeof(uint32_t)*4)-2);
@@ -867,7 +867,7 @@ void QTPFS::PathManager::ReadyQueuedSearches() {
 		auto pathView = registry.view<PathSearch>();
 
 		// Any requests that cannot be processed should be removed. We can't do that with the r*
-		// iterators becasue that will break them.
+		// iterators because that will break them.
 		std::for_each(pathView.begin(), pathView.end(), [this](entt::entity entity){
 			if (!registry.all_of<ProcessPath>(entity))
 				registry.destroy(entity);

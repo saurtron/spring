@@ -67,8 +67,8 @@ bool CCannon::HaveFreeLineOfFire(const float3 srcPos, const float3 tgtPos, const
 	if (projectileSpeed == 0.0f)
 		return true;
 
-	float3 launchDir = CalcWantedDir(tgtPos - weaponMuzzlePos);
-	float3 targetVec = (tgtPos - weaponMuzzlePos) * XZVector;
+	float3 launchDir = CalcWantedDir(tgtPos - srcPos);
+	float3 targetVec = (tgtPos - srcPos) * XZVector;
 
 	if (launchDir.SqLength() == 0.0f)
 		return false;
@@ -90,7 +90,7 @@ bool CCannon::HaveFreeLineOfFire(const float3 srcPos, const float3 tgtPos, const
 	// and the prior 10.0f buffer is no longer good enough with the accurate coefficients
 	// TODO: allow this ignore distance to be set on a per-unit basis
 	const float groundDist = ((avoidFlags & Collision::NOGROUND) == 0)?
-		CGround::TrajectoryGroundCol(weaponMuzzlePos, targetVec, groundColCheckDistance, linCoeff, qdrCoeff):
+		CGround::TrajectoryGroundCol(srcPos, targetVec, groundColCheckDistance, linCoeff, qdrCoeff):
 		-1.0f;
 	const float angleSpread = (AccuracyExperience() + SprayAngleExperience()) * 0.6f * 0.9f;
 
@@ -98,7 +98,7 @@ bool CCannon::HaveFreeLineOfFire(const float3 srcPos, const float3 tgtPos, const
 		return false;
 
 	// TODO: add a forcedUserTarget mode (enabled with meta key e.g.) and skip this test accordingly
-	return (!TraceRay::TestTrajectoryCone(weaponMuzzlePos, targetVec, xzTargetDist, linCoeff, qdrCoeff, angleSpread, owner->allyteam, avoidFlags, owner));
+	return (!TraceRay::TestTrajectoryCone(srcPos, targetVec, xzTargetDist, linCoeff, qdrCoeff, angleSpread, owner->allyteam, avoidFlags, owner));
 }
 
 void CCannon::FireImpl(const bool scriptCall)
@@ -110,27 +110,27 @@ void CCannon::FireImpl(const bool scriptCall)
 	launchDir += (gsRNG.NextVector() * SprayAngleExperience() + SalvoErrorExperience());
 	launchDir.SafeNormalize();
 
-	int ttl = 0;
+	int myTtl = 0;
 	const float sqSpeed2D = launchDir.SqLength2D() * projectileSpeed * projectileSpeed;
 	const int predict = math::ceil((sqSpeed2D == 0.0f) ?
 		(-2.0f * projectileSpeed * launchDir.y / gravity):
 		math::sqrt(targetVec.SqLength2D() / sqSpeed2D));
 
-	if (weaponDef->flighttime > 0) {
-		ttl = weaponDef->flighttime;
+	if (ttl > 0) {
+		myTtl = ttl;
 	} else if (weaponDef->selfExplode) {
-		ttl = (predict + gsRNG.NextFloat() * 2.5f - 0.5f);
+		myTtl = (predict + gsRNG.NextFloat() * 2.5f - 0.5f);
 	} else if ((weaponDef->groundBounce || weaponDef->waterBounce) && weaponDef->numBounce > 0) {
-		ttl = (predict * (1 + weaponDef->numBounce * weaponDef->bounceRebound));
+		myTtl = (predict * (1 + weaponDef->numBounce * weaponDef->bounceRebound));
 	} else {
-		ttl = predict * 2;
+		myTtl = predict * 2;
 	}
 
 	ProjectileParams params = GetProjectileParams();
 	params.pos = weaponMuzzlePos;
 	params.end = currentTargetPos;
 	params.speed = launchDir * projectileSpeed;
-	params.ttl = ttl;
+	params.ttl = myTtl;
 	params.gravity = gravity;
 
 	WeaponProjectileFactory::LoadProjectile(params);

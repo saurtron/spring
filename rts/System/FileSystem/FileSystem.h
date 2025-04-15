@@ -47,7 +47,7 @@ public:
 	 *
 	 * @return the filesize or 0 if the file doesn't exist.
 	 */
-	static size_t GetFileSize(std::string path);
+	static size_t GetFileSize(const std::string& path);
 	///@}
 
 	/// @name directory
@@ -81,7 +81,7 @@ public:
 	static std::string GetFilename(const std::string& path);
 	/**
 	 * @brief Returns the basename part of a path
-	 * This is equvalent to the filename without extension.
+	 * This is equivalent to the filename without extension.
 	 * "/home/user/.spring/test.txt" -> "test"
 	 */
 	static std::string GetBasename(const std::string& path);

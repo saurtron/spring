@@ -262,7 +262,7 @@ bool CFeature::AddBuildPower(CUnit* builder, float amount)
 
 	if (amount > 0.0f) {
 		// 'Repairing' previously-sucked features prior to resurrection
-		// This is reclaim-option independant - repairing features should always
+		// This is reclaim-option independent - repairing features should always
 		// be like other repairing - gradual and multi-unit
 		// Lots of this code is stolen from unit->AddBuildPower
 		//
@@ -492,6 +492,14 @@ void CFeature::ForcedSpin(const float3& newDir)
 	RECOIL_DETAILED_TRACY_ZONE;
 	// update local direction-vectors
 	CSolidObject::ForcedSpin(newDir);
+	UpdateTransform(pos, true);
+}
+
+void CFeature::ForcedSpin(const float3& newFrontDir, const float3& newRightDir)
+{
+	RECOIL_DETAILED_TRACY_ZONE;
+	// update local direction-vectors
+	CSolidObject::ForcedSpin(newFrontDir, newRightDir);
 	UpdateTransform(pos, true);
 }
 

@@ -120,6 +120,9 @@ CUnitDrawerData::CUnitDrawerData(bool& mtModelDrawer_)
 	iconFadeVanish = configHandler->GetFloat("UnitIconFadeVanish");
 	useScreenIcons = configHandler->GetBool("UnitIconsAsUI");
 	iconHideWithUI = configHandler->GetBool("UnitIconsHideWithUI");
+	ghostIconDimming = configHandler->GetFloat("UnitGhostIconsDimming");
+
+	configHandler->NotifyOnChange(this, {"UnitGhostIconsDimming"});
 
 	unitDefImages.clear();
 	unitDefImages.resize(unitDefHandler->NumUnitDefs() + 1);
@@ -161,6 +164,13 @@ CUnitDrawerData::~CUnitDrawerData()
 	}
 
 	unitsByIcon.clear();
+
+	configHandler->RemoveObserver(this);
+}
+
+void CUnitDrawerData::ConfigNotify(const std::string& key, const std::string& value)
+{
+	ghostIconDimming = configHandler->GetFloat("UnitGhostIconsDimming");
 }
 
 void CUnitDrawerData::Update()
@@ -232,6 +242,7 @@ void CUnitDrawerData::UpdateGhostedBuildings()
 
 				// obtained LOS on the ghost of a dead building
 				if (!gso->DecRef()) {
+					spring::VectorErase(unitsByIcon[gso->myIcon].second, const_cast<const GhostSolidObject*>(gso));
 					groundDecals->GhostDestroyed(gso);
 					ghostMemPool.free(gso);
 				}
@@ -289,15 +300,15 @@ void CUnitDrawerData::UpdateUnitIcon(const CUnit* unit, bool forced, bool killed
 
 	if (!killed) {
 		if ((oldIcon != newIcon) || forced) {
-			spring::VectorErase(unitsByIcon[oldIcon], unit);
-			unitsByIcon[newIcon].push_back(unit);
+			spring::VectorErase(unitsByIcon[oldIcon].first, unit);
+			unitsByIcon[newIcon].first.push_back(unit);
 		}
 
 		u->myIcon = newIcon;
 		return;
 	}
 
-	spring::VectorErase(unitsByIcon[oldIcon], unit);
+	spring::VectorErase(unitsByIcon[oldIcon].first, unit);
 }
 
 void CUnitDrawerData::UpdateUnitIconState(CUnit* unit)
@@ -442,10 +453,10 @@ void CUnitDrawerData::UpdateObjectDrawFlags(CSolidObject* o) const
 			} break;
 
 			case CCamera::CAMTYPE_SHADOW: {
-				if      (u->HasDrawFlag(DrawFlags::SO_OPAQUE_FLAG))
-					u->AddDrawFlag(DrawFlags::SO_SHOPAQ_FLAG);
-				else if (u->HasDrawFlag(DrawFlags::SO_ALPHAF_FLAG))
+				if unlikely(IsAlpha(u))
 					u->AddDrawFlag(DrawFlags::SO_SHTRAN_FLAG);
+				else
+					u->AddDrawFlag(DrawFlags::SO_SHOPAQ_FLAG);
 			} break;
 
 			default: { assert(false); } break;
@@ -504,7 +515,15 @@ void CUnitDrawerData::SetUnitDefImage(const UnitDef* unitDef, const std::string&
 		}
 	}
 
-	unitImage->textureID = bitmap.CreateTexture();
+	unitImage->textureID = bitmap.CreateTexture(TextureCreationParams{
+		.aniso = 0.0f,
+		.lodBias = 0.0f,
+		.texID = 0,
+		.reqNumLevels = 1,
+		.linearMipMapFilter = false,
+		.linearTextureFilter = true
+	});
+
 	unitImage->imageSizeX = bitmap.xsize;
 	unitImage->imageSizeY = bitmap.ysize;
 }
@@ -601,20 +620,30 @@ void CUnitDrawerData::RenderUnitDestroyed(const CUnit* unit)
 				gso = ghostMemPool.alloc<GhostSolidObject>();
 
 				gso->pos = u->pos;
+				gso->midPos = u->midPos;
 				gso->modelName = gsoModel->name;
 				gso->facing = u->buildFacing;
 				gso->dir = u->frontdir;
 				gso->team = u->team;
+				gso->radius = u->radius;
 				gso->refCount = 0;
 				gso->GetModel();
 
+				gso->myIcon = u->myIcon;
+				gso->iconRadius = u->iconRadius;
+
 				groundDecals->GhostCreated(u, gso);
+
 			}
 
 			// <gso> can be inserted for multiple allyteams
 			// (the ref-counter saves us come deletion time)
 			savedData.deadGhostBuildings[allyTeam][gsoModel->type].push_back(gso);
 			gso->IncRef();
+
+			if (allyTeam == gu->myAllyTeam) {
+				unitsByIcon[u->myIcon].second.push_back(gso);
+			}
 		}
 
 		spring::VectorErase(savedData.liveGhostBuildings[allyTeam][MDL_TYPE(u)], u);
@@ -669,12 +698,20 @@ void CUnitDrawerData::PlayerChanged(int playerNum)
 	if (playerNum != gu->myPlayerNum)
 		return;
 
-	for (auto& [icon, units] : unitsByIcon) {
-		units.clear();
+	for (auto& [icon, data] : unitsByIcon) {
+		data.first.clear();
+		data.second.clear();
 	}
 
 	for (CUnit* unit : unsortedObjects) {
 		// force an erase (no-op) followed by an insert
 		UpdateUnitIcon(unit, true, false);
 	}
+
+	for (auto& ghosts : savedData.deadGhostBuildings[gu->myAllyTeam]) {
+		for (auto ghost : ghosts) {
+			unitsByIcon[ghost->myIcon].second.push_back(ghost);
+		}
+	}
+
 }

@@ -1,6 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 #include "System/Matrix44f.h"
+#include "System/Quaternion.h"
 #include "System/SpringMath.h"
 #ifndef UNIT_TEST
 	#include "Rendering/GlobalRendering.h"
@@ -24,7 +25,7 @@ CMatrix44f::CMatrix44f(const CMatrix44f& mat)
 }
 
 
-CMatrix44f::CMatrix44f(const float3 pos, const float3 x, const float3 y, const float3 z)
+CMatrix44f::CMatrix44f(const float3& pos, const float3& x, const float3& y, const float3& z)
 {
 	// column-major!
 	m[0] = x.x;   m[4] = y.x;   m[ 8] = z.x;   m[12] = pos.x;
@@ -33,13 +34,13 @@ CMatrix44f::CMatrix44f(const float3 pos, const float3 x, const float3 y, const f
 	m[3] = 0.0f;  m[7] = 0.0f;  m[11] = 0.0f;  m[15] = 1.0f;
 }
 
-CMatrix44f::CMatrix44f(const float rotX, const float rotY, const float rotZ)
+CMatrix44f::CMatrix44f(float rotX, float rotY, float rotZ)
 {
 	LoadIdentity();
 	RotateEulerXYZ(float3(rotX, rotY, rotZ));
 }
 
-CMatrix44f::CMatrix44f(const float3 p)
+CMatrix44f::CMatrix44f(const float3& p)
 {
 	LoadIdentity();
 	SetPos(p);
@@ -70,6 +71,22 @@ bool CMatrix44f::IsIdentity() const
 	return (*this) == IDENTITY;
 }
 
+float CMatrix44f::Det3() const
+{
+	// triple product == D
+	return col[0].dot(col[1].cross(col[2]));
+}
+
+float CMatrix44f::Det4() const
+{
+	return
+		md[0][3] * md[1][2] * md[2][1] * md[3][0] - md[0][2] * md[1][3] * md[2][1] * md[3][0] - md[0][3] * md[1][1] * md[2][2] * md[3][0] + md[0][1] * md[1][3] * md[2][2] * md[3][0] +
+		md[0][2] * md[1][1] * md[2][3] * md[3][0] - md[0][1] * md[1][2] * md[2][3] * md[3][0] - md[0][3] * md[1][2] * md[2][0] * md[3][1] + md[0][2] * md[1][3] * md[2][0] * md[3][1] +
+		md[0][3] * md[1][0] * md[2][2] * md[3][1] - md[0][0] * md[1][3] * md[2][2] * md[3][1] - md[0][2] * md[1][0] * md[2][3] * md[3][1] + md[0][0] * md[1][2] * md[2][3] * md[3][1] +
+		md[0][3] * md[1][1] * md[2][0] * md[3][2] - md[0][1] * md[1][3] * md[2][0] * md[3][2] - md[0][3] * md[1][0] * md[2][1] * md[3][2] + md[0][0] * md[1][3] * md[2][1] * md[3][2] +
+		md[0][1] * md[1][0] * md[2][3] * md[3][2] - md[0][0] * md[1][1] * md[2][3] * md[3][2] - md[0][2] * md[1][1] * md[2][0] * md[3][3] + md[0][1] * md[1][2] * md[2][0] * md[3][3] +
+		md[0][2] * md[1][0] * md[2][1] * md[3][3] - md[0][0] * md[1][2] * md[2][1] * md[3][3] - md[0][1] * md[1][0] * md[2][2] * md[3][3] + md[0][0] * md[1][1] * md[2][2] * md[3][3];
+}
 
 CMatrix44f& CMatrix44f::RotateX(float angle)
 {
@@ -196,7 +213,7 @@ CMatrix44f& CMatrix44f::RotateZ(float angle)
 }
 
 
-CMatrix44f& CMatrix44f::Rotate(float angle, const float3 axis)
+CMatrix44f& CMatrix44f::Rotate(float angle, const float3& axis)
 {
 	const float sr = math::sin(angle);
 	const float cr = math::cos(angle);
@@ -226,7 +243,7 @@ CMatrix44f& CMatrix44f::Rotate(float angle, const float3 axis)
 }
 
 
-CMatrix44f& CMatrix44f::RotateEulerXYZ(const float3 angles)
+CMatrix44f& CMatrix44f::RotateEulerXYZ(const float3& angles)
 {
 	// rotate around X first, Y second, Z third (R=R(Z)*R(Y)*R(X))
 	if (angles[ANGLE_P] != 0.0f) { RotateX(angles[ANGLE_P]); }
@@ -235,7 +252,7 @@ CMatrix44f& CMatrix44f::RotateEulerXYZ(const float3 angles)
 	return *this;
 }
 
-CMatrix44f& CMatrix44f::RotateEulerYXZ(const float3 angles)
+CMatrix44f& CMatrix44f::RotateEulerYXZ(const float3& angles)
 {
 	// rotate around Y first, X second, Z third (R=R(Z)*R(X)*R(Y))
 	if (angles[ANGLE_Y] != 0.0f) { RotateY(angles[ANGLE_Y]); }
@@ -244,7 +261,7 @@ CMatrix44f& CMatrix44f::RotateEulerYXZ(const float3 angles)
 	return *this;
 }
 
-CMatrix44f& CMatrix44f::RotateEulerZXY(const float3 angles)
+CMatrix44f& CMatrix44f::RotateEulerZXY(const float3& angles)
 {
 	// rotate around Z first, X second, Y third (R=R(Y)*R(X)*R(Z))
 	if (angles[ANGLE_R] != 0.0f) { RotateZ(angles[ANGLE_R]); }
@@ -253,7 +270,7 @@ CMatrix44f& CMatrix44f::RotateEulerZXY(const float3 angles)
 	return *this;
 }
 
-CMatrix44f& CMatrix44f::RotateEulerZYX(const float3 angles)
+CMatrix44f& CMatrix44f::RotateEulerZYX(const float3& angles)
 {
 	// rotate around Z first, Y second, X third (R=R(X)*R(Y)*R(Z))
 	if (angles[ANGLE_R] != 0.0f) { RotateZ(angles[ANGLE_R]); }
@@ -272,7 +289,7 @@ CMatrix44f& CMatrix44f::RotateEulerZYX(const float3 angles)
 //  [ 0   0  sz   0]
 //  [ 0   0   0   1]
 //
-CMatrix44f& CMatrix44f::Scale(const float3 scales)
+CMatrix44f& CMatrix44f::Scale(const float3& scales)
 {
 	m[ 0] *= scales.x;
 	m[ 1] *= scales.x;
@@ -360,6 +377,15 @@ static inline void MatrixMatrixMultiplySSE(const CMatrix44f& m1, const CMatrix44
 	_mm_store_ps(&mout->md[3][0], moutc4);
 }
 
+bool CMatrix44f::equals(const CMatrix44f& rhs) const
+{
+	return
+		col[0].equals(rhs.col[0]) &&
+		col[1].equals(rhs.col[1]) &&
+		col[2].equals(rhs.col[2]) &&
+		col[3].equals(rhs.col[3]);
+}
+
 bool CMatrix44f::operator==(const CMatrix44f& rhs) const
 {
 	if (this == &rhs)
@@ -409,7 +435,7 @@ CMatrix44f CMatrix44f::operator+(const CMatrix44f& mat) const
 		r[i + 2] = m[i + 2] + mat[i + 2];
 		r[i + 3] = m[i + 3] + mat[i + 3];
 	}
-#else //brings spring's Matrix44 on par with Eigen in terms of perfomance
+#else //brings spring's Matrix44 on par with Eigen in terms of performance
 	#define ADD_COLUMN(col) \
 		 _mm_store_ps(&r.md[col][0], _mm_add_ps(_mm_load_ps(&md[col][0]), _mm_load_ps(&mat.md[col][0])))
 
@@ -509,6 +535,45 @@ CMatrix44f CMatrix44f::InvertAffine() const
 	CMatrix44f mInv(*this);
 	mInv.InvertAffineInPlace();
 	return mInv;
+}
+
+/// <summary>
+/// Decompose a transformation matrix into translate, rotation (Quaternion), scale components
+/// </summary>
+std::tuple<float3, CQuaternion, float3> CMatrix44f::DecomposeIntoTRS() const
+{
+	CMatrix44f tmpMat = *this;
+	float4& t0 = tmpMat.col[0];
+	float4& t1 = tmpMat.col[1];
+	float4& t2 = tmpMat.col[2];
+
+	const float4& c0 = col[0];
+	const float4& c1 = col[1];
+	const float4& c2 = col[2];
+	const float4& c3 = col[3];
+
+	const float d = tmpMat.Det3();
+	const float s = Sign(d);
+
+	float3 scaling{ s * c0.Length(), c1.Length(), c2.Length() };
+
+	assert(
+		!epscmp(scaling[0], 0.0f, float3::cmp_eps()) &&
+		!epscmp(scaling[1], 0.0f, float3::cmp_eps()) &&
+		!epscmp(scaling[2], 0.0f, float3::cmp_eps())
+	);
+
+	t0 /= scaling[0];
+	t1 /= scaling[1];
+	t2 /= scaling[2];
+
+	assert(tmpMat.IsRotOrRotTranMatrix());
+
+	return std::make_tuple(
+		float3(c3.x, c3.y, c3.z),       //translate
+		CQuaternion::MakeFrom(tmpMat),  //rotate (quat)
+		scaling                         //scale
+	);
 }
 
 

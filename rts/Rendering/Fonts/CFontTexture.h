@@ -97,7 +97,7 @@ struct GlyphInfo {
 class CglFontRenderer;
 
 /**
-This class just store glyphs and load new glyphs if requred
+This class just store glyphs and load new glyphs if required
 It works with image and don't care about rendering these glyphs
 It works only and only with UTF32 chars
 **/
@@ -115,6 +115,8 @@ public:
 	static bool AddFallbackFont(const std::string& fontfile);
 	static void ClearFallbackFonts();
 	static void ClearAllGlyphs();
+
+	static void PinFont(std::shared_ptr<FontFace>& face, const std::string& filename, const int size);
 
 	inline static spring::WrappedSyncRecursiveMutex sync = {};
 protected:
@@ -188,6 +190,7 @@ private:
 	int lastTextureUpdate = 0;
 	bool needsTextureUpload = true;
 	inline static int maxFontTries = 0;
+	inline static int maxPinnedFonts = 0;
 #endif
 	std::shared_ptr<FontFace> shFace;
 

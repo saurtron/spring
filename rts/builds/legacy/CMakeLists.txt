@@ -7,19 +7,26 @@
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
+add_library(Game STATIC)
+target_sources(Game PRIVATE ${sources_engine_Game})
+add_dependencies(Game generateVersionFiles)
+target_include_directories(Game PRIVATE "${CMAKE_BINARY_DIR}/src-generated/engine")
+target_link_libraries(Game PRIVATE
+	 Tracy::TracyClient
+	 SDL2::SDL2
+	 RmlUi::RmlUi
+	 ${sound-impl}
+	 prd::jsoncpp
+	 streflop
+)
 
 ### Assemble libraries
-find_package(SDL2 REQUIRED)
-set(engineIncludes ${SDL2_INCLUDE_DIR})
-set(engineLibraries ${SDL2_LIBRARY})
-if("${SDL2_VERSION_STRING}" VERSION_LESS "2")
-	message(FATAL_ERROR "Found SDL v${SDL2_VERSION_STRING} while 2 is required!")
-endif()
+find_package(SDL2 MODULE REQUIRED)
+set(engineLibraries SDL2::SDL2)
 
 set(OpenGL_GL_PREFERENCE LEGACY)
 find_package_static(OpenGL 3.0 REQUIRED)
-find_package_static(GLEW 2.2.0 REQUIRED)
-list(APPEND engineLibraries OpenGL::GL OpenGL::GLU GLEW::GLEW)
+list(APPEND engineLibraries OpenGL::GL OpenGL::GLU)
 
 find_fontconfig_hack()
 find_package_static(Fontconfig 2.11 REQUIRED)
@@ -38,6 +45,7 @@ list(APPEND engineLibraries Freetype::Freetype)
 
 if    (UNIX)
 	find_package(X11 REQUIRED)
+	target_link_libraries(Game PRIVATE X11::Xcursor)
 	list(APPEND engineLibraries ${X11_Xcursor_LIB} ${X11_X11_LIB})
 endif (UNIX)
 
@@ -57,9 +65,9 @@ list(APPEND engineLibraries pr-downloader)
 list(APPEND engineLibraries RmlUi::Core)
 list(APPEND engineLibraries RmlUi::Debugger)
 list(APPEND engineLibraries lunasvg)
+list(APPEND engineLibraries glad)
 
-### Assemble external incude dirs
-list(APPEND engineIncludes ${OPENAL_INCLUDE_DIR})
+### Assemble external include dirs
 list(APPEND engineIncludes ${ENGINE_SRC_ROOT_DIR}/lib/asio/include)
 list(APPEND engineIncludes ${ENGINE_SRC_ROOT_DIR}/lib/slimsig/include)
 list(APPEND engineIncludes ${ENGINE_SRC_ROOT_DIR}/lib/cereal/include)
@@ -68,7 +76,7 @@ include_directories(${engineIncludes})
 
 ### Build the executable
 add_executable(engine-legacy ${EXE_FLAGS} ${engineSources} ${ENGINE_ICON} ${engineHeaders})
-target_link_libraries(engine-legacy ${engineLibraries})
+target_link_libraries(engine-legacy ${engineLibraries} Game)
 
 
 ### Install the executable

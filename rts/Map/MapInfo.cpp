@@ -140,8 +140,25 @@ void CMapInfo::ReadAtmosphere()
 
 	atmo.skyBox       = atmoTable.GetString("skyBox", "");
 	atmo.skyColor     = atmoTable.GetFloat3("skyColor", float3(0.1f, 0.15f, 0.7f));
-	atmo.skyDir       = atmoTable.GetFloat3("skyDir", -FwdVector);
-	atmo.skyDir.ANormalize();
+
+	if (atmoTable.KeyExists("skyDir")) {
+		LOG_L(L_DEPRECATED, "[CMapInfo::%s] atmosphere.skyDir in mapinfo.lua was never used and now deprecated, use atmosphere.skyAxisAngle instead", __func__);
+	}
+
+	{
+		atmo.skyAxisAngle = atmoTable.GetFloat4("skyAxisAngle", float4{ FwdVector, 0.0f });
+
+		auto axis = float3{ atmo.skyAxisAngle.x, atmo.skyAxisAngle.y, atmo.skyAxisAngle.z };
+
+		const float axisNorm = axis.Length();
+		if (axisNorm < float3::nrm_eps())
+			axis = FwdVector;
+		else
+			axis /= axisNorm;
+
+		atmo.skyAxisAngle = float4{ axis, ClampRad(atmo.skyAxisAngle.w) };
+	}
+
 	atmo.sunColor     = atmoTable.GetFloat3("sunColor", float3(1.0f, 1.0f, 1.0f));
 	atmo.cloudColor   = atmoTable.GetFloat3("cloudColor", float3(1.0f, 1.0f, 1.0f));
 	atmo.fluidDensity = atmoTable.GetFloat("fluidDensity", 1.2f * 0.25f);
@@ -280,17 +297,17 @@ void CMapInfo::ReadWater()
 	}
 
 	FIND_MAP_TEXTURE(&water.normalTexture);
-	water.numTiles = std::clamp(wt.GetInt("numTiles", 1), 1, 16);
+	water.numTiles = std::clamp(wt.GetInt("numTiles", 4), 1, 16);
 	if (water.normalTexture.empty()) {
-		water.normalTexture = resGfxMaps.GetString("waternormaltex", "waterbump.png");
+		water.normalTexture = resGfxMaps.GetString("waternormaltex", "waterbump_4tiles.dds");
 		FIND_MAP_TEXTURE(&water.normalTexture, "bitmaps/");
 
-		// default texture is a TileSet of 3x3
+		// default texture is a TileSet of 4x4
 		// user-defined textures are expected to be 1x1 (no DynWaves possible)
-		water.numTiles = 3;
+		water.numTiles = 4;
 
 		if (resGfxMaps.KeyExists("waternormaltex")) {
-			water.numTiles = std::clamp(resGfxMaps.GetInt("numTiles", 1), 1, 16);
+			water.numTiles = std::clamp(resGfxMaps.GetInt("numTiles", 4), 1, 16);
 		}
 	}
 

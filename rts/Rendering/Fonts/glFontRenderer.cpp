@@ -140,7 +140,7 @@ CglShaderFontRenderer::CglShaderFontRenderer()
 	fontShader = std::make_unique<Shader::GLSLProgramObject>("[GL-Font]");
 	fontShaderColor = std::make_unique<Shader::GLSLProgramObject>("[GL-Font]");
 
-	LOG("[CglFont::%s] Creating Font shaders: GLEW_ARB_explicit_attrib_location = %s", __func__, globalRendering->supportExplicitAttribLoc ? "true" : "false");
+	LOG("[CglFont::%s] Creating Font shaders: GLAD_GL_ARB_explicit_attrib_location = %s", __func__, globalRendering->supportExplicitAttribLoc ? "true" : "false");
 	if (globalRendering->supportExplicitAttribLoc) {
 		fontShader->AttachShaderObject(new Shader::GLSLShaderObject(GL_VERTEX_SHADER  , vsFont330));
 		fontShader->AttachShaderObject(new Shader::GLSLShaderObject(GL_FRAGMENT_SHADER, fsFont330));

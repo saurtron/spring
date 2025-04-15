@@ -99,6 +99,7 @@ class LuaSyncedRead {
 		static int GetFeaturesInSphere(lua_State* L);
 		static int GetFeaturesInCylinder(lua_State* L);
 		static int GetProjectilesInRectangle(lua_State* L);
+		static int GetProjectilesInSphere(lua_State* L);
 
 		static int ValidUnitID(lua_State* L);
 		static int GetUnitTooltip(lua_State* L);
@@ -113,6 +114,7 @@ class LuaSyncedRead {
 		static int GetUnitCosts(lua_State* L);
 		static int GetUnitCostTable(lua_State* L);
 		static int GetUnitResources(lua_State* L);
+		static int GetUnitStorage(lua_State* L);
 		static int GetUnitMetalExtraction(lua_State* L);
 		static int GetUnitExperience(lua_State* L);
 		static int GetUnitStates(lua_State* L);
@@ -294,7 +296,8 @@ class LuaSyncedRead {
 		static int TraceRay(lua_State* L);           //TODO: not implemented
 		static int TraceRayUnits(lua_State* L);      //TODO: not implemented
 		static int TraceRayFeatures(lua_State* L);   //TODO: not implemented
-		static int TraceRayGround(lua_State* L);     //TODO: not implemented
+		static int TraceRayGroundBetweenPositions(lua_State* L);
+		static int TraceRayGroundInDirection(lua_State* L);
 };
 
 #endif /* LUA_SYNCED_READ_H */

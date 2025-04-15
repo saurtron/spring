@@ -255,7 +255,7 @@ CLuaUnitScript::CLuaUnitScript(lua_State* L, CUnit* unit)
 		const std::string& fname = lua_tostring(L, -2);
 		const int r = luaL_ref(L, LUA_REGISTRYINDEX);
 
-		scriptNames.insert(fname, r);
+		scriptNames.emplace(fname, r);
 		UpdateCallIn(fname, r);
 	}
 	for (auto& p: unit->localModel.pieces) {
@@ -333,7 +333,7 @@ int CLuaUnitScript::UpdateCallIn()
 	else {
 		// adding new callIn
 		r = luaL_ref(L, LUA_REGISTRYINDEX);
-		scriptNames.insert(fname, r);
+		scriptNames.emplace(fname, r);
 	}
 
 	UpdateCallIn(fname, r);
@@ -387,7 +387,7 @@ void CLuaUnitScript::RemoveCallIn(const std::string& fname)
 void CLuaUnitScript::ShowScriptError(const std::string& msg)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	// if we are in the same handle, we can truely raise an error
+	// if we are in the same handle, we can truly raise an error
 	if (handle->IsRunning()) {
 		luaL_error(L, "Lua UnitScript error: %s", msg.c_str());
 	}

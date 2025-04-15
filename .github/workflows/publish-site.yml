@@ -3,8 +3,11 @@ on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
+env:
+  EMMYLUA_CLI_VERSION: "0.6.0"
 jobs:
   publish:
+    if: github.repository == 'beyond-all-reason/spring' || github.event_name == 'workflow_dispatch'
     name: Publish Site
     runs-on: ubuntu-latest
     permissions:
@@ -13,23 +16,42 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install --fix-missing -y lua-ldoc lua-markdown jq p7zip-full libsdl2-2.0-0 libopenal1
+          sudo apt-get install --fix-missing -y jq p7zip-full libsdl2-2.0-0 libopenal1
       - name: Checkout Source Repository
         uses: actions/checkout@v2
-        with:
-          ref: master
       - name: Generate Dynamic Content
         run: |
           bash doc/site/_scripts/get_release_data.sh
           bash doc/site/_scripts/get_engine_data.sh
           git add -f doc/site/_data
-      - name: Run LDoc
+      # NOTE: This step is duplicated in `generate-lua-library.yml`
+      - name: Generate Lua library
         run: |
-          ldoc -c doc/LDoc/config.ld .
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-          git add -f doc/site/ldoc
-          git commit -m "Update doc/site"
+          npm install -g lua-doc-extractor@3
+          lua-doc-extractor rts/Lua/*.cpp \
+            --dest rts/Lua/library/generated \
+            --repo https://github.com/${{ github.repository }}/blob/${{ github.sha }}
+      # Upload the Lua library artifact for debugging.
+      - name: Upload Lua Library artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{github.run_id}}-library
+          path: rts/Lua/library/
+      - name: Install emmylua_doc_cli
+        run: |
+          cargo install emmylua_doc_cli --version "${EMMYLUA_CLI_VERSION}"
+      - name: Generate docs using emmylua_doc_cli
+        run: |
+          emmylua_doc_cli \
+            -i rts/Lua/library \
+            -o doc/site/lua-api \
+            --override-template doc/emmlua-doc-cli-template
+          git add -f doc/site/lua-api
+      - name: Commit changes
+        run: |
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git commit -m "Update doc/site/lua-api"
       - name: Check if gh-pages exists
         id: check-ghpages
         run: |
@@ -39,8 +61,8 @@ jobs:
         id: site-changes
         if: steps.check-ghpages.outputs.exists == 'true'
         run: |
-          git diff --stat origin/gh-pages master:doc/site
-          git diff --quiet origin/gh-pages master:doc/site && (echo "modified=false" > $GITHUB_OUTPUT) || (echo "modified=true" > $GITHUB_OUTPUT)
+          git diff --stat origin/gh-pages ${{ github.ref_name }}:doc/site
+          git diff --quiet origin/gh-pages ${{ github.ref_name }}:doc/site && (echo "modified=false" > $GITHUB_OUTPUT) || (echo "modified=true" > $GITHUB_OUTPUT)
       - name: Push gh-pages # Only push gh-pages if doc/site/ was changed or ldoc did changes
         if: steps.check-ghpages.outputs.exists == 'false' || steps.site-changes.outputs.modified == 'true'
         run: |

@@ -543,8 +543,11 @@ void CGame::LoadMap(const std::string& mapFileName)
 		helper->Init();
 		readMap = CReadMap::LoadMap(mapFileName);
 
-		// half size; building positions are snapped to multiples of BUILD_SQUARE_SIZE
+		/* Uses half-size grid because it *incorrectly* assumes
+		 * building positions are always snapped to the build grid. */
+		static_assert(BUILD_GRID_RESOLUTION == 2);
 		buildingMaskMap.Init(mapDims.hmapx * mapDims.hmapy);
+
 		groundBlockingObjectMap.Init(mapDims.mapSquares);
 		yardmapStatusEffectsMap.InitNewYardmapStatusEffectsMap();
 	}
@@ -1133,7 +1136,7 @@ int CGame::KeyPressed(int keyCode, int scanCode, bool isRepeat)
 
 	// try our list of actions
 	for (const Action& action: lastActionList) {
-		if (ActionPressed(keyCode, scanCode, action, isRepeat)) {
+		if (ActionPressed(action, isRepeat)) {
 			return 0;
 		}
 	}
@@ -1355,7 +1358,7 @@ bool CGame::UpdateUnsynced(const spring_time currentTime)
 		// This mode tries to correct for the wrongly calculated timeOffset adaptively,
 		// while trying to maintain a smooth interpolation rate
 		// As frame rates dip below 45fps, this method is only marginally better than old method
-		// But that is heavily dependent on wether the load is sim or draw based.
+		// But that is heavily dependent on whether the load is sim or draw based.
 		// TODO: the camera smoothing still seems to take sim load into account heavily. So large sim loads jitter the camera quite a bit when moving
 		if (SmoothTimeOffset > 0){
 
@@ -1369,7 +1372,7 @@ bool CGame::UpdateUnsynced(const spring_time currentTime)
 				// What we want to know is when the last draw happened, and at what offset.
 				// There are two special cases here, if the last draw happened "on time", then we want to 'pull in' CTO to 0,
 				// irrespective of the time spent in sim.
-				// If the last draw frame didnt happend on time, and had a large CTO, then we need to 'carry over' some time offset
+				// If the last draw frame didnt happen on time, and had a large CTO, then we need to 'carry over' some time offset
 
 				if ((LTO + drawsimratio - 1.0 > (CTO)* strictness)) {
 					newCTO = std::fmin((LTO + drawsimratio - 1.0f) * strictness, 1.3f);
@@ -1494,6 +1497,7 @@ bool CGame::Draw() {
 	const spring_time currentTimePreDraw = spring_gettime();
 
 	SCOPED_SPECIAL_TIMER("Draw");
+	SCOPED_GL_DEBUGGROUP("Draw");
 	globalRendering->SetGLTimeStamp(CGlobalRendering::FRAME_REF_TIME_QUERY_IDX);
 
 	SetDrawMode(gameNormalDraw);
@@ -1567,6 +1571,7 @@ bool CGame::Draw() {
 
 	{
 		SCOPED_TIMER("Draw::Screen");
+		SCOPED_GL_DEBUGGROUP("Draw::Screen");
 		if (CUnitDrawer::UseScreenIcons())
 			unitDrawer->DrawUnitIconsScreen();
 
@@ -1622,10 +1627,12 @@ void CGame::DrawInputReceivers()
 		{
 			// this has MANUAL ordering, draw it last (front-most)
 			SCOPED_TIMER("Draw::Screen::DrawScreen");
+			SCOPED_GL_DEBUGGROUP("Draw::Screen::DrawScreen");
 			luaInputReceiver->Draw();
 		}
 	} else {
 		SCOPED_TIMER("Draw::Screen::Minimap");
+		SCOPED_GL_DEBUGGROUP("Draw::Screen::Minimap");
 
 		if (globalRendering->dualScreenMode) {
 			// minimap is on its own screen, so always draw it
@@ -2176,34 +2183,35 @@ void CGame::Save(std::string&& fileName, std::string&& saveArgs)
 
 
 
-bool CGame::ProcessCommandText(int keyCode, int scanCode, const std::string& command) {
+bool CGame::ProcessCommandText(const std::string& command) {
 	RECOIL_DETAILED_TRACY_ZONE;
 	if (command.size() <= 2)
 		return false;
 
 	if ((command[0] == '/') && (command[1] != '/')) {
 		// strip the '/'
-		ProcessAction(Action(command.substr(1)), keyCode, scanCode, false);
+		ProcessAction(Action(command.substr(1)), false);
 		return true;
 	}
 
 	return false;
 }
 
-bool CGame::ProcessAction(const Action& action, int keyCode, int scanCode, bool isRepeat)
+bool CGame::ProcessAction(const Action& action, bool isRepeat)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	if (ActionPressed(keyCode, scanCode, action, isRepeat))
+	if (ActionPressed(action, isRepeat))
 		return true;
 
+	bool handled = false;
 	// maybe a widget is interested?
-	if (luaUI != nullptr)
-		luaUI->GotChatMsg(action.rawline, false); //FIXME add return argument!
+	if (luaUI != nullptr && luaUI->GotChatMsg(action.rawline, false))
+		handled = true;
 
-	if (luaMenu != nullptr)
-		luaMenu->GotChatMsg(action.rawline, false); //FIXME add return argument!
+	if (luaMenu != nullptr && luaMenu->GotChatMsg(action.rawline, false))
+		handled = true;
 
-	return false;
+	return handled;
 }
 
 void CGame::ActionReceived(const Action& action, int playerID)
@@ -2223,14 +2231,14 @@ void CGame::ActionReceived(const Action& action, int playerID)
 	}
 }
 
-bool CGame::ActionPressed(int keyCode, int scanCode, const Action& action, bool isRepeat)
+bool CGame::ActionPressed(const Action& action, bool isRepeat)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	const IUnsyncedActionExecutor* executor = unsyncedGameCommands->GetActionExecutor(action.command);
 
 	if (executor != nullptr) {
 		// an executor for that action was found
-		if (executor->ExecuteAction(UnsyncedAction(action, keyCode, isRepeat)))
+		if (executor->ExecuteAction(UnsyncedAction(action, isRepeat)))
 			return true;
 	}
 

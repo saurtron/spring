@@ -15,6 +15,9 @@ CallInsList = {
 	"Shutdown",
 	"LayoutButtons",
 	"ConfigureLayout",
+	"ActiveCommandChanged",
+	"CameraRotationChanged",
+	"CameraPositionChanged",
 	"CommandNotify",
 
 	"KeyMapChanged",
@@ -71,11 +74,6 @@ CallInsList = {
 	"FeatureDestroyed",
 
 	"DrawGenesis",
-	"DrawWater",
-	"DrawSky",
-	"DrawSun",
-	"DrawGrass",
-	"DrawTrees",
 	"DrawWorld",
 	"DrawWorldPreUnit",
 	"DrawWorldPreParticles",

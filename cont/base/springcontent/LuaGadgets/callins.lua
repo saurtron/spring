@@ -176,6 +176,9 @@ CALLIN_LIST = {
 	"RecvSkirmishAIMessage",
 
 	"DefaultCommand",
+	"ActiveCommandChanged",
+	"CameraRotationChanged",
+	"CameraPositionChanged",
 	"CommandNotify",
 
 	"ViewResize", -- FIXME ?

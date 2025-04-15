@@ -46,6 +46,10 @@ DECL_FREE_HANDLER(CLuaIntro, luaIntro)
 
 /******************************************************************************/
 
+/***
+ * @class Intro : Callins
+ * @see Callins
+ */
 CLuaIntro::CLuaIntro()
 : CLuaHandle("LuaIntro", LUA_HANDLE_ORDER_INTRO, true, false)
 {
@@ -325,9 +329,10 @@ string CLuaIntro::LoadFile(const string& filename) const
 /******************************************************************************/
 /******************************************************************************/
 
-/*** Draws custom load screens.
+/***
+ * Draws custom load screens.
  *
- * @function DrawLoadScreen()
+ * @function Intro:DrawLoadScreen
  */
 void CLuaIntro::DrawLoadScreen()
 {
@@ -352,7 +357,9 @@ void CLuaIntro::DrawLoadScreen()
 
 
 /***
- * @function LoadProgress(message, replaceLastLine)
+ * @function Intro:LoadProgress
+ * @param message string
+ * @param replaceLastLine boolean 
  */
 void CLuaIntro::LoadProgress(const std::string& msg, const bool replace_lastline)
 {

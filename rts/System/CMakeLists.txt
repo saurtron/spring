@@ -34,6 +34,7 @@ make_global_var(sources_engine_System_common
 		"${CMAKE_CURRENT_SOURCE_DIR}/Math/SpringDampers.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Math/NURBS.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Matrix44f.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Quaternion.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Misc/RectangleOverlapHandler.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Misc/SpringTime.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Object.cpp"
@@ -42,7 +43,6 @@ make_global_var(sources_engine_System_common
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Clipboard.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/errorhandler.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Misc.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/SharedLib.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/ScopedFileLock.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/SDL1_keysym.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Watchdog.cpp"
@@ -66,6 +66,7 @@ make_global_var(sources_engine_System_common
 		"${CMAKE_CURRENT_SOURCE_DIR}/Threading/ThreadPool.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/TimeProfiler.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/TimeUtil.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Transform.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/UriParser.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/StringUtil.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/type2.cpp"
@@ -125,13 +126,17 @@ make_global_var(sources_engine_System_Log_sinkFile
 make_global_var(sources_engine_System_Log_sinkOutputDebugString
 		"${CMAKE_CURRENT_SOURCE_DIR}/Log/OutputDebugStringSink.cpp"
 	)
+
+# Warning: sources_engine_System_Platform_* is not used by spring-dedicated
 set(sources_engine_System_Platform_Linux
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/CrashHandler.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/Hardware.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/SoLib.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/MessageBox.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/WindowManagerHelper.cpp"
 	)
 set(sources_engine_System_Platform_Mac
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/Hardware.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/SoLib.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Mac/MessageBox.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Mac/CrashHandler.cpp"
@@ -140,7 +145,7 @@ set(sources_engine_System_Platform_Mac
 	)
 set(sources_engine_System_Platform_Windows
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/CrashHandler.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/DllLib.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/Hardware.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/MessageBox.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/seh.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/WinVersion.cpp"
@@ -151,12 +156,16 @@ set(sources_engine_System_Threading_Mac
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Mac/Signal.cpp"
 	)
 set(sources_engine_System_Threading_Linux
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/CpuTopology.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/Futex.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/ThreadSupport.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Linux/SoLib.cpp"
 	)
 set(sources_engine_System_Threading_Windows
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/CpuTopology.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/CriticalSection.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/Future.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Win/DllLib.cpp"
 	)
 
 
@@ -175,6 +184,8 @@ endif()
 set(sources_engine_System_Threading
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/CpuID.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/Threading.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/ThreadAffinityGuard.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Platform/SharedLib.cpp"
 	)
 
 set(sources_engine_System

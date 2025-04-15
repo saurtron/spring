@@ -65,6 +65,11 @@ DECL_FREE_HANDLER(CLuaUI, luaUI)
 
 /******************************************************************************/
 
+/***
+ * @class UI : Callins
+ * @see Callins
+ */
+
 CLuaUI::CLuaUI()
 : CLuaHandle("LuaUI", LUA_HANDLE_ORDER_UI, true, false)
 {
@@ -189,8 +194,13 @@ CLuaUI::~CLuaUI()
 
 void CLuaUI::InitLuaSocket(lua_State* L) {
 	std::string code;
-	std::string filename = "socket.lua";
-	CFileHandler f(filename);
+	std::string filename = "LuaSocket/socket.lua";
+	CFileHandler f(filename, SPRING_VFS_BASE);
+
+	if (!f.FileExists()) {
+		LOG_L(L_ERROR, "Error loading %s (file does not exist)", filename.c_str());
+		return;
+	}
 
 	LUA_OPEN_LIB(L, luaopen_socket_core);
 
@@ -273,7 +283,7 @@ bool CLuaUI::LoadCFunctions(lua_State* L)
 /******************************************************************************/
 
 /***
- * @function ConfigureLayout
+ * @function UI:ConfigureLayout
  */
 bool CLuaUI::ConfigureLayout(const string& command)
 {

@@ -53,6 +53,7 @@ CR_REG_METADATA(CWeapon, (
 	CR_MEMBER(nextSalvo),
 	CR_MEMBER(salvoLeft),
 	CR_MEMBER(salvoWindup),
+	CR_MEMBER(ttl),
 
 	CR_MEMBER(range),
 	CR_MEMBER(projectileSpeed),
@@ -139,6 +140,7 @@ CWeapon::CWeapon(CUnit* owner, const WeaponDef* def):
 	nextSalvo(0),
 	salvoLeft(0),
 	salvoWindup(0),
+	ttl(1),
 
 	range(1.0f),
 	projectileSpeed(1.0f),
@@ -361,7 +363,7 @@ bool CWeapon::CheckAimingAngle() const
 	const float3 worldMainDir = owner->GetObjectSpaceVec(mainDir);
 
 	// weapon finished a previously started AimWeapon thread and wants to
-	// fire, but target is no longer within contraints --> wait for re-aim
+	// fire, but target is no longer within constraints --> wait for re-aim
 	return (CheckTargetAngleConstraint(worldTargetDir, worldMainDir));
 }
 

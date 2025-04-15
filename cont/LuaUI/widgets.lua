@@ -34,7 +34,7 @@ local SELECTOR_BASENAME = 'selector.lua'
 
 local SAFEWRAP = 1
 -- 0: disabled
--- 1: enabled, but can be overriden by widget.GetInfo().unsafe
+-- 1: enabled, but can be overridden by widget.GetInfo().unsafe
 -- 2: always enabled
 
 local SAFEDRAW = false  -- requires SAFEWRAP to work
@@ -184,6 +184,9 @@ local callInLists = {
   'Shutdown',
   'Update',
   'TextCommand',
+  'ActiveCommandChanged',
+  'CameraRotationChanged',
+  'CameraPositionChanged',
   'CommandNotify',
   'AddConsoleLine',
   'ViewResize',
@@ -1182,6 +1185,24 @@ function widgetHandler:ConfigureLayout(command)
 end
 
 
+function widgetHandler:ActiveCommandChanged(id, cmdType)
+  for _,w in ipairs(self.ActiveCommandChangedList) do
+    w:ActiveCommandChanged(id, cmdType)
+  end
+end
+
+function widgetHandler:CameraRotationChanged(rotx, roty, rotz)
+  for _,w in ipairs(self.CameraRotationChangedList) do
+    w:CameraRotationChanged(rotx, roty, rotz)
+  end
+end
+
+function widgetHandler:CameraPositionChanged(posx, posy, posz)
+  for _,w in ipairs(self.CameraPositionChangedList) do
+    w:CameraPositionChanged(posx, posy, posz)
+  end
+end
+
 function widgetHandler:CommandNotify(id, params, options)
   for _,w in ipairs(self.CommandNotifyList) do
     if (w:CommandNotify(id, params, options)) then
@@ -2174,7 +2195,7 @@ end
 --  Font call-ins
 --
 
-function widgetHandler:FontsChaged()
+function widgetHandler:FontsChanged()
   for _,w in ripairs(self.FontsChangedList) do
     w:FontsChanged()
   end
