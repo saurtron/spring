@@ -268,6 +268,11 @@ void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
 		if (c.GetOpts() & ALT_KEY) {
 			Command nc(c);
 			nc.SetOpts(nc.GetOpts() | INTERNAL_ORDER);
+			std::optional<Command> waitCmd;
+		        if (!commandQue.empty() && commandQue.front().GetID() == CMD_WAIT) {
+				waitCmd = commandQue.front();
+				commandQue.pop_front();
+			}
 			for (int a = 0; a < numItems; ++a) {
 				if (repeatOrders) {
 					if (commandQue.empty()) {
@@ -281,6 +286,8 @@ void CFactoryCAI::GiveCommandReal(const Command& c, bool fromSynced)
 			}
 
 			BuildeeChangeCheck();
+			if (waitCmd)
+				commandQue.push_front(*waitCmd);
 		} else {
 			for (int a = 0; a < numItems; ++a) {
 				commandQue.push_back(c);
