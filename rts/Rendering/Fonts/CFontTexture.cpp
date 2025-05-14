@@ -447,14 +447,6 @@ static std::shared_ptr<FontFace> GetRenderFontFace(const std::string& fontfile, 
 
 #ifndef HEADLESS
 
-inline
-static std::string GetFaceKey(FT_Face f)
-{
-	RECOIL_DETAILED_TRACY_ZONE;
-	FT_FaceRec_* fr = static_cast<FT_FaceRec_*>(f);
-	return fmt::format("{}-{}-{}", fr->family_name, fr->style_name, fr->num_glyphs);
-}
-
 // NOLINTNEXTLINE{misc-misplaced-const}
 template<typename USET>
 static std::shared_ptr<FontFace> GetFontForCharacters(const std::vector<char32_t>& characters, const FT_Face origFace, const int origSize, const USET& blackList)
@@ -586,11 +578,11 @@ static std::shared_ptr<FontFace> GetFontForCharacters(const std::vector<char32_t
 		if (invalidFonts.find(std::make_pair(filename, origSize)) != invalidFonts.end()) //this font is known to error out
 			continue;
 
+		if (blackList.find(std::make_pair(filename, origSize)) != blackList.cend())
+			continue;
+
 		try {
 			auto face = GetRenderFontFace(filename, origSize);
-
-			if (blackList.find(GetFaceKey(*face)) != blackList.cend())
-				continue;
 
 			CFontTexture::PinFont(face, filename, origSize);
 
@@ -641,6 +633,7 @@ CFontTexture::CFontTexture(const std::string& fontfile, int size, int _outlinesi
 	, texHeight(0)
 	, wantedTexWidth(0)
 	, wantedTexHeight(0)
+	, fileName(fontfile)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	atlasAlloc.SetMaxSize(globalRendering->maxTextureSize, globalRendering->maxTextureSize);
@@ -1050,10 +1043,10 @@ void CFontTexture::LoadWantedGlyphs(const std::vector<char32_t>& wanted)
 	// load glyphs from different fonts (using fontconfig)
 	std::shared_ptr<FontFace> f = shFace;
 
-	static spring::unordered_set<std::string> alreadyCheckedFonts;
+	static spring::unordered_set<SizedFontKey> alreadyCheckedFonts;
 	alreadyCheckedFonts.clear();
 	do {
-		alreadyCheckedFonts.insert(GetFaceKey(*f));
+		alreadyCheckedFonts.insert(std::make_pair(fileName, fontSize));
 
 		for (std::size_t idx = 0; idx < map.size(); /*nop*/) {
 			if (auto it = failedAttemptsToReplace.find(map[idx]); (it != failedAttemptsToReplace.end() && it->second == maxFontTries)) {

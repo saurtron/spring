@@ -182,6 +182,7 @@ protected:
 
 	std::unique_ptr<CglFontRenderer> fontRenderer;
 private:
+	std::string fileName;
 #ifndef HEADLESS
 	int curTextureUpdate = 0;
 	int lastTextureUpdate = 0;
