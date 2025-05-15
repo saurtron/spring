@@ -701,10 +701,10 @@ void TBitmapAction<T, ch>::Blur(int iterations, float weight)
 		#if MT_EXECUTION == 1
 			for_mt_chunk(0, src->ysize, [this, src, srcAction, dstAction, bpi, w0](int y) {
 		#else
-			for (int y = 0; y < src->ysize; y++) {
+			for (int x = 0; x < src->xsize; x++) {
 		#endif
-				int yBaseOffset = (y * src->xsize);
-				for (int x = 0; x < src->xsize; x++) {
+				for (int y = 0; y < src->ysize; y++) {
+					int yBaseOffset = (y * src->xsize);
 
 					// don't use AccumChanType for additional precision
 					std::array<float, ch> val{ 0.0f };
