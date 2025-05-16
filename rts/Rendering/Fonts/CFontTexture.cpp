@@ -644,6 +644,8 @@ CFontTexture::CFontTexture(const std::string& fontfile, int size, int _outlinesi
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	atlasAlloc.SetMaxSize(globalRendering->maxTextureSize, globalRendering->maxTextureSize);
+	blurX1 = blurY1 = std::numeric_limits<int>::max();
+	blurX2 = blurY2 = 0;
 
 	atlasGlyphs.reserve(1024);
 
@@ -870,7 +872,8 @@ bool CFontTexture::ClearGlyphs() {
 
 		// clear atlases
 		ClearAtlases(32, 32);
-		blurX1 = blurY1 = blurX2 = blurY2 = 0;
+		blurX1 = blurY1 = std::numeric_limits<int>::max();
+		blurX2 = blurY2 = 0;
 
 		// preload standard glyphs
 		PreloadGlyphs();
@@ -1091,7 +1094,6 @@ void CFontTexture::LoadWantedGlyphs(const std::vector<char32_t>& wanted)
 
 	// read atlasAlloc glyph data back into atlasUpdate{Shadow}
 	{
-		blurX1 = blurY1 = blurX2 = blurY2 = 0;
 		if (!atlasAlloc.Allocate())
 			LOG_L(L_WARNING, "[CFontTexture::%s] Texture limit reached! (try to reduce the font size and/or outlinewidth)", __func__);
 
@@ -1130,10 +1132,10 @@ void CFontTexture::LoadWantedGlyphs(const std::vector<char32_t>& wanted)
 			if (texpos[2] != 0)
 				atlasUpdate.CopySubImage(atlasGlyphs[glyphIdx], texpos.x, texpos.y);
 			if (texpos2[2] != 0) {
-				blurX1 = std::min<int>(blurX1, texpos2.x + outlineSize);
-				blurX2 = std::max<int>(blurX2, texpos2.x + outlineSize + atlasGlyphs[glyphIdx].xsize + outlineSize);
-				blurY1 = std::min<int>(blurY1, texpos2.y + outlineSize);
-				blurY2 = std::max<int>(blurY2, texpos2.y + outlineSize + atlasGlyphs[glyphIdx].ysize + outlineSize);
+				blurX1 = std::min<int>(blurX1, texpos2.x + outlineSize/2);
+				blurX2 = std::max<int>(blurX2, texpos2.x + outlineSize/2 + atlasGlyphs[glyphIdx].xsize + outlineSize);
+				blurY1 = std::min<int>(blurY1, texpos2.y + outlineSize/2);
+				blurY2 = std::max<int>(blurY2, texpos2.y + outlineSize/2 + atlasGlyphs[glyphIdx].ysize + outlineSize);
 				atlasUpdateShadow.CopySubImage(atlasGlyphs[glyphIdx], texpos2.x + outlineSize, texpos2.y + outlineSize);
 			}
 		}
@@ -1397,7 +1399,10 @@ void CFontTexture::UpdateGlyphAtlasTexture()
 	// merge shadow and regular atlas bitmaps, dispose shadow
 	if (atlasUpdateShadow.xsize == atlasUpdate.xsize && atlasUpdateShadow.ysize == atlasUpdate.ysize) {
 		spring_time t1 = spring_gettime();
-		atlasUpdateShadow.Blur(outlineSize, outlineWeight, blurX1, blurY1, blurX2-blurX1, blurY2-blurY1);
+		if (blurX1 < blurX2)
+			atlasUpdateShadow.Blur(outlineSize, outlineWeight, blurX1, blurY1, blurX2-blurX1, blurY2-blurY1);
+		blurX1 = blurY1 = std::numeric_limits<int>::max();
+		blurX2 = blurY2 = 0;
 		spring_time t2 = spring_gettime();
 		spring_time tt = t2-t1;
 		if (tt.toMilliSecsf() > 10) {
