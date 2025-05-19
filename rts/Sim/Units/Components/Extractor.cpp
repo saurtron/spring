@@ -32,6 +32,31 @@ void ExtractorBuilding::PostLoad(CUnit* myUnit)
 }
 
 
+void ExtractorBuilding::PauseExtraction()
+{
+	if (unit->activated)
+		Deactivate();
+}
+
+
+void ExtractorBuilding::ResumeExtraction()
+{
+	if (unit->activated)
+		Activate();
+}
+
+
+void ExtractorBuilding::ClearAreaOfControl()
+{
+	// undo the extraction-area
+	for (auto si = metalAreaOfControl.begin(); si != metalAreaOfControl.end(); ++si) {
+		metalMap.RemoveExtraction(si->x, si->z, si->extractionDepth);
+	}
+
+	metalAreaOfControl.clear();
+}
+
+
 /* resets the metalMap and notifies the neighbours */
 void ExtractorBuilding::ResetExtraction()
 {
@@ -39,12 +64,7 @@ void ExtractorBuilding::ResetExtraction()
 	unit->metalExtract = 0;
 	unit->script->ExtractionRateChanged(unit->metalExtract);
 
-	// undo the extraction-area
-	for (auto si = metalAreaOfControl.begin(); si != metalAreaOfControl.end(); ++si) {
-		metalMap.RemoveExtraction(si->x, si->z, si->extractionDepth);
-	}
-
-	metalAreaOfControl.clear();
+	ClearAreaOfControl();
 
 	// tell the neighbours (if any) to take it over
 	for (ExtractorBuilding* ngb: neighbours) {
@@ -86,6 +106,41 @@ void ExtractorBuilding::FindNeighbours()
 }
 
 
+void ExtractorBuilding::UpdateNeighbours()
+{
+	std::vector<ExtractorBuilding*> oldNeighbours = neighbours;
+
+	neighbours.clear();
+	// find any neighbouring extractors
+	QuadFieldQuery qfQuery;
+	quadField.GetUnits(qfQuery, unit->pos, extractionRange + extractorHandler.maxExtractionRange);
+
+	for (CUnit* u: *qfQuery.units) {
+		if (u == unit)
+			continue;
+
+		auto *eb = extractorHandler.TryGetExtractor(u);
+		if (eb == nullptr)
+			continue;
+
+		if (!IsNeighbour(eb))
+			continue;
+
+		AddNeighbour(eb);
+		eb->AddNeighbour(this);
+	}
+
+	for(auto eb: oldNeighbours) {
+		if (std::find(neighbours.begin(), neighbours.end(), eb) == neighbours.end())
+			eb->RemoveNeighbour(this);
+	}
+	for(auto eb: neighbours) {
+		if (std::find(oldNeighbours.begin(), oldNeighbours.end(), eb) == oldNeighbours.end())
+			eb->AddNeighbour(this);
+	}
+}
+
+
 /* sets the range of extraction for this extractor, also finds overlapping neighbours. */
 void ExtractorBuilding::SetExtractionRangeAndDepth(float range, float depth)
 {
@@ -119,8 +174,28 @@ void ExtractorBuilding::SetExtractionRangeAndDepth(float range, float depth)
 		return;
 	}
 
+	RecalculateAreaOfControl();
+}
+
+
+void ExtractorBuilding::Moved()
+{
+	if (!unit->activated)
+		return;
+
+	ClearAreaOfControl();
+	RecalculateAreaOfControl();
+
+	// TODO: should probably notify/refresh neighbours if active even if they didn't change so they
+	// can also update area of control.
+
+	UpdateNeighbours(); // TODO: maybe outside of activated check?
+}
+
+void ExtractorBuilding::RecalculateAreaOfControl()
+{
 	// calculate this extractor's area of control and metalExtract amount
-	unit->metalExtract = 0;
+	float newExtract = 0.0f;
 
 	const int xBegin = std::max(                   0, (int) ((unit->pos.x - extractionRange) / METAL_MAP_SQUARE_SIZE));
 	const int xEnd   = std::min(mapDims.mapx / 2 - 1, (int) ((unit->pos.x + extractionRange) / METAL_MAP_SQUARE_SIZE));
@@ -142,15 +217,18 @@ void ExtractorBuilding::SetExtractionRangeAndDepth(float range, float depth)
 				msqr.x = x;
 				msqr.z = z;
 				// extraction is done in a cylinder of height <depth>
-				msqr.extractionDepth = metalMap.RequestExtraction(x, z, depth);
+				msqr.extractionDepth = metalMap.RequestExtraction(x, z, extractionDepth);
 				metalAreaOfControl.push_back(msqr);
-				unit->metalExtract += msqr.extractionDepth * metalMap.GetMetalAmount(msqr.x, msqr.z);
+				newExtract += msqr.extractionDepth * metalMap.GetMetalAmount(msqr.x, msqr.z);
 			}
 		}
 	}
 
-	// set the COB animation speed
-	unit->script->ExtractionRateChanged(unit->metalExtract);
+	if (newExtract != unit->metalExtract) {
+		unit->metalExtract = newExtract;
+		// set the COB animation speed
+		unit->script->ExtractionRateChanged(unit->metalExtract);
+	}
 }
 
 

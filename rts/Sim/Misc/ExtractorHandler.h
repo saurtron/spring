@@ -29,6 +29,10 @@ public:
 	void UnitPostLoad(CUnit* unit) const;
 	void UnitReverseBuilt(const CUnit* unit) const;
 
+	void UnitEnteredAir(const CUnit* unit) const;
+	void UnitLeftAir(const CUnit* unit) const;
+	void UnitMoved(const CUnit* unit) const;
+
 	void PostFinalizeRefresh() const;
 
 	void UpdateMaxExtractionRange(float newExtractorRange);

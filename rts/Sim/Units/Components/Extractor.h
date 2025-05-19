@@ -35,8 +35,11 @@ public:
 	void PreInit(const UnitLoadParams& params);
 	void PostLoad(CUnit* myUnit);
 
+	void Moved();
+
 	void ResetExtraction();
 	void FindNeighbours();
+	void UpdateNeighbours();
 	void SetExtractionRangeAndDepth(float range, float depth);
 	void ReCalculateMetalExtraction();
 	bool IsNeighbour(ExtractorBuilding* neighbour);
@@ -46,9 +49,17 @@ public:
 	float GetExtractionRange() const { return extractionRange; }
 	float GetExtractionDepth() const { return extractionDepth; }
 
+	void PauseExtraction();
+	void ResumeExtraction();
+
 	void Activate();
 	void Deactivate();
 
+private:
+	void RecalculateAreaOfControl();
+	void ClearAreaOfControl();
+
+public:
 	// Serialization
 
 	template<class Archive, class Snapshot>

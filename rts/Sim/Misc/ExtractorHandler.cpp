@@ -103,3 +103,29 @@ void ExtractorHandler::UnitReverseBuilt(const CUnit* unit) const
 		extractor->ResetExtraction();
 }
 
+
+void ExtractorHandler::UnitEnteredAir(const CUnit* unit) const
+{
+	auto* extractor = TryGetExtractor(unit);
+	if (extractor != nullptr)
+		extractor->PauseExtraction();
+}
+
+
+void ExtractorHandler::UnitLeftAir(const CUnit* unit) const
+{
+	auto* extractor = TryGetExtractor(unit);
+	if (extractor != nullptr)
+		extractor->ResumeExtraction();
+}
+
+
+void ExtractorHandler::UnitMoved(const CUnit* unit) const
+{
+	if (!unit->activated)
+		return;
+	auto* extractor = TryGetExtractor(unit);
+	if (extractor != nullptr)
+		extractor->Moved();
+}
+

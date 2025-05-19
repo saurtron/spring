@@ -535,6 +535,8 @@ void CUnit::ForcedMove(const float3& newPos)
 	Move((preFramePos = newPos) - pos, true);
 	Block();
 
+	extractorHandler.UnitMoved(this);
+
 	eventHandler.UnitMoved(this);
 	quadField.MovedUnit(this);
 }
@@ -656,6 +658,11 @@ void CUnit::Update()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
 	ASSERT_SYNCED(pos);
+
+	// TODO: PSTATE_BIT_MOVING gets updated in SlowUpdate??
+	// need smth faster
+	if (HasPhysicalStateBit(CSolidObject::PSTATE_BIT_MOVING))
+		extractorHandler.UnitMoved(this);
 
 	UpdatePhysicalState(0.1f);
 	UpdatePosErrorParams(true, false);
@@ -1822,8 +1829,10 @@ void CUnit::UpdatePhysicalState(float eps)
 
 	if (IsInAir() != inAir) {
 		if (IsInAir()) {
+			extractorHandler.UnitEnteredAir(this);
 			eventHandler.UnitEnteredAir(this);
 		} else {
+			extractorHandler.UnitLeftAir(this);
 			eventHandler.UnitLeftAir(this);
 		}
 	}
