@@ -46,8 +46,8 @@ out vec4 outColor;
 void main() {
 	vec2 texSize = vec2(textureSize(tex, 0));
 
-	float alpha = texture(tex, vUV / texSize).x;
-	outColor = vec4(vCol.r, vCol.g, vCol.b, vCol.a * alpha);
+	float alpha = texture(tex, vUV / texSize).x * vCol.a;
+	outColor = vec4(vCol.r*alpha, vCol.g*alpha, vCol.b*alpha, alpha);
 }
 )";
 
@@ -81,8 +81,8 @@ in vec2 vUV;
 void main() {
 	vec2 texSize = vec2(textureSize(tex, 0));
 
-	float alpha = texture(tex, vUV / texSize).x;
-	gl_FragColor = vec4(vCol.r, vCol.g, vCol.b, vCol.a * alpha);
+	float alpha = texture(tex, vUV / texSize).x * vCol.a;
+	gl_FragColor = vec4(vCol.r*alpha, vCol.g*alpha, vCol.b*alpha, alpha);
 }
 )";
 ////////////////////////////////////////////
@@ -171,7 +171,7 @@ void CglShaderFontRenderer::PushGLState(const CglFont& fnt)
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_ALPHA_TEST); //just in case
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBindTexture(GL_TEXTURE_2D, fnt.GetTexture());
 
@@ -187,6 +187,8 @@ void CglShaderFontRenderer::PopGLState()
 
 	if (currProgID > 0)
 		glUseProgram(currProgID);
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
