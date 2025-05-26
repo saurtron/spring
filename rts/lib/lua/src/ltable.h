@@ -32,7 +32,7 @@
 
 
 /* returns the Node, given the value of a table entry */
-#define nodefromval(v)	cast(Node *, (v))
+#define nodefromval(v)	lua_cast(Node *, (v))
 
 
 LUAI_FUNC const TValue *luaH_getint (Table *t, lua_Integer key);

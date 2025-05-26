@@ -258,7 +258,7 @@ void luaC_fix (lua_State *L, GCObject *o) {
 GCObject *luaC_newobjdt (lua_State *L, int tt, size_t sz, size_t offset) {
   global_State *g = G(L);
   char *p = cast_charp(luaM_newobject(L, novariant(tt), sz));
-  GCObject *o = cast(GCObject *, p + offset);
+  GCObject *o = lua_cast(GCObject *, p + offset);
   o->marked = luaC_white(g);
   o->tt = tt;
   o->next = g->allgc;
@@ -1316,7 +1316,7 @@ static void atomic2gen (lua_State *L, global_State *g) {
 ** memory grows 'genminormul'%.
 */
 static void setminordebt (global_State *g) {
-  luaE_setdebt(g, -(cast(l_mem, (gettotalbytes(g) / 100)) * g->genminormul));
+  luaE_setdebt(g, -(lua_cast(l_mem, (gettotalbytes(g) / 100)) * g->genminormul));
 }
 
 
@@ -1668,7 +1668,7 @@ static void incstep (lua_State *L, global_State *g) {
   int stepmul = (getgcparam(g->gcstepmul) | 1);  /* avoid division by 0 */
   l_mem debt = (g->GCdebt / WORK2MEM) * stepmul;
   l_mem stepsize = (g->gcstepsize <= log2maxs(l_mem))
-                 ? ((cast(l_mem, 1) << g->gcstepsize) / WORK2MEM) * stepmul
+                 ? ((lua_cast(l_mem, 1) << g->gcstepsize) / WORK2MEM) * stepmul
                  : MAX_LMEM;  /* overflow; keep maximum value */
   do {  /* repeat until pause or enough "credit" (negative debt) */
     lu_mem work = singlestep(L);  /* perform one single step */

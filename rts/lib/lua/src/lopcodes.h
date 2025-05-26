@@ -111,16 +111,16 @@ enum OpMode {iABC, iABx, iAsBx, iAx, isJ};  /* basic instruction formats */
 ** the following macros help to manipulate instructions
 */
 
-#define GET_OPCODE(i)	(cast(OpCode, ((i)>>POS_OP) & MASK1(SIZE_OP,0)))
+#define GET_OPCODE(i)	(lua_cast(OpCode, ((i)>>POS_OP) & MASK1(SIZE_OP,0)))
 #define SET_OPCODE(i,o)	((i) = (((i)&MASK0(SIZE_OP,POS_OP)) | \
-		((cast(Instruction, o)<<POS_OP)&MASK1(SIZE_OP,POS_OP))))
+		((lua_cast(Instruction, o)<<POS_OP)&MASK1(SIZE_OP,POS_OP))))
 
 #define checkopm(i,m)	(getOpMode(GET_OPCODE(i)) == m)
 
 
 #define getarg(i,pos,size)	(cast_int(((i)>>(pos)) & MASK1(size,0)))
 #define setarg(i,v,pos,size)	((i) = (((i)&MASK0(size,pos)) | \
-                ((cast(Instruction, v)<<pos)&MASK1(size,pos))))
+                ((lua_cast(Instruction, v)<<pos)&MASK1(size,pos))))
 
 #define GETARG_A(i)	getarg(i, POS_A, SIZE_A)
 #define SETARG_A(i,v)	setarg(i, v, POS_A, SIZE_A)
@@ -153,22 +153,22 @@ enum OpMode {iABC, iABx, iAsBx, iAx, isJ};  /* basic instruction formats */
 	setarg(i, cast_uint((j)+OFFSET_sJ), POS_sJ, SIZE_sJ)
 
 
-#define CREATE_ABCk(o,a,b,c,k)	((cast(Instruction, o)<<POS_OP) \
-			| (cast(Instruction, a)<<POS_A) \
-			| (cast(Instruction, b)<<POS_B) \
-			| (cast(Instruction, c)<<POS_C) \
-			| (cast(Instruction, k)<<POS_k))
+#define CREATE_ABCk(o,a,b,c,k)	((lua_cast(Instruction, o)<<POS_OP) \
+			| (lua_cast(Instruction, a)<<POS_A) \
+			| (lua_cast(Instruction, b)<<POS_B) \
+			| (lua_cast(Instruction, c)<<POS_C) \
+			| (lua_cast(Instruction, k)<<POS_k))
 
-#define CREATE_ABx(o,a,bc)	((cast(Instruction, o)<<POS_OP) \
-			| (cast(Instruction, a)<<POS_A) \
-			| (cast(Instruction, bc)<<POS_Bx))
+#define CREATE_ABx(o,a,bc)	((lua_cast(Instruction, o)<<POS_OP) \
+			| (lua_cast(Instruction, a)<<POS_A) \
+			| (lua_cast(Instruction, bc)<<POS_Bx))
 
-#define CREATE_Ax(o,a)		((cast(Instruction, o)<<POS_OP) \
-			| (cast(Instruction, a)<<POS_Ax))
+#define CREATE_Ax(o,a)		((lua_cast(Instruction, o)<<POS_OP) \
+			| (lua_cast(Instruction, a)<<POS_Ax))
 
-#define CREATE_sJ(o,j,k)	((cast(Instruction, o) << POS_OP) \
-			| (cast(Instruction, j) << POS_sJ) \
-			| (cast(Instruction, k) << POS_k))
+#define CREATE_sJ(o,j,k)	((lua_cast(Instruction, o) << POS_OP) \
+			| (lua_cast(Instruction, j) << POS_sJ) \
+			| (lua_cast(Instruction, k) << POS_k))
 
 
 #if !defined(MAXINDEXRK)  /* (for debugging only) */
@@ -380,7 +380,7 @@ OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
 
 LUAI_DDEC(const lu_byte luaP_opmodes[NUM_OPCODES];)
 
-#define getOpMode(m)	(cast(enum OpMode, luaP_opmodes[m] & 7))
+#define getOpMode(m)	(lua_cast(enum OpMode, luaP_opmodes[m] & 7))
 #define testAMode(m)	(luaP_opmodes[m] & (1 << 3))
 #define testTMode(m)	(luaP_opmodes[m] & (1 << 4))
 #define testITMode(m)	(luaP_opmodes[m] & (1 << 5))

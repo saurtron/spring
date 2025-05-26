@@ -395,7 +395,7 @@ static void rethook (lua_State *L, CallInfo *ci, int nres) {
         delta = ci->u.l.nextraargs + p->numparams + 1;
     }
     ci->func.p += delta;  /* if vararg, back to virtual 'func' */
-    ftransfer = cast(unsigned short, firstres - ci->func.p);
+    ftransfer = lua_cast(unsigned short, firstres - ci->func.p);
     luaD_hook(L, LUA_HOOKRET, -1, ftransfer, nres);  /* call it */
     ci->func.p -= delta;
   }
@@ -783,7 +783,7 @@ static int resume_error (lua_State *L, const char *msg, int narg) {
 ** coroutine.
 */
 static void resume (lua_State *L, void *ud) {
-  int n = *(cast(int*, ud));  /* number of arguments */
+  int n = *(lua_cast(int*, ud));  /* number of arguments */
   StkId firstArg = L->top.p - n;  /* first argument */
   CallInfo *ci = L->ci;
   if (L->status == LUA_OK)  /* starting a coroutine? */
@@ -916,7 +916,7 @@ struct CloseP {
 ** Auxiliary function to call 'luaF_close' in protected mode.
 */
 static void closepaux (lua_State *L, void *ud) {
-  struct CloseP *pcl = cast(struct CloseP *, ud);
+  struct CloseP *pcl = lua_cast(struct CloseP *, ud);
   luaF_close(L, pcl->level, pcl->status, 0);
 }
 
@@ -991,7 +991,7 @@ static void checkmode (lua_State *L, const char *mode, const char *x) {
 
 static void f_parser (lua_State *L, void *ud) {
   LClosure *cl;
-  struct SParser *p = cast(struct SParser *, ud);
+  struct SParser *p = lua_cast(struct SParser *, ud);
   int c = zgetc(p->z);  /* read first character */
   if (c == LUA_SIGNATURE[0]) {
     checkmode(L, p->mode, "binary");

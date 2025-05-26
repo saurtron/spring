@@ -93,12 +93,23 @@ typedef LUA_NUMBER lua_Number;
 /* type for integer functions */
 typedef LUA_INTEGER lua_Integer;
 
+/* type for string hashes */  // SPRING
+typedef unsigned int lua_Hash; // SPRING
+LUA_API void  (lua_pushhstring) (lua_State *L,
+                                 lua_Hash h, const char *s, size_t l);
+
+
 /* unsigned integer type */
 typedef LUA_UNSIGNED lua_Unsigned;
 
 /* type for continuation-function contexts */
 typedef LUA_KCONTEXT lua_KContext;
 
+/* type for string hashes */ // SPRING
+typedef unsigned int lua_Hash; // SPRING
+
+//SPRING
+LUA_API lua_Hash (lua_calchash) (const char *s, size_t l);
 
 /*
 ** Type for C functions registered with Lua
@@ -200,7 +211,7 @@ LUA_API const char     *(lua_typename) (lua_State *L, int tp);
 
 LUA_API lua_Number      (lua_tonumberx) (lua_State *L, int idx, int *isnum);
 LUA_API lua_Integer     (lua_tointegerx) (lua_State *L, int idx, int *isnum);
-LUA_API int             (lua_toboolean) (lua_State *L, int idx);
+LUA_API bool            (lua_toboolean) (lua_State *L, int idx);
 LUA_API const char     *(lua_tolstring) (lua_State *L, int idx, size_t *len);
 LUA_API lua_Unsigned    (lua_rawlen) (lua_State *L, int idx);
 LUA_API lua_CFunction   (lua_tocfunction) (lua_State *L, int idx);

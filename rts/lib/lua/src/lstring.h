@@ -53,5 +53,8 @@ LUAI_FUNC TString *luaS_newlstr (lua_State *L, const char *str, size_t l);
 LUAI_FUNC TString *luaS_new (lua_State *L, const char *str);
 LUAI_FUNC TString *luaS_createlngstrobj (lua_State *L, size_t l);
 
+//SPRING
+LUAI_FUNC TString *luaS_newhstr (lua_State *L,
+                                 lua_Hash h, const char *str, size_t l);
 
 #endif

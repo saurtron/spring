@@ -127,7 +127,7 @@ void luaO_arith (lua_State *L, int op, const TValue *p1, const TValue *p2,
                  StkId res) {
   if (!luaO_rawarith(L, op, p1, p2, s2v(res))) {
     /* could not perform raw operation; try metamethod */
-    luaT_trybinTM(L, p1, p2, res, cast(TMS, (op - LUA_OPADD) + TM_ADD));
+    luaT_trybinTM(L, p1, p2, res, lua_cast(TMS, (op - LUA_OPADD) + TM_ADD));
   }
 }
 
@@ -270,7 +270,7 @@ static const char *l_str2d (const char *s, lua_Number *result) {
 }
 
 
-#define MAXBY10		cast(lua_Unsigned, LUA_MAXINTEGER / 10)
+#define MAXBY10		lua_cast(lua_Unsigned, LUA_MAXINTEGER / 10)
 #define MAXLASTD	cast_int(LUA_MAXINTEGER % 10)
 
 static const char *l_str2int (const char *s, lua_Integer *result) {
@@ -504,7 +504,7 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
       }
       case 'I': {  /* a 'lua_Integer' */
         TValue num;
-        setivalue(&num, cast(lua_Integer, va_arg(argp, l_uacInt)));
+        setivalue(&num, lua_cast(lua_Integer, va_arg(argp, l_uacInt)));
         addnum2buff(&buff, &num);
         break;
       }

@@ -367,7 +367,7 @@ union GCUnion {
 ** "A pointer to a union object, suitably converted, points to each of
 ** its members [...], and vice versa."
 */
-#define cast_u(o)	cast(union GCUnion *, (o))
+#define cast_u(o)	lua_cast(union GCUnion *, (o))
 
 /* macros to convert a GCObject into a specific value */
 #define gco2ts(o)  \
@@ -391,7 +391,7 @@ union GCUnion {
 
 
 /* actual number of total bytes allocated */
-#define gettotalbytes(g)	cast(lu_mem, (g)->totalbytes + (g)->GCdebt)
+#define gettotalbytes(g)	lua_cast(lu_mem, (g)->totalbytes + (g)->GCdebt)
 
 LUAI_FUNC void luaE_setdebt (global_State *g, l_mem debt);
 LUAI_FUNC void luaE_freethread (lua_State *L, lua_State *L1);

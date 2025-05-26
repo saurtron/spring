@@ -255,6 +255,75 @@ TString *luaS_new (lua_State *L, const char *str) {
   return p[0];
 }
 
+// SPRING START
+
+//SPRING
+static inline lua_Hash calchash(const char *str, size_t l) {
+  lua_Hash h = lua_cast(unsigned int, l);  /* seed */
+  size_t step = (l>>5)+1;  /* if string is too long, don't hash all its chars */
+  size_t l1;
+  for (l1=l; l1>=step; l1-=step) {  /* compute hash */
+    h = h ^ ((h<<5)+(h>>2)+lua_cast(unsigned char, str[l1-1]));
+  }
+  return h;
+}
+
+
+//SPRING
+LUA_API lua_Hash lua_calchash(const char *str, size_t l) {
+  return calchash(str, l);
+}
+
+/*
+TString *luaS_newhstr (lua_State *L, lua_Hash h, const char *str, size_t l) {
+  GCObject *o;
+  for (o = G(L)->strt.hash[lmod(h, G(L)->strt.size)];
+       o != NULL;
+       o = o->gch.next) {
+    TString *ts = rawgco2ts(o);
+    if (ts->tsv.len == l && (memcmp(str, getstr(ts), l) == 0)) {
+      // string may be dead
+      if (isdead(G(L), o)) changewhite(o);
+      return ts;
+    }
+  }
+  return newlstr(L, str, l, h);  // not found
+}
+
+TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
+  if (l <= LUAI_MAXSHORTLEN)  // short string?
+    return internshrstr(L, str, l);
+  else {
+    TString *ts;
+    if (l_unlikely(l * sizeof(char) >= (MAX_SIZE - sizeof(TString))))
+      luaM_toobig(L);
+    ts = luaS_createlngstrobj(L, l);
+    memcpy(getlngstr(ts), str, l * sizeof(char));
+    return ts;
+  }
+}
+
+
+
+//SPRING
+TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
+  GCObject *o;
+  const lua_Hash h = calchash(str, l);
+  for (o = G(L)->strt.hash[lmod(h, G(L)->strt.size)];
+       o != NULL;
+       o = o->gch.next) {
+    TString *ts = rawgco2ts(o);
+    if (ts->tsv.len == l && (memcmp(str, getstr(ts), l) == 0)) {
+      // string may be dead
+      if (isdead(G(L), o)) changewhite(o);
+      return ts;
+    }
+  }
+  return newlstr(L, str, l, h);  // not found
+}
+*/
+// SPRING END
+
 
 Udata *luaS_newudata (lua_State *L, size_t s, int nuvalue) {
   Udata *u;

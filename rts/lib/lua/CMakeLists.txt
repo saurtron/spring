@@ -10,6 +10,8 @@ SET(luaSources
 		"src/lauxlib.cpp"
 		"src/lbaselib.cpp"
 		"src/lcode.cpp"
+		"src/lcorolib.cpp"
+		"src/lctype.cpp"
 		"src/ldblib.cpp"
 		"src/ldebug.cpp"
 		"src/ldo.cpp"
@@ -33,9 +35,9 @@ SET(luaSources
 		"src/ltablib.cpp"
 		"src/ltm.cpp"
 		"src/lundump.cpp"
+		"src/lutf8lib.cpp"
 		"src/lvm.cpp"
 		"src/lzio.cpp"
-		"src/print.cpp"
 		"include/LuaUser.cpp"
 	)
 

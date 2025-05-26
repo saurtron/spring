@@ -396,7 +396,7 @@ LUA_API lua_Integer lua_tointegerx (lua_State *L, int idx, int *pisnum) {
 }
 
 
-LUA_API int lua_toboolean (lua_State *L, int idx) {
+LUA_API bool lua_toboolean (lua_State *L, int idx) {
   const TValue *o = index2value(L, idx);
   return !l_isfalse(o);
 }
@@ -535,6 +535,17 @@ LUA_API const char *lua_pushlstring (lua_State *L, const char *s, size_t len) {
 }
 
 
+//SPRING
+LUA_API void lua_pushhstring (lua_State *L,
+                              lua_Hash h, const char *s, size_t len) {
+  lua_lock(L);
+  luaC_checkGC(L);
+  setsvalue2s(L, L->top, luaS_newhstr(L, h, s, len));
+  api_incr_top(L);
+  lua_unlock(L);
+}
+
+
 LUA_API const char *lua_pushstring (lua_State *L, const char *s) {
   lua_lock(L);
   if (s == NULL)
@@ -550,7 +561,6 @@ LUA_API const char *lua_pushstring (lua_State *L, const char *s) {
   lua_unlock(L);
   return s;
 }
-
 
 LUA_API const char *lua_pushvfstring (lua_State *L, const char *fmt,
                                       va_list argp) {
@@ -1034,7 +1044,7 @@ struct CallS {  /* data to 'f_call' */
 
 
 static void f_call (lua_State *L, void *ud) {
-  struct CallS *c = cast(struct CallS *, ud);
+  struct CallS *c = lua_cast(struct CallS *, ud);
   luaD_callnoyield(L, c->func, c->nresults);
 }
 
@@ -1171,7 +1181,7 @@ LUA_API int lua_gc (lua_State *L, int what, ...) {
         luaC_step(L);
       }
       else {  /* add 'data' to total debt */
-        debt = cast(l_mem, data) * 1024 + g->GCdebt;
+        debt = lua_cast(l_mem, data) * 1024 + g->GCdebt;
         luaE_setdebt(g, debt);
         luaC_checkGC(L);
       }

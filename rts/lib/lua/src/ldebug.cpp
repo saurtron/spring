@@ -629,7 +629,7 @@ static const char *funcnamefromcode (lua_State *L, const Proto *p,
       tm = TM_NEWINDEX;
       break;
     case OP_MMBIN: case OP_MMBINI: case OP_MMBINK: {
-      tm = cast(TMS, GETARG_C(i));
+      tm = lua_cast(TMS, GETARG_C(i));
       break;
     }
     case OP_UNM: tm = TM_UNM; break;

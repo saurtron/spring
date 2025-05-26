@@ -133,18 +133,18 @@ typedef LUAI_UACINT l_uacInt;
 
 
 /* type casts (a macro highlights casts in the code) */
-#define cast(t, exp)	((t)(exp))
+#define lua_cast(t, exp)	((t)(exp))
 
-#define cast_void(i)	cast(void, (i))
-#define cast_voidp(i)	cast(void *, (i))
-#define cast_num(i)	cast(lua_Number, (i))
-#define cast_int(i)	cast(int, (i))
-#define cast_uint(i)	cast(unsigned int, (i))
-#define cast_byte(i)	cast(lu_byte, (i))
-#define cast_uchar(i)	cast(unsigned char, (i))
-#define cast_char(i)	cast(char, (i))
-#define cast_charp(i)	cast(char *, (i))
-#define cast_sizet(i)	cast(size_t, (i))
+#define cast_void(i)	lua_cast(void, (i))
+#define cast_voidp(i)	lua_cast(void *, (i))
+#define cast_num(i)	lua_cast(lua_Number, (i))
+#define cast_int(i)	lua_cast(int, (i))
+#define cast_uint(i)	lua_cast(unsigned int, (i))
+#define cast_byte(i)	lua_cast(lu_byte, (i))
+#define cast_uchar(i)	lua_cast(unsigned char, (i))
+#define cast_char(i)	lua_cast(char, (i))
+#define cast_charp(i)	lua_cast(char *, (i))
+#define cast_sizet(i)	lua_cast(size_t, (i))
 
 
 /* cast a signed lua_Integer to lua_Unsigned */
@@ -342,6 +342,7 @@ typedef l_uint32 Instruction;
 #endif
 
 /* the others are quite standard operations */
+#include "lib/streflop/streflop_cond.h"
 #if !defined(luai_numadd)
 #define luai_numadd(L,a,b)      ((a)+(b))
 #define luai_numsub(L,a,b)      ((a)-(b))

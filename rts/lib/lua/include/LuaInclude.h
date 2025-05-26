@@ -3,6 +3,9 @@
 #ifndef SPRING_LUA_INCLUDE
 #define SPRING_LUA_INCLUDE
 
+#define LUA_COMPAT_APIINTCASTS
+#define LUA_COMPAT_5_3
+
 #include <string>
 #include <cstring> // strlen
 #include <cassert>
@@ -16,7 +19,9 @@
 #include "System/Log/ILog.h"
 #include "System/BranchPrediction.h"
 
-
+#ifndef lua_tointeger
+#define lua_tointeger(L,i)	lua_tointegerx(L,(i),NULL)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // A few missing lua_to..., lua_check..., lua_opt...
@@ -236,7 +241,8 @@ static inline void LUA_CLOSE(lua_State** L) {
 
 
 static inline void LUA_UNLOAD_LIB(lua_State* L, std::string libname) {
-	luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 1);
+	//luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 1);
+  	luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
 	lua_pushsstring(L, libname);
 	lua_pushnil(L);
 	lua_rawset(L, -3);

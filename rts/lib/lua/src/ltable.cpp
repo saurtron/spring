@@ -188,7 +188,7 @@ static Node *mainpositionTV (const Table *t, const TValue *key) {
 
 l_sinline Node *mainpositionfromnode (const Table *t, Node *nd) {
   TValue key;
-  getnodekey(cast(lua_State *, NULL), &key, nd);
+  getnodekey(lua_cast(lua_State *, NULL), &key, nd);
   return mainpositionTV(t, &key);
 }
 
@@ -479,7 +479,7 @@ static int numusehash (const Table *t, unsigned int *nums, unsigned int *pna) {
 */
 static void setnodevector (lua_State *L, Table *t, unsigned int size) {
   if (size == 0) {  /* no elements to hash part? */
-    t->node = cast(Node *, dummynode);  /* use common 'dummynode' */
+    t->node = lua_cast(Node *, dummynode);  /* use common 'dummynode' */
     t->lsizenode = 0;
     t->lastfree = NULL;  /* signal that it is using dummy node */
   }
@@ -791,7 +791,7 @@ const TValue *luaH_getstr (Table *t, TString *key) {
     return luaH_getshortstr(t, key);
   else {  /* for long strings, use generic case */
     TValue ko;
-    setsvalue(cast(lua_State *, NULL), &ko, key);
+    setsvalue(lua_cast(lua_State *, NULL), &ko, key);
     return getgeneric(t, &ko, 0);
   }
 }
@@ -828,7 +828,7 @@ void luaH_finishset (lua_State *L, Table *t, const TValue *key,
   if (isabstkey(slot))
     luaH_newkey(L, t, key, value);
   else
-    setobj2t(L, cast(TValue *, slot), value);
+    setobj2t(L, lua_cast(TValue *, slot), value);
 }
 
 
@@ -850,7 +850,7 @@ void luaH_setint (lua_State *L, Table *t, lua_Integer key, TValue *value) {
     luaH_newkey(L, t, &k, value);
   }
   else
-    setobj2t(L, cast(TValue *, p), value);
+    setobj2t(L, lua_cast(TValue *, p), value);
 }
 
 
@@ -976,7 +976,7 @@ lua_Unsigned luaH_getn (Table *t) {
   /* (3) 'limit' is the last element and either is zero or present in table */
   lua_assert(limit == luaH_realasize(t) &&
              (limit == 0 || !isempty(&t->array[limit - 1])));
-  if (isdummy(t) || isempty(luaH_getint(t, cast(lua_Integer, limit + 1))))
+  if (isdummy(t) || isempty(luaH_getint(t, lua_cast(lua_Integer, limit + 1))))
     return limit;  /* 'limit + 1' is absent */
   else  /* 'limit + 1' is also present */
     return hash_search(t, limit);

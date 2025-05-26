@@ -118,7 +118,7 @@ static Instruction *previousinstruction (FuncState *fs) {
   if (fs->pc > fs->lasttarget)
     return &fs->f->code[fs->pc - 1];  /* previous instruction */
   else
-    return cast(Instruction*, &invalidinstruction);
+    return lua_cast(Instruction*, &invalidinstruction);
 }
 
 
@@ -1361,7 +1361,7 @@ l_sinline OpCode binopr2op (BinOpr opr, BinOpr baser, OpCode base) {
   lua_assert(baser <= opr &&
             ((baser == OPR_ADD && opr <= OPR_SHR) ||
              (baser == OPR_LT && opr <= OPR_LE)));
-  return cast(OpCode, (cast_int(opr) - cast_int(baser)) + cast_int(base));
+  return lua_cast(OpCode, (cast_int(opr) - cast_int(baser)) + cast_int(base));
 }
 
 
@@ -1369,7 +1369,7 @@ l_sinline OpCode binopr2op (BinOpr opr, BinOpr baser, OpCode base) {
 ** Convert a UnOpr to an OpCode  (ORDER OPR - ORDER OP)
 */
 l_sinline OpCode unopr2op (UnOpr opr) {
-  return cast(OpCode, (cast_int(opr) - cast_int(OPR_MINUS)) +
+  return lua_cast(OpCode, (cast_int(opr) - cast_int(OPR_MINUS)) +
                                        cast_int(OP_UNM));
 }
 
@@ -1379,7 +1379,7 @@ l_sinline OpCode unopr2op (UnOpr opr) {
 */
 l_sinline TMS binopr2TM (BinOpr opr) {
   lua_assert(OPR_ADD <= opr && opr <= OPR_SHR);
-  return cast(TMS, (cast_int(opr) - cast_int(OPR_ADD)) + cast_int(TM_ADD));
+  return lua_cast(TMS, (cast_int(opr) - cast_int(OPR_ADD)) + cast_int(TM_ADD));
 }
 
 
@@ -1768,7 +1768,7 @@ void luaK_posfix (FuncState *fs, BinOpr opr,
     case OPR_GT: case OPR_GE: {
       /* '(a > b)' <=> '(b < a)';  '(a >= b)' <=> '(b <= a)' */
       swapexps(e1, e2);
-      opr = cast(BinOpr, (opr - OPR_GT) + OPR_LT);
+      opr = lua_cast(BinOpr, (opr - OPR_GT) + OPR_LT);
     }  /* FALLTHROUGH */
     case OPR_LT: case OPR_LE: {
       codeorder(fs, opr, e1, e2);

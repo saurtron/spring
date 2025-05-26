@@ -106,7 +106,7 @@ typedef enum {
 ** 'slot' points to the place to put the value.
 */
 #define luaV_finishfastset(L,t,slot,v) \
-    { setobj2t(L, cast(TValue *,slot), v); \
+    { setobj2t(L, lua_cast(TValue *,slot), v); \
       luaC_barrierback(L, gcvalue(t), v); }
 
 

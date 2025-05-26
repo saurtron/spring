@@ -48,7 +48,7 @@ typedef struct LG {
 
 
 
-#define fromstate(L)	(cast(LX *, cast(lu_byte *, (L)) - offsetof(LX, l)))
+#define fromstate(L)	(lua_cast(LX *, lua_cast(lu_byte *, (L)) - offsetof(LX, l)))
 
 
 /*
@@ -361,7 +361,7 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   int i;
   lua_State *L;
   global_State *g;
-  LG *l = cast(LG *, (*f)(ud, NULL, LUA_TTHREAD, sizeof(LG)));
+  LG *l = lua_cast(LG *, (*f)(ud, NULL, LUA_TTHREAD, sizeof(LG)));
   if (l == NULL) return NULL;
   L = &l->l.l;
   g = &l->g;

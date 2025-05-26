@@ -32,7 +32,7 @@
 #define upisopen(up)	((up)->v.p != &(up)->u.value)
 
 
-#define uplevel(up)	check_exp(upisopen(up), cast(StkId, (up)->v.p))
+#define uplevel(up)	check_exp(upisopen(up), lua_cast(StkId, (up)->v.p))
 
 
 /*
