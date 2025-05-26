@@ -20,8 +20,8 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // This file was generated with a script.
-// Generated 2021-01-12 23:42:11.736174 UTC
-// This header was generated with sol v3.2.3 (revision 68fd0c01)
+// Generated 2022-06-25 08:14:19.336233 UTC
+// This header was generated with sol v3.3.0 (revision eba86625)
 // https://github.com/ThePhD/sol2
 
 #ifndef SOL_SINGLE_CONFIG_HPP
@@ -47,12 +47,6 @@ https://sol2.readthedocs.io/en/latest/safety.html ! You can also pass them throu
 the build system, or the command line options of your compiler.
 
 */
-
-#define LUA_VERSION_NUM 501
-#define SOL_USING_CXX_LUA 1 //Tons of undefined references if not set
-#define SOL_ALL_SAFETIES_ON 1
-#define SOL_NO_CHECK_NUMBER_PRECISION 1
-//#define SOL_NO_EXCEPTIONS 1 //crashes system on load
 
 // end of sol/config.hpp
 
