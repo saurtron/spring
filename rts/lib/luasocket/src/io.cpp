@@ -1,14 +1,10 @@
 /*=========================================================================*\
 * Input/Output abstraction
 * LuaSocket toolkit
-*
-* RCS ID: $Id: io.c,v 1.6 2005/09/29 06:11:41 diego Exp $
 \*=========================================================================*/
+#include "luasocket.h"
 #include "io.h"
 
-/*=========================================================================*\
-* Exported functions
-\*=========================================================================*/
 /*-------------------------------------------------------------------------*\
 * Initializes C structure
 \*-------------------------------------------------------------------------*/
@@ -27,6 +23,6 @@ const char *io_strerror(int err) {
         case IO_DONE: return NULL;
         case IO_CLOSED: return "closed";
         case IO_TIMEOUT: return "timeout";
-        default: return "unknown error"; 
+        default: return "unknown error";
     }
 }

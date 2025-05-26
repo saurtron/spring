@@ -1,17 +1,12 @@
 /*=========================================================================*\
 * Auxiliar routines for class hierarchy manipulation
 * LuaSocket toolkit
-*
-* RCS ID: $Id: auxiliar.c,v 1.14 2005/10/07 04:40:59 diego Exp $
 \*=========================================================================*/
+#include "luasocket.h"
+#include "auxiliar.h"
 #include <string.h>
 #include <stdio.h>
 
-#include "auxiliar.h"
-
-/*=========================================================================*\
-* Exported functions
-\*=========================================================================*/
 /*-------------------------------------------------------------------------*\
 * Initializes the module
 \*-------------------------------------------------------------------------*/
@@ -24,11 +19,11 @@ int auxiliar_open(lua_State *L) {
 * Creates a new class with given methods
 * Methods whose names start with __ are passed directly to the metatable.
 \*-------------------------------------------------------------------------*/
-void auxiliar_newclass(lua_State *L, const char *classname, luaL_reg *func) {
+void auxiliar_newclass(lua_State *L, const char *classname, luaL_Reg *func) {
     luaL_newmetatable(L, classname); /* mt */
     /* create __index table to place methods */
     lua_pushstring(L, "__index");    /* mt,"__index" */
-    lua_newtable(L);                 /* mt,"__index",it */ 
+    lua_newtable(L);                 /* mt,"__index",it */
     /* put class name into class metatable */
     lua_pushstring(L, "class");      /* mt,"__index",it,"class" */
     lua_pushstring(L, classname);    /* mt,"__index",it,"class",classname */
@@ -81,12 +76,12 @@ void auxiliar_add2group(lua_State *L, const char *classname, const char *groupna
 \*-------------------------------------------------------------------------*/
 int auxiliar_checkboolean(lua_State *L, int objidx) {
     if (!lua_isboolean(L, objidx))
-        luaL_typerror(L, objidx, lua_typename(L, LUA_TBOOLEAN));
+        auxiliar_typeerror(L, objidx, lua_typename(L, LUA_TBOOLEAN));
     return lua_toboolean(L, objidx);
 }
 
 /*-------------------------------------------------------------------------*\
-* Return userdata pointer if object belongs to a given class, abort with 
+* Return userdata pointer if object belongs to a given class, abort with
 * error otherwise
 \*-------------------------------------------------------------------------*/
 void *auxiliar_checkclass(lua_State *L, const char *classname, int objidx) {
@@ -100,7 +95,7 @@ void *auxiliar_checkclass(lua_State *L, const char *classname, int objidx) {
 }
 
 /*-------------------------------------------------------------------------*\
-* Return userdata pointer if object belongs to a given group, abort with 
+* Return userdata pointer if object belongs to a given group, abort with
 * error otherwise
 \*-------------------------------------------------------------------------*/
 void *auxiliar_checkgroup(lua_State *L, const char *groupname, int objidx) {
@@ -123,7 +118,7 @@ void auxiliar_setclass(lua_State *L, const char *classname, int objidx) {
 }
 
 /*-------------------------------------------------------------------------*\
-* Get a userdata pointer if object belongs to a given group. Return NULL 
+* Get a userdata pointer if object belongs to a given group. Return NULL
 * otherwise
 \*-------------------------------------------------------------------------*/
 void *auxiliar_getgroupudata(lua_State *L, const char *groupname, int objidx) {
@@ -141,9 +136,19 @@ void *auxiliar_getgroupudata(lua_State *L, const char *groupname, int objidx) {
 }
 
 /*-------------------------------------------------------------------------*\
-* Get a userdata pointer if object belongs to a given class. Return NULL 
+* Get a userdata pointer if object belongs to a given class. Return NULL
 * otherwise
 \*-------------------------------------------------------------------------*/
 void *auxiliar_getclassudata(lua_State *L, const char *classname, int objidx) {
-    return luaL_checkudata(L, objidx, classname);
+    return luaL_testudata(L, objidx, classname);
+}
+
+/*-------------------------------------------------------------------------*\
+* Throws error when argument does not have correct type.
+* Used to be part of lauxlib in Lua 5.1, was dropped from 5.2.
+\*-------------------------------------------------------------------------*/
+int auxiliar_typeerror (lua_State *L, int narg, const char *tname) {
+  const char *msg = lua_pushfstring(L, "%s expected, got %s", tname,
+      luaL_typename(L, narg));
+  return luaL_argerror(L, narg, msg);
 }

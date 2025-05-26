@@ -5,6 +5,7 @@ INCLUDE_DIRECTORIES(BEFORE ../lua/include)
 SET(luaSocketSources
 	src/auxiliar.cpp
 	src/buffer.cpp
+	src/compat.cpp
 	src/except.cpp
 	src/inet.cpp
 	src/io.cpp
@@ -12,6 +13,7 @@ SET(luaSocketSources
 	src/mime.cpp
 	src/options.cpp
 	src/select.cpp
+	src/serial.cpp
 	src/tcp.cpp
 	src/timeout.cpp
 	src/udp.cpp

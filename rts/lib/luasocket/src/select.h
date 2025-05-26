@@ -8,10 +8,16 @@
 * method getfd() which returns the descriptor to be passed to the
 * underlying select function. Another method, dirty(), should return 
 * true if there is data ready for reading (required for buffered input).
-*
-* RCS ID: $Id: select.h,v 1.7 2004/06/16 01:02:07 diego Exp $
 \*=========================================================================*/
 
+#ifndef _WIN32
+#pragma GCC visibility push(hidden)
+#endif
+
 int select_open(lua_State *L);
+
+#ifndef _WIN32
+#pragma GCC visibility pop
+#endif
 
 #endif /* SELECT_H */
