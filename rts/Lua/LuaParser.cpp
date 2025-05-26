@@ -312,7 +312,7 @@ void LuaParser::PushParam()
 	if (initDepth > 0) {
 		lua_rawset(L, -3);
 	} else {
-		lua_rawset(L, LUA_GLOBALSINDEX);
+		//lua_rawset(L, LUA_GLOBALSINDEX);
 	}
 }
 
@@ -328,7 +328,7 @@ void LuaParser::GetTable(const std::string& name, bool overwrite)
 		lua_newtable(L);
 	} else {
 		lua_pushsstring(L, name);
-		lua_gettable(L, (initDepth == 0) ? LUA_GLOBALSINDEX : -3);
+		//lua_gettable(L, (initDepth == 0) ? LUA_GLOBALSINDEX : -3);
 		if (!lua_istable(L, -1)) {
 			lua_pop(L, 1);
 			lua_newtable(L);
@@ -350,7 +350,7 @@ void LuaParser::GetTable(int index, bool overwrite)
 		lua_newtable(L);
 	} else {
 		lua_pushnumber(L, index);
-		lua_gettable(L, (initDepth == 0) ? LUA_GLOBALSINDEX : -3);
+		//lua_gettable(L, (initDepth == 0) ? LUA_GLOBALSINDEX : -3);
 		if (!lua_istable(L, -1)) {
 			lua_pop(L, 1);
 			lua_newtable(L);

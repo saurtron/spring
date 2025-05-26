@@ -38,10 +38,12 @@ struct LuaHashString {
 
 		inline void GetGlobal(lua_State* L) const {
 			Push(L);
-			lua_rawget(L, LUA_GLOBALSINDEX);
+			//lua_rawget(L, LUA_GLOBALSINDEX);
+			// GLOBAL
 		}
 		inline bool GetGlobalFunc(lua_State* L) const {
 			GetGlobal(L);
+  			//lua_getglobal(L, "require");
 
 			if (lua_isfunction(L, -1))
 				return true;
