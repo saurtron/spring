@@ -249,6 +249,7 @@ namespace QTPFS {
 		bool disallowNodeRevisit = false;
 
 public:
+		int syncID;
 		bool rawPathCheck = false;
 		bool synced = false;
 		bool pathRequestWaiting = false;

@@ -333,7 +333,7 @@ extern void log_frontend_cleanup();
  * @see LOG_SECTION
  */
 #define LOG_S(section, fmt, ...) \
-	_LOG_SECTION(section, L_INFO, fmt, ##__VA_ARGS__)
+	_LOG_SECTION(section, DEFAULT_LOG_LEVEL_SHORT, fmt, ##__VA_ARGS__)
 
 /**
  * Registers a log message with a specifiable section and level.

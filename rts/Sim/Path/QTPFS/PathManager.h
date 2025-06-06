@@ -186,6 +186,7 @@ namespace QTPFS {
 
 		static unsigned int LAYERS_PER_UPDATE;
 		static unsigned int MAX_TEAM_SEARCHES;
+		static int globalSyncID;
 
 		unsigned int searchStateOffset;
 		unsigned int numPathRequests;

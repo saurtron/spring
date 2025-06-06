@@ -58,6 +58,7 @@
 
 CONFIG(int, PathingThreadCount).defaultValue(0).safemodeValue(1).minimumValue(0);
 
+int QTPFS::PathManager::globalSyncID = 0;
 namespace QTPFS {
 	struct PMLoadScreen {
 	public:
@@ -730,12 +731,14 @@ void QTPFS::PathManager::Update() {
 		};
 
 		SRectangle rect(0,0,0,0);
-		for_mt(0, nodeLayers.size(), [this, &rect, &numBlocksToUpdate](const int index) {
+		for(int index = 0; index < nodeLayers.size(); index++) {
+		//for_mt(0, nodeLayers.size(), [this, &rect, &numBlocksToUpdate](const int index) {
 			int curThread = ThreadPool::GetThreadNum();
 			int layerNum = nodeLayerUpdatePriorityOrder[index];
 			int blocksToUpdate = numBlocksToUpdate(layerNum);
 			for (int i = 0; i < blocksToUpdate; ++i) { UpdateNodeLayer(layerNum, rect, curThread); }
-		});
+		//});
+		};
 
 		// Mark all dirty paths so that they can be recalculated
 		int pathsMarkedDirty = 0;
@@ -903,7 +906,8 @@ void QTPFS::PathManager::ExecuteQueuedSearches() {
 
 	// execute pending searches collected via
 	// RequestPath and QueueDeadPathSearches
-	for_mt(0, pathView.size(), [this, &pathView](int i){
+	for(int i = 0; i< pathView.size(); i++) {
+	//for_mt(0, pathView.size(), [this, &pathView](int i){
 		QTPFS::entity pathSearchEntity = pathView.begin()[i];
         // QTPFS::entity pathSearchEntity = pathView.storage<PathSearch>()[i];
 
@@ -914,7 +918,8 @@ void QTPFS::PathManager::ExecuteQueuedSearches() {
 		int pathType = search->GetPathType();
 		NodeLayer& nodeLayer = nodeLayers[pathType];
 		ExecuteSearch(search, nodeLayer, pathType);
-	});
+	//});
+	};
 
 	auto completePath = [this](QTPFS::entity pathEntity, IPath* path){
 		// inform the movement system that the path has been changed.
@@ -1227,6 +1232,10 @@ unsigned int QTPFS::PathManager::QueueSearch(
 	};
 
 	IPath* newPath = createNewPath(pathEntity, synced);
+	if (synced)
+		newPath->syncID = ++globalSyncID;
+	else
+		newPath->syncID = 0;
 
 	// Every path gets one. It gets changed in a multi-threaded section, so we can't add them on demand.
 	registry.emplace<PathRequeueSearch>(pathEntity, false);
@@ -1274,6 +1283,7 @@ unsigned int QTPFS::PathManager::QueueSearch(
 	newSearch->allowPartialSearch = !allowRawSearch;
 	newSearch->initialized = false;
 	newSearch->synced = synced;
+	newSearch->syncID = newPath->syncID;
 
 	// LOG("%s: %s (%x) %d -> %d ", __func__
 	// 		, unit != nullptr ? unit->unitDef->name.c_str() : "non-unit"
@@ -1343,6 +1353,7 @@ unsigned int QTPFS::PathManager::RequeueSearch(
 	newSearch->initialized = false;
 	newSearch->allowPartialSearch = allowPartialSearch;
 	newSearch->synced = oldPath->IsSynced();
+	newSearch->syncID = oldPath->syncID;
 
 	newSearch->tryPathRepair = allowRepair;
 
@@ -1525,9 +1536,12 @@ bool QTPFS::PathManager::PathUpdated(unsigned int pathID) {
 	QTPFS::entity pathEntity = (QTPFS::entity)pathID;
 	if (!registry.valid(pathEntity)) { return false; }
 	IPath* livePath = registry.try_get<IPath>(pathEntity);
-
 	if (livePath == nullptr)
 		return false;
+       auto pos = livePath->GetGoalPosition();
+       auto pos2 = livePath->GetSourcePoint();
+       LOG_S("SyncLog", "PathUpdated %d %d %f %f %f %f %f %f", livePath->syncID, livePath->GetNumPathUpdates(), pos.x, pos.y, pos.z, pos2.x, pos2.y, pos2.z);
+
 
 	return (livePath->GetNumPathUpdates() > 0);
 }

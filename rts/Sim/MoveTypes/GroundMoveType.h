@@ -5,10 +5,13 @@
 
 #include <array>
 #include <tuple>
+#include <sstream>
+#include <source_location>
 
 #include "MoveType.h"
 #include "Sim/Path/IPathController.h"
 #include "System/Sync/SyncedFloat3.h"
+#include "System/Log/ILog.h"
 
 struct UnitDef;
 struct MoveDef;
@@ -92,6 +95,7 @@ public:
 
 	void TriggerSkipWayPoint() {
 		earlyCurrWayPoint.y = -2.0f;
+		SyncLog(std::forward_as_tuple(earlyCurrWayPoint));
 	}
 	void TriggerCallArrived() {
 		atEndOfPath = true;
@@ -130,10 +134,16 @@ public:
 	void SyncWaypoints() {
 		// Synced vars trigger a checksum update on change, which is expensive so we should check
 		// that there has been a change before triggering an update to the checksum.
-		if (!currWayPoint.bitExactEquals(earlyCurrWayPoint))
+		if (!currWayPoint.bitExactEquals(earlyCurrWayPoint)) {
+			SyncLog(std::forward_as_tuple(earlyCurrWayPoint));
 			currWayPoint = earlyCurrWayPoint;
-		if (!nextWayPoint.bitExactEquals(earlyNextWayPoint))
+			SyncLog(std::forward_as_tuple(earlyCurrWayPoint));
+		}
+		if (!nextWayPoint.bitExactEquals(earlyNextWayPoint)) {
+			SyncLog(std::forward_as_tuple(earlyNextWayPoint));
 			nextWayPoint = earlyNextWayPoint;
+			SyncLog(std::forward_as_tuple(earlyNextWayPoint));
+		}
 	}
 	unsigned int GetPathId() { return pathID; }
 
@@ -198,7 +208,15 @@ private:
         const UnitDef *colliderUD,
         const MoveDef *colliderMD,
         int curThread);
-
+    	void OutputLog(const std::string& floats, const std::source_location& location) const;
+	template<typename ...Float3Like>
+	void SyncLog(const std::tuple<Float3Like& ...>& f3tuple, std::source_location location = std::source_location::current()) const {
+		std::ostringstream ss;
+		std::apply([&ss](auto&&... f3) {
+			((ss << static_cast<float3>(f3).str() << ';'), ...);
+		}, f3tuple);
+		OutputLog(ss.str(), location);
+	}
 public:
     void SetMainHeading();
     void ChangeSpeed(float, bool, bool = false);

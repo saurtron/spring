@@ -2106,12 +2106,14 @@ bool CGroundMoveType::CanSetNextWayPoint(int thread) {
 	if (atEndOfPath)
 		return false;
 
+	LOG_S("SyncLog", "CanSetNextWayPoint %d", owner->id);
 	const float3& pos = owner->pos;
 		  float3& cwp = earlyCurrWayPoint;
 		  float3& nwp = earlyNextWayPoint;
 
 	// QTPFS ONLY PATH
 	if (pathManager->PathUpdated(pathID)) {
+		LOG_S("SyncLog", "PathUpdated %d", owner->id);
 		// path changed while we were following it (eg. due
 		// to terrain deformation) in between two waypoints
 		// but still has the same ID; in this case (which is
@@ -3065,6 +3067,25 @@ void CGroundMoveType::HandleFeatureCollisions(
 	}
 }
 
+
+void CGroundMoveType::OutputLog(const std::string& floats, const std::source_location& location) const
+{
+	std::string_view fn = location.function_name();
+	auto st = fn.find("::");
+	if (st != std::string_view::npos) {
+		fn.remove_prefix(st + 2); // Advance past "::"
+	}
+	auto fi = fn.find('(');
+	if (fi != std::string_view::npos) {
+		fn.remove_suffix(fn.size() - fi); // Trim (blabla) part
+	}
+
+	auto tid = ThreadPool::GetThreadNum();
+
+	static spring::mutex loggingMut;
+	const auto lock = std::scoped_lock(loggingMut);
+	LOG_S("SyncLog", "%s:%u: values: %s <|> [oid=%d][cs=%s]", std::string(fn).c_str(), static_cast<uint32_t>(location.line()), floats.c_str(), owner->id, std::format("{:08x}", CSyncChecker::GetChecksum()).c_str());
+}
 
 
 void CGroundMoveType::LeaveTransport()

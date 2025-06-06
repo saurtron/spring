@@ -3759,6 +3759,8 @@ int LuaSyncedCtrl::SetUnitMoveGoal(lua_State* L)
 	const float radius = luaL_optfloat(L, 5, 0.0f);
 	const float speed  = luaL_optfloat(L, 6, unit->moveType->GetMaxSpeed());
 
+	LOG_S("SyncLog", "mgoal:%d %f %f %f", unit->id, pos.x, pos.y, pos.z);
+
 	if (luaL_optboolean(L, 7, false)) {
 		unit->moveType->StartMovingRaw(pos, radius);
 	} else {
@@ -3811,6 +3813,7 @@ int LuaSyncedCtrl::ClearUnitGoal(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
+	LOG_S("SyncLog", "cgoal:%d", unit->id);
 	unit->moveType->StopMoving(false, false, luaL_optboolean(L, 2, true));
 	return 0;
 }

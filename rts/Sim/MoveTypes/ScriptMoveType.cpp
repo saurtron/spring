@@ -65,6 +65,7 @@ CScriptMoveType::CScriptMoveType(CUnit* unit): AMoveType(unit)
 		return;
 
 	Sim::registry.emplace_or_replace<GeneralMoveType>(owner->entityReference, owner->id);
+	LOG_S("SyncLog", "scr+:%d", owner->id);
 }
 
 
@@ -77,6 +78,7 @@ CScriptMoveType::~CScriptMoveType()
 	owner->UnBlock();
 
 	Sim::registry.remove<GeneralMoveType>(owner->entityReference);
+	LOG_S("SyncLog", "scr-:%d", owner->id);
 }
 
 

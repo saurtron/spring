@@ -110,6 +110,7 @@ namespace QTPFS {
 
 			owner = other.owner;
 			searchTime = other.searchTime;
+			syncID = other.syncID;
 			return *this;
 		}
 		IPath(IPath&& other) { *this = std::move(other); }
@@ -142,6 +143,7 @@ namespace QTPFS {
 
 			owner = other.owner;
 			searchTime = other.searchTime;
+			syncID = other.syncID;
 
 			return *this;
 		}
@@ -332,6 +334,7 @@ namespace QTPFS {
 
 		bool IsRawPath() const { return isRawPath; }
 		void SetIsRawPath(bool enable) { isRawPath = enable; }
+		unsigned int syncID;
 
 	private:
 		unsigned int pathID = 0;
