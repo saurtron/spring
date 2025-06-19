@@ -398,17 +398,22 @@ bool CExplosionGeneratorHandler::PredictExplosionVisible(const WeaponDef* weapon
 		CCustomExplosionGenerator* cGen;
 		if (gen && (cGen = dynamic_cast<CCustomExplosionGenerator*>(gen)) != nullptr) {
 			const float realHeight = CGround::GetHeightReal(pos);
-			const unsigned int heightFlags = CCustomExplosionGenerator::GetFlagsFromHeight(pos.y, realHeight);
-			const unsigned int commonFlags = cGen->CommonVisibleFlags(heightFlags); // TODO: should also pass bit about hitting unit or not unit to filter.
+			unsigned int visFlags = CCustomExplosionGenerator::GetFlagsFromHeight(pos.y, realHeight);
+
+			const bool unitCollision = (params.hitUnit != nullptr);
+			visFlags |= (CCustomExplosionGenerator::CEG_SPWF_UNIT    * (    unitCollision));
+			visFlags |= (CCustomExplosionGenerator::CEG_SPWF_NO_UNIT * (1 - unitCollision));
+
+			const unsigned int commonFlags = cGen->CommonVisibleFlags(visFlags); // TODO: should also pass bit about hitting unit or not unit to filter.
 
 			if (commonFlags & CCustomExplosionGenerator::CEG_SPWF_ALWAYS_VISIBLE) {
 				return true;
 			}
 
-			const bool    airExplosion = ((heightFlags & CCustomExplosionGenerator::CEG_SPWF_AIR       ) != 0);
-			const bool groundExplosion = ((heightFlags & CCustomExplosionGenerator::CEG_SPWF_GROUND    ) != 0);
-			const bool  waterExplosion = ((heightFlags & CCustomExplosionGenerator::CEG_SPWF_WATER     ) != 0);
-			const bool     uwExplosion = ((heightFlags & CCustomExplosionGenerator::CEG_SPWF_UNDERWATER) != 0);
+			const bool    airExplosion = ((visFlags & CCustomExplosionGenerator::CEG_SPWF_AIR       ) != 0);
+			const bool groundExplosion = ((visFlags & CCustomExplosionGenerator::CEG_SPWF_GROUND    ) != 0);
+			const bool  waterExplosion = ((visFlags & CCustomExplosionGenerator::CEG_SPWF_WATER     ) != 0);
+			const bool     uwExplosion = ((visFlags & CCustomExplosionGenerator::CEG_SPWF_UNDERWATER) != 0);
 			losAir = airExplosion;
 			losGround = groundExplosion || waterExplosion || uwExplosion;
 		}
