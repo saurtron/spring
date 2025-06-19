@@ -2218,7 +2218,7 @@ bool CLuaHandle::Explosion(int weaponDefID, const WeaponDef* weaponDef, const CE
 	if (weaponDefID < 0)
 		return false;
 
-	// if empty, we are not a LuaHandleSynced
+	// if empty, we are a handle with no explosion watch support.
 	if (watchExplosionDefs.empty())
 		return false;
 	if (!watchExplosionDefs[weaponDefID])
