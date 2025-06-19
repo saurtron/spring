@@ -14,8 +14,6 @@ public:
 	bool Init();
 
 	bool useNewColorIndicators = false;
-
-	void ConfigNotify(const std::string& key, const std::string& value);
 };
 
 extern CFontHandler fontHandler;
