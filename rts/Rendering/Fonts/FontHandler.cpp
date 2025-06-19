@@ -4,7 +4,7 @@
 
 #include "System/Config/ConfigHandler.h"
 
-CONFIG(bool, TextUseNewColorIndicators).defaultValue(false).description("Old color indicators don't allow writing some characters.");
+CONFIG(bool, TextUseNewColorIndicators).defaultValue(false).description("Disable support for old color indicators. The old color indicators don't allow writing some characters.");
 
 CFontHandler fontHandler;
 
