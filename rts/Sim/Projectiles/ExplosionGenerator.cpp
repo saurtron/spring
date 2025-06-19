@@ -10,6 +10,7 @@
 #include "ExpGenSpawnable.h"
 #include "ExpGenSpawnableMemberInfo.h"
 #include "Game/Camera.h"
+#include "Game/GameHelper.h"
 #include "Game/GlobalUnsynced.h" // guRNG
 #include "Lua/LuaParser.h"
 #include "Map/Ground.h"
@@ -376,7 +377,7 @@ bool CExplosionGeneratorHandler::GenExplosion(
 }
 
 
-bool CExplosionGeneratorHandler::PredictExplosionVisible(const WeaponDef* weaponDef, const float3& pos, int allyTeamID)
+bool CExplosionGeneratorHandler::PredictExplosionVisible(const WeaponDef* weaponDef, const CExplosionParams& params, int allyTeamID)
 {
 	if (gu->spectatingFullView)
 		return true;
@@ -386,6 +387,7 @@ bool CExplosionGeneratorHandler::PredictExplosionVisible(const WeaponDef* weapon
 
 	bool losAir = true;
 	bool losGround = true;
+	const auto& pos = params.pos;
 	if (weaponDef != nullptr) {
 		if (weaponDef != nullptr && weaponDef->visuals.alwaysVisible)
 			return true;

@@ -20,6 +20,7 @@
 using std::string;
 using std::vector;
 
+struct CExplosionParams;
 class CSolidObject;
 class CUnit;
 class CWeapon;
@@ -201,7 +202,7 @@ class CEventClient
 		virtual void StockpileChanged(const CUnit* unit,
 		                              const CWeapon* weapon, int oldCount) {}
 
-		virtual bool Explosion(int weaponID, const WeaponDef* weaponDef, int projectileID, const float3& pos, const CUnit* owner) { return false; }
+		virtual bool Explosion(int weaponID, const WeaponDef* weaponDef, const CExplosionParams& params) { return false; }
 
 
 		virtual bool CommandFallback(const CUnit* unit, const Command& cmd) { return false; }

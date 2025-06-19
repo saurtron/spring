@@ -18,6 +18,7 @@ class float3;
 class CUnit;
 class IExplosionGenerator;
 struct WeaponDef;
+struct CExplosionParams;
 
 struct SExpGenSpawnableMemberInfo;
 
@@ -59,7 +60,7 @@ public:
 	IExplosionGenerator* LoadGenerator(const char* tag, const char* pre = "");
 	IExplosionGenerator* GetGenerator(unsigned int expGenID);
 
-	bool PredictExplosionVisible(const WeaponDef* weaponDef, const float3& pos, int allyTeamID);
+	bool PredictExplosionVisible(const WeaponDef* weaponDef, const CExplosionParams& params, int allyTeamID);
 
 	bool GenExplosion(
 		unsigned int expGenID,
