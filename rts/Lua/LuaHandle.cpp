@@ -2254,7 +2254,7 @@ bool CLuaHandle::Explosion(int weaponDefID, const WeaponDef* weaponDef, const CE
 	// get the results
 	const bool retval = luaL_optboolean(L, -1, false);
 	lua_pop(L, 1);
-	return retval;
+	return synced && retval;
 }
 
 
