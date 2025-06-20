@@ -955,7 +955,7 @@ void CCobThread::DeferredCall(bool synced)
 	// setup the parameter array
 	auto d = CCobDeferredCallin(cobInst->GetUnit(), cobFile->luaScripts[r1], dataStack, r2);
 
-	cobEngine->AddDeferredCallin(std::move(d), ThreadPool::GetThreadNum());
+	cobEngine->AddDeferredCallin(std::move(d));
 
 	// always succeeds
 	retCode = 1;

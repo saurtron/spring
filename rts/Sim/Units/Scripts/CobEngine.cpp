@@ -212,9 +212,8 @@ void CCobEngine::ShowScriptError(const std::string& msg)
 }
 
 
-void CCobEngine::AddDeferredCallin(CCobDeferredCallin&& deferredCallin, int threadNum)
+void CCobEngine::AddDeferredCallin(CCobDeferredCallin&& deferredCallin)
 {
-	// TODO thread safety
 	deferredCallins[deferredCallin.funcHash].push_back(deferredCallin);
 }
 
