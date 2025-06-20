@@ -4,7 +4,7 @@
 
 #include "System/Config/ConfigHandler.h"
 
-CONFIG(bool, TextUseNewColorIndicators).defaultValue(false).description("Disable support for old color indicators. The old color indicators don't allow writing some characters.");
+CONFIG(bool, TextDisableOldColorIndicators).defaultValue(false).description("Disable support for old color indicators. The old color indicators don't allow writing some characters.");
 
 CFontHandler fontHandler;
 
@@ -17,7 +17,7 @@ CFontHandler::CFontHandler()
 bool CFontHandler::Init()
 {
 	if (configHandler != nullptr)
-		useNewColorIndicators = configHandler->GetBool("TextUseNewColorIndicators");
+		disableOldColorIndicators = configHandler->GetBool("TextDisableOldColorIndicators");
 	return true;
 }
 

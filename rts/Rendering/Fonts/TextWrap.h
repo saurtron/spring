@@ -45,7 +45,7 @@ private:
 			if (resetColor) {
 				out = ColorResetIndicator;
 			} else {
-				out = fontHandler.useNewColorIndicators ? ColorCodeIndicator : OldColorCodeIndicator;
+				out = fontHandler.disableOldColorIndicators ? ColorCodeIndicator : OldColorCodeIndicator;
 				out += color.r;
 				out += color.g;
 				out += color.b;

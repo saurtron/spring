@@ -326,7 +326,7 @@ bool LuaConstGame::PushEntries(lua_State* L)
 	}
 	{
 		// inline color-codes for text fonts
-		bool newIndicators = fontHandler.useNewColorIndicators;
+		bool newIndicators = fontHandler.disableOldColorIndicators;
 
 		lua_pushliteral(L, "textColorCodes");
 		lua_createtable(L, 0, 3);

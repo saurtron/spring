@@ -13,7 +13,7 @@ public:
 	CFontHandler();
 	bool Init();
 
-	bool useNewColorIndicators = false;
+	bool disableOldColorIndicators = false;
 };
 
 extern CFontHandler fontHandler;
