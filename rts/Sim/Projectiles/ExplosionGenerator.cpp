@@ -915,7 +915,6 @@ void CCustomExplosionGenerator::ParseExplosionCode(
 unsigned int CCustomExplosionGenerator::CommonVisibleFlags(unsigned int visibilityFlags) const
 {
 	int resFlags = 0;
-	visibilityFlags |= CEG_SPWF_ALWAYS_VISIBLE;
 	for (auto& psi: expGenParams.projectiles) {
 		if (psi.flags & visibilityFlags)
 			resFlags |= psi.flags;
