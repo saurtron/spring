@@ -404,7 +404,7 @@ bool CExplosionGeneratorHandler::PredictExplosionVisible(const WeaponDef* weapon
 			visFlags |= (CCustomExplosionGenerator::CEG_SPWF_UNIT    * (    unitCollision));
 			visFlags |= (CCustomExplosionGenerator::CEG_SPWF_NO_UNIT * (1 - unitCollision));
 
-			const unsigned int commonFlags = cGen->CommonVisibleFlags(visFlags); // TODO: should also pass bit about hitting unit or not unit to filter.
+			const unsigned int commonFlags = cGen->CommonVisibleFlags(visFlags);
 
 			if (commonFlags & CCustomExplosionGenerator::CEG_SPWF_ALWAYS_VISIBLE) {
 				return true;
