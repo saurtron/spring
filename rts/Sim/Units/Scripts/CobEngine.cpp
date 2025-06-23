@@ -226,8 +226,10 @@ void CCobEngine::RunDeferredCallins()
 		funcHashes.push_back(it.first);
 
 	for(auto funcHash: funcHashes) {
-		auto pair = deferredCallins.extract(funcHash);
-		auto& callins = pair.mapped();
+		auto it = deferredCallins.find(funcHash); // 'it' has to necessarily be present at this point
+
+		auto callins = std::move(it->second);
+		deferredCallins.erase(it);
 
 		const LuaHashString cmdStr = LuaHashString(callins[0].funcName.c_str());
 		luaRules->Cob2LuaBatch(cmdStr, callins, false);

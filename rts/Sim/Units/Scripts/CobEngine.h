@@ -60,6 +60,7 @@ public:
 		// threadInstances is never explicitly iterated in the actual code,
 		// but iterated during sync dumps, so clean it with clear_unordered_map
 		spring::clear_unordered_map(threadInstances);
+		spring::clear_unordered_map(deferredCallins);
 		tickAddedThreads.clear();
 
 		runningThreadIDs.clear();
@@ -123,7 +124,7 @@ private:
 	std::vector<int> runningThreadIDs;
 	std::vector<int> waitingThreadIDs;
 
-	std::unordered_map<int, std::vector<CCobDeferredCallin> > deferredCallins; // UNSYNCED only, otherwise use spring:unordered_map
+	spring::unordered_map<int, std::vector<CCobDeferredCallin> > deferredCallins;
 
 	// stores <id, waketime> pairs s.t. after waking up the ID can be checked
 	// for validity; thread owner might get removed while a thread is sleeping
