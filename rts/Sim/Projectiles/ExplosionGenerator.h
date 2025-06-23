@@ -199,7 +199,7 @@ public:
 		CEG_SPWF_UNDERWATER = 1 << 5,  // TODO: UNDERVOIDWATER?
 		CEG_SPWF_UNIT       = 1 << 6,  // only execute when the explosion hits a unit
 		CEG_SPWF_NO_UNIT    = 1 << 7,  // only execute when the explosion doesn't hit a unit (environment)
-		CEG_SPWF_ALWAYS_VISIBLE = 1 << 8,
+		CEG_SPWF_ALWAYS_VISIBLE = 1 << 31,
 	};
 
 	enum {
