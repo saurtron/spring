@@ -267,7 +267,6 @@ string CLuaUI::LoadFile(const string& name, const std::string& mode) const
 static bool IsDisallowedCallIn(const string& name)
 {
 	switch (hashString(name.c_str())) {
-		//case hashString("Explosion"     ): { return true; } break; // so dangerous??
 		case hashString("DrawUnit"      ): { return true; } break;
 		case hashString("DrawFeature"   ): { return true; } break;
 		case hashString("DrawShield"    ): { return true; } break;
