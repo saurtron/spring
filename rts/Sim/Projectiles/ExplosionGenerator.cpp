@@ -394,9 +394,8 @@ bool CExplosionGeneratorHandler::PredictExplosionVisible(const WeaponDef* weapon
 
 		const int explosionID = (weaponDef != nullptr)? weaponDef->impactExplosionGeneratorID: CExplosionGeneratorHandler::EXPGEN_ID_STANDARD;
 
-		IExplosionGenerator* gen = explGenHandler.GetGenerator(explosionID);
-		CCustomExplosionGenerator* cGen;
-		if (gen && (cGen = dynamic_cast<CCustomExplosionGenerator*>(gen)) != nullptr) {
+		const auto* cGen = dynamic_cast<CCustomExplosionGenerator*>(explGenHandler.GetGenerator(explosionID));
+		if (cGen != nullptr) {
 			const float realHeight = CGround::GetHeightReal(pos);
 			unsigned int visFlags = CCustomExplosionGenerator::GetFlagsFromHeight(pos.y, realHeight);
 
