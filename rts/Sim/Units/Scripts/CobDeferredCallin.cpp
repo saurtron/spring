@@ -6,8 +6,6 @@
 #include "CobEngine.h"
 
 #include "Lua/LuaHashString.h"
-#include "Sim/Misc/GlobalConstants.h"
-#include "Sim/Misc/GlobalSynced.h"
 #include "Lua/LuaUI.h"
 
 #include "System/Misc/TracyDefs.h"
