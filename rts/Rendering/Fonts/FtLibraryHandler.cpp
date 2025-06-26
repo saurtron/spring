@@ -6,20 +6,12 @@
 #include "FontHandler.h"
 #include "FontLogSection.h"
 #include "FtLibraryHandler.h"
+#include "FtIncludes.h"
 
 #include <cstring> // for memset, memcpy
 #include <string>
 #include <vector>
 #include <sstream>
-
-#ifndef HEADLESS
-	#include <ft2build.h>
-	#include FT_FREETYPE_H
-	#ifdef USE_FONTCONFIG
-		#include <fontconfig/fontconfig.h>
-		#include <fontconfig/fcfreetype.h>
-	#endif
-#endif // HEADLESS
 
 #include "Rendering/GL/myGL.h"
 #include "Rendering/GlobalRendering.h"
@@ -46,30 +38,6 @@
 #include "System/Misc/TracyDefs.h"
 
 #define SUPPORT_AMD_HACKS_HERE
-
-#ifndef HEADLESS
-	#undef __FTERRORS_H__
-	#define FT_ERRORDEF( e, v, s )  { e, s },
-	#define FT_ERROR_START_LIST     {
-	#define FT_ERROR_END_LIST       { 0, 0 } };
-	struct FTErrorRecord {
-		int          err_code;
-		const char*  err_msg;
-	} static errorTable[] =
-	#include FT_ERRORS_H
-
-	struct IgnoreMe {}; // MSVC IntelliSense is confused by #include FT_ERRORS_H above. This seems to fix it.
-
-	static const char* GetFTError(FT_Error e) {
-		const auto it = std::find_if(std::begin(errorTable), std::end(errorTable), [e](FTErrorRecord er) { return er.err_code == e; });
-		if (it != std::end(errorTable))
-			return it->err_msg;
-
-		return "Unknown error";
-	}
-#endif // HEADLESS
-
-
 
 #ifndef HEADLESS
 class FtLibraryHandler {
