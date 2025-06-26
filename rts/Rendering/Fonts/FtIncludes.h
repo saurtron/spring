@@ -11,6 +11,8 @@
 #endif // HEADLESS
 
 #ifndef HEADLESS
+	#include <algorithm>
+
 	#undef __FTERRORS_H__
 	#define FT_ERRORDEF( e, v, s )  { e, s },
 	#define FT_ERROR_START_LIST     {
