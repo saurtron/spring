@@ -10,6 +10,9 @@
 #include "fmt/printf.h"
 
 #include "System/Misc/TracyDefs.h"
+#ifdef _WIN32
+	#include <userenv.h>
+#endif
 
 #ifndef HEADLESS
 class FtLibraryHandler {
