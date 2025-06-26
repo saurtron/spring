@@ -301,31 +301,21 @@ FcConfig* FtLibraryHandlerProxy::GetFCConfig() {
 #endif
 }
 
-FcFontSet* FtLibraryHandlerProxy::GetGameFontSet() {
 #ifndef HEADLESS
+FcFontSet* FtLibraryHandlerProxy::GetGameFontSet() {
 	return FtLibraryHandler::GetGameFontSet();
-#else
-	return nullptr;
-#endif
 }
 
 FcPattern* FtLibraryHandlerProxy::GetBasePattern() {
-#ifndef HEADLESS
 	return FtLibraryHandler::GetBasePattern();
-#else
-	return nullptr;
-#endif
 }
 
 void FtLibraryHandlerProxy::ClearGameFontSet() {
-#ifndef HEADLESS
 	FtLibraryHandler::ClearGameFontSet();
-#endif
 }
 
 void FtLibraryHandlerProxy::ClearBasePattern() {
-#ifndef HEADLESS
 	FtLibraryHandler::ClearBasePattern();
-#endif
 }
+#endif
 

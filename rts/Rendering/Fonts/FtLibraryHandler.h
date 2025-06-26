@@ -12,15 +12,17 @@ class FtLibraryHandlerProxy {
 public:
 	static void InitFtLibrary();
 	static bool InitFontconfig(bool console);
+
+	static FcConfig* GetFCConfig();
+	static bool CanUseFontConfig();
+
 #ifndef HEADLESS
 	static int NewMemoryFace(const unsigned char* file_base, signed long file_size, signed long face_index, FT_Face *aface);
-#endif
-	static bool CanUseFontConfig();
 	static FcFontSet* GetGameFontSet();
 	static FcPattern* GetBasePattern();
 	static void ClearGameFontSet();
 	static void ClearBasePattern();
-	static FcConfig* GetFCConfig();
+#endif
 };
 
 #endif // FT_LIBRARY_HANDLER_H
