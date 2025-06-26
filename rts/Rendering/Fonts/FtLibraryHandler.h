@@ -1,11 +1,9 @@
 #ifndef _FT_LIBRARY_HANDLER_H
 #define _FT_LIBRARY_HANDLER_H
 
-//struct FcFontSet;
-//struct FcPattern;
-//struct FcConfig;
 struct FT_FaceRec_;
 typedef struct FT_FaceRec_* FT_Face;
+
 typedef struct _FcConfig    FcConfig;
 typedef struct _FcFontSet    FcFontSet;
 typedef struct _FcPattern    FcPattern;
