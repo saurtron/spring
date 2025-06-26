@@ -11,7 +11,7 @@
 
 #include "System/Misc/TracyDefs.h"
 #ifdef _WIN32
-	#include <userenv.h>
+	#include <windows.h>
 #endif
 
 #ifndef HEADLESS
