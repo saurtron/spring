@@ -286,7 +286,7 @@ void FtLibraryHandlerProxy::ClearBasePattern() {
 
 int FtLibraryHandlerProxy::NewMemoryFace(const unsigned char* file_base, signed long file_size, signed long face_index, FT_Face *aface)
 {
-	FT_Error error = FT_New_Memory_Face(FtLibraryHandler::GetLibrary(), file_base, file_size, 0, aface);
+	FT_Error error = FT_New_Memory_Face(FtLibraryHandler::GetLibrary(), file_base, file_size, face_index, aface);
 	return error;
 }
 #endif
