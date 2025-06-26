@@ -35,10 +35,6 @@
 
 static constexpr int FT_INTERNAL_DPI = 64;
 
-#ifdef HEADLESS
-typedef unsigned char FT_Byte;
-#endif
-
 using SizedFontKey = std::pair<std::string, int>;
 
 static spring::unordered_map<SizedFontKey, std::weak_ptr<FontFace>> fontFaceCache;

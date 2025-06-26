@@ -10,6 +10,10 @@
 	#endif
 #endif // HEADLESS
 
+#ifdef HEADLESS
+typedef unsigned char FT_Byte;
+#endif
+
 #ifndef HEADLESS
 	#include <algorithm>
 	#include <iterator>
