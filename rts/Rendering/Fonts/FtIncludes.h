@@ -1,20 +1,17 @@
 #ifndef _FT_INCLUDES_H
 #define _FT_INCLUDES_H
 
-#ifndef HEADLESS
+#ifdef HEADLESS
+	typedef unsigned char FT_Byte;
+#else  // not HEADLESS
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
 	#ifdef USE_FONTCONFIG
 		#include <fontconfig/fontconfig.h>
 		#include <fontconfig/fcfreetype.h>
 	#endif
-#endif // HEADLESS
 
-#ifdef HEADLESS
-typedef unsigned char FT_Byte;
-#endif
-
-#ifndef HEADLESS
+	// FtError helper code
 	#include <algorithm>
 	#include <iterator>
 
