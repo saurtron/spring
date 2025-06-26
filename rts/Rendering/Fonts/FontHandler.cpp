@@ -24,37 +24,35 @@ CFontHandler::CFontHandler()
 }
 
 
-bool CFontHandler::Init(bool fullInit)
+bool CFontHandler::Init(bool console)
 {
-	if (configHandler != nullptr) {
-		maxFontTries = configHandler->GetInt("MaxFontTries");
-		maxPinnedFonts = configHandler->GetInt("MaxPinnedFonts");
-		disableOldColorIndicators = configHandler->GetBool("TextDisableOldColorIndicators");
-		allowColorFonts = configHandler->GetBool("AllowColorFonts");
-		useFontConfigLib = configHandler->GetBool("UseFontConfigLib");
-		searchSystemFonts = configHandler->GetBool("UseFontConfigSystemFonts");
-		searchFontAttributes = configHandler->GetBool("FontConfigSearchAttributes");
-		searchApplySubstitutions = configHandler->GetBool("FontConfigApplySubstitutions");
-	} else {
-		maxFontTries = 5;
-		maxPinnedFonts = 10;
-		allowColorFonts = false;
-		disableOldColorIndicators = false;
-		useFontConfigLib = true;
-		searchSystemFonts = true;
-		searchFontAttributes = true;
-		searchApplySubstitutions = true;
-	}
 	FtLibraryHandlerProxy::InitFtLibrary();
 
-	bool res = FtLibraryHandlerProxy::InitFontconfig(!fullInit);
-	if (!fullInit)
-		return res;
+	return FtLibraryHandlerProxy::InitFontconfig(console);
+}
+
+bool CFontHandler::FullInit()
+{
+	assert(configHandler != nullptr);
+
+	LoadConfig();
+	Init(false);
 
 	CFontTexture::InitFonts();
 	return CglFont::LoadConfigFonts();
 }
 
+void CFontHandler::LoadConfig()
+{
+	maxFontTries = configHandler->GetInt("MaxFontTries");
+	maxPinnedFonts = configHandler->GetInt("MaxPinnedFonts");
+	disableOldColorIndicators = configHandler->GetBool("TextDisableOldColorIndicators");
+	allowColorFonts = configHandler->GetBool("AllowColorFonts");
+	useFontConfigLib = configHandler->GetBool("UseFontConfigLib");
+	searchSystemFonts = configHandler->GetBool("UseFontConfigSystemFonts");
+	searchFontAttributes = configHandler->GetBool("FontConfigSearchAttributes");
+	searchApplySubstitutions = configHandler->GetBool("FontConfigApplySubstitutions");
+}
 
 void CFontHandler::Kill()
 {

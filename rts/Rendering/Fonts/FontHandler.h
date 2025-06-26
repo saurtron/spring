@@ -9,17 +9,21 @@ class CFontHandler : public spring::noncopyable
 {
 public:
 	CFontHandler();
-	bool Init(bool fullInit);
+	bool Init(bool console);
+	bool FullInit();
 	void Kill();
 
 	bool disableOldColorIndicators = false;
-	int maxFontTries = 0;
-	int maxPinnedFonts = 0;
-	bool allowColorFonts = 0;
-	bool useFontConfigLib = false;
+	int maxFontTries = 5;
+	int maxPinnedFonts = 10;
+	bool allowColorFonts = false;
+	bool useFontConfigLib = true;
 	bool searchSystemFonts = true;
 	bool searchFontAttributes = true;
 	bool searchApplySubstitutions = true;
+
+private:
+	void LoadConfig();
 };
 
 extern CFontHandler fontHandler;

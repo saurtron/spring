@@ -335,7 +335,7 @@ bool SpringApp::InitPlatformLibs()
 
 bool SpringApp::InitFonts()
 {
-	return fontHandler.Init(true);
+	return fontHandler.FullInit();
 /*
 	using namespace std::chrono_literals;
 	auto future = std::async(std::launch::async, []() {
@@ -478,7 +478,7 @@ void SpringApp::ParseCmdLine(int argc, char* argv[])
 			spring_clock::PushTickRate();
 			spring_time::setstarttime(spring_time::gettime(true));
 		}
-		if (fontHandler.Init(false)) {
+		if (fontHandler.Init(true)) {
 			printf("[FtLibraryHandler::GenFontConfig] is succesfull\n");
 			exit(spring::EXIT_CODE_SUCCESS);
 		}
