@@ -13,7 +13,7 @@
 #include "System/UnorderedMap.hpp"
 #include "System/UnorderedSet.hpp"
 #include "System/Threading/WrappedSync.h"
-#include "CFtLibraryHandler.h"
+#include "FtLibraryHandler.h"
 
 
 class CBitmap;
