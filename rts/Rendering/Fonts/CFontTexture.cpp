@@ -6,12 +6,11 @@
 #include "FontHandler.h"
 #include "FontLogSection.h"
 #include "FtLibraryHandler.h"
+#include "FtIncludes.h"
 
 #include <cstring> // for memset, memcpy
 #include <string>
 #include <vector>
-
-#include "FtIncludes.h"
 
 #include "Rendering/GL/myGL.h"
 #include "Rendering/Textures/Bitmap.h"
