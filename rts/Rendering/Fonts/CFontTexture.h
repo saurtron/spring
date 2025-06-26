@@ -13,18 +13,10 @@
 #include "System/UnorderedMap.hpp"
 #include "System/UnorderedSet.hpp"
 #include "System/Threading/WrappedSync.h"
+#include "CFtLibraryHandler.h"
 
 
-struct FT_FaceRec_;
-typedef struct FT_FaceRec_* FT_Face;
 class CBitmap;
-
-class FtLibraryHandlerProxy {
-public:
-	static void InitFtLibrary();
-	static bool InitFontconfig(bool console);
-};
-
 
 struct IGlyphRect { //FIXME use SRect or float4
 	IGlyphRect():

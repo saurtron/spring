@@ -48,6 +48,7 @@
 #include "Net/Protocol/NetProtocol.h" // clientNet
 #include "Rendering/GlobalRendering.h"
 #include "Rendering/Fonts/FontHandler.h"
+#include "Rendering/Fonts/CFtLibraryHandler.h"
 #include "Rendering/Fonts/glFont.h"
 #include "Rendering/GL/FBO.h"
 #include "Rendering/Models/ModelsMemStorage.h"
