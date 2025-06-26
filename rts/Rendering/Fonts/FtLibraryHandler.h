@@ -1,3 +1,5 @@
+/* This file is part of the Recoil engine (GPL v2 or later), see LICENSE.html */
+
 #ifndef _FT_LIBRARY_HANDLER_H
 #define _FT_LIBRARY_HANDLER_H
 
