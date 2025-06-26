@@ -1,6 +1,9 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 #include "FontHandler.h"
+#include "FtLibraryHandler.h"
+#include "CFontTexture.h"
+#include "glFont.h"
 
 #include "System/Config/ConfigHandler.h"
 
@@ -21,7 +24,7 @@ CFontHandler::CFontHandler()
 }
 
 
-bool CFontHandler::Init()
+bool CFontHandler::Init(bool fullInit)
 {
 	if (configHandler != nullptr) {
 		maxFontTries = configHandler->GetInt("MaxFontTries");
@@ -42,7 +45,21 @@ bool CFontHandler::Init()
 		searchFontAttributes = true;
 		searchApplySubstitutions = true;
 	}
-	return true;
+	FtLibraryHandlerProxy::InitFtLibrary();
+
+	bool res = FtLibraryHandlerProxy::InitFontconfig(!fullInit);
+	if (!fullInit)
+		return res;
+
+	CFontTexture::InitFonts();
+	return CglFont::LoadConfigFonts();
 }
 
 
+void CFontHandler::Kill()
+{
+	font      = {};
+	smallFont = {};
+
+	CFontTexture::KillFonts();
+}

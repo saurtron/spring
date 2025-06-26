@@ -3,15 +3,14 @@
 #ifndef _FONT_HANDLER_H
 #define _FONT_HANDLER_H
 
-#include <string>
-
 #include "System/Misc/NonCopyable.h"
 
 class CFontHandler : public spring::noncopyable
 {
 public:
 	CFontHandler();
-	bool Init();
+	bool Init(bool fullInit);
+	void Kill();
 
 	bool disableOldColorIndicators = false;
 	int maxFontTries = 0;

@@ -47,9 +47,8 @@
 #include "Net/GameServer.h"
 #include "Net/Protocol/NetProtocol.h" // clientNet
 #include "Rendering/GlobalRendering.h"
-#include "Rendering/Fonts/FontHandler.h"
-#include "Rendering/Fonts/FtLibraryHandler.h"
 #include "Rendering/Fonts/glFont.h"
+#include "Rendering/Fonts/FontHandler.h"
 #include "Rendering/GL/FBO.h"
 #include "Rendering/Models/ModelsMemStorage.h"
 #include "Rendering/GL/RenderBuffers.h"
@@ -336,11 +335,7 @@ bool SpringApp::InitPlatformLibs()
 
 bool SpringApp::InitFonts()
 {
-	fontHandler.Init();
-	FtLibraryHandlerProxy::InitFtLibrary();
-	FtLibraryHandlerProxy::InitFontconfig(false);
-	CFontTexture::InitFonts();
-	return CglFont::LoadConfigFonts();
+	return fontHandler.Init(true);
 /*
 	using namespace std::chrono_literals;
 	auto future = std::async(std::launch::async, []() {
@@ -366,12 +361,9 @@ bool SpringApp::InitFonts()
 
 void SpringApp::CleanFonts()
 {
-	font      = {};
-	smallFont = {};
-
 	// Can't leave it to default program destructor as the order of object destruction is not guaranteed.
 	// E.g.: Bitmap memory pool can be destroyed before fonts causing null ptr exception
-	CFontTexture::KillFonts();
+	fontHandler.Kill();
 }
 
 bool SpringApp::InitFileSystem()
@@ -486,8 +478,7 @@ void SpringApp::ParseCmdLine(int argc, char* argv[])
 			spring_clock::PushTickRate();
 			spring_time::setstarttime(spring_time::gettime(true));
 		}
-		FtLibraryHandlerProxy::InitFtLibrary();
-		if (FtLibraryHandlerProxy::InitFontconfig(true)) {
+		if (fontHandler.Init(false)) {
 			printf("[FtLibraryHandler::GenFontConfig] is succesfull\n");
 			exit(spring::EXIT_CODE_SUCCESS);
 		}
