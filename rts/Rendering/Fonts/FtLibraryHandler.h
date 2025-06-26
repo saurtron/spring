@@ -1,5 +1,5 @@
-#ifndef _CFT_LIBRARY_HANDLER_H
-#define _CFT_LIBRARY_HANDLER_H
+#ifndef _FT_LIBRARY_HANDLER_H
+#define _FT_LIBRARY_HANDLER_H
 
 //struct FcFontSet;
 //struct FcPattern;
@@ -25,4 +25,4 @@ public:
 	static FcConfig* GetFCConfig();
 };
 
-#endif // CFT_LIBRARY_HANDLER_H
+#endif // FT_LIBRARY_HANDLER_H
