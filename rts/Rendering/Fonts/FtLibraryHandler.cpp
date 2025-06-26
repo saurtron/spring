@@ -1,43 +1,14 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
-#include "CFontTexture.h"
-
-#include "glFontRenderer.h"
 #include "FontHandler.h"
-#include "FontLogSection.h"
 #include "FtLibraryHandler.h"
 #include "FtIncludes.h"
 
-#include <cstring> // for memset, memcpy
-#include <string>
-#include <vector>
-#include <sstream>
-
-#include "Rendering/GL/myGL.h"
-#include "Rendering/GlobalRendering.h"
-#include "Rendering/Textures/Bitmap.h"
-#include "System/Config/ConfigHandler.h"
-#include "System/Exceptions.h"
-#include "System/EventHandler.h"
 #include "System/Log/ILog.h"
-#include "System/FileSystem/FileHandler.h"
-#include "System/Threading/ThreadPool.h"
-#ifdef _DEBUG
-	#include "System/Platform/Threading.h"
-#endif
-#include "System/SafeUtil.h"
-#include "System/StringUtil.h"
 #include "System/TimeProfiler.h"
-#include "System/UnorderedMap.hpp"
-#include "System/float4.h"
-#include "System/ContainerUtil.h"
-#include "System/ScopedResource.h"
-#include "fmt/format.h"
 #include "fmt/printf.h"
 
 #include "System/Misc/TracyDefs.h"
-
-#define SUPPORT_AMD_HACKS_HERE
 
 #ifndef HEADLESS
 class FtLibraryHandler {
