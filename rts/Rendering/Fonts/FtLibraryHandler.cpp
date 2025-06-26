@@ -2,6 +2,7 @@
 
 #include "FontHandler.h"
 #include "FtLibraryHandler.h"
+#include "FontLogSection.h"
 #include "FtIncludes.h"
 
 #include "System/Log/ILog.h"

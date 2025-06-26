@@ -10,14 +10,11 @@
 #include <cstring> // for memset, memcpy
 #include <string>
 #include <vector>
-#include <sstream>
 
 #include "FtIncludes.h"
 
 #include "Rendering/GL/myGL.h"
-#include "Rendering/GlobalRendering.h"
 #include "Rendering/Textures/Bitmap.h"
-#include "System/Config/ConfigHandler.h"
 #include "System/Exceptions.h"
 #include "System/EventHandler.h"
 #include "System/Log/ILog.h"
@@ -26,15 +23,11 @@
 #ifdef _DEBUG
 	#include "System/Platform/Threading.h"
 #endif
-#include "System/SafeUtil.h"
-#include "System/StringUtil.h"
-#include "System/TimeProfiler.h"
 #include "System/UnorderedMap.hpp"
 #include "System/float4.h"
 #include "System/ContainerUtil.h"
 #include "System/ScopedResource.h"
 #include "fmt/format.h"
-#include "fmt/printf.h"
 
 #include "System/Misc/TracyDefs.h"
 
