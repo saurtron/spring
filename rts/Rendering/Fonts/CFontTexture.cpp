@@ -1,7 +1,9 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 #include "CFontTexture.h"
+
 #include "glFontRenderer.h"
+#include "FontHandler.h"
 #include "FontLogSection.h"
 
 #include <cstring> // for memset, memcpy
@@ -159,10 +161,6 @@ public:
 			ScopedOnceTimer timer(msg);
 			ZoneScopedNC("FtLibraryHandler::FontConfigInit", tracy::Color::Purple);
 
-			searchSystemFonts = configHandler->GetBool("UseFontConfigSystemFonts");
-			searchFontAttributes = configHandler->GetBool("FontConfigSearchAttributes");
-			searchApplySubstitutions = configHandler->GetBool("FontConfigApplySubstitutions");
-
 			FcBool res;
 			std::string errprefix = fmt::sprintf("[%s] Fontconfig(version %d.%d.%d) failed to initialize", __func__, FC_MAJOR, FC_MINOR, FC_REVISION);
 
@@ -258,7 +256,7 @@ public:
 	}
 	static bool InitSingletonFontconfig(bool console) { return singleton->InitFontconfig(console); }
 
-	static bool UseFontConfig() { return (configHandler == nullptr || configHandler->GetBool("UseFontConfigLib")); }
+	static bool UseFontConfig() { return fontHandler.useFontConfigLib; }
 
 	#ifdef USE_FONTCONFIG
 	// command-line CheckGenFontConfigFull invocation checks
@@ -300,13 +298,13 @@ public:
 		singleton->basePattern = FcPatternCreate();
 	}
 	static bool GetSearchSystemFonts() {
-		return singleton->searchSystemFonts;
+		return fontHandler.searchSystemFonts;
 	}
 	static bool GetSearchFontAttributes() {
-		return singleton->searchFontAttributes;
+		return fontHandler.searchFontAttributes;
 	}
 	static bool GetSearchApplySubstitutions() {
-		return singleton->searchApplySubstitutions;
+		return fontHandler.searchApplySubstitutions;
 	}
 	#endif
 private:
@@ -316,9 +314,6 @@ private:
 	FcFontSet *gameFontSet;
 	FcPattern *basePattern;
 	#endif
-	bool searchSystemFonts;
-	bool searchFontAttributes;
-	bool searchApplySubstitutions;
 
 	static inline std::unique_ptr<FtLibraryHandler> singleton = nullptr;
 };
@@ -911,7 +906,7 @@ void CFontTexture::PinFont(std::shared_ptr<FontFace>& face, const std::string& f
 	if (cached != pinnedRecentFonts.end()) {
 		cached->second.timestamp = time;
 	} else {
-		if (pinnedRecentFonts.size() >= maxPinnedFonts) {
+		if (pinnedRecentFonts.size() >= fontHandler.maxPinnedFonts) {
 			SizedFontKey* oldest;
 			float oldestTime = time;
 			for(auto &[key, timestampedFont]: pinnedRecentFonts) {
@@ -931,11 +926,6 @@ void CFontTexture::PinFont(std::shared_ptr<FontFace>& face, const std::string& f
 void CFontTexture::InitFonts()
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-#ifndef HEADLESS
-	maxFontTries = configHandler ? configHandler->GetInt("MaxFontTries") : 5;
-	maxPinnedFonts = configHandler ? configHandler->GetInt("MaxPinnedFonts") : 10;
-	allowColorFonts = configHandler ? configHandler->GetBool("AllowColorFonts") : false;
-#endif
 }
 
 void CFontTexture::KillFonts()
@@ -1054,13 +1044,13 @@ void CFontTexture::LoadWantedGlyphs(const std::vector<char32_t>& wanted)
 	map.clear();
 
 	for (auto c : wanted) {
-		if (auto it = failedAttemptsToReplace.find(c); (it != failedAttemptsToReplace.end() && it->second == maxFontTries))
+		if (auto it = failedAttemptsToReplace.find(c); (it != failedAttemptsToReplace.end() && it->second == fontHandler.maxFontTries))
 			continue;
 
 		auto it = std::lower_bound(nonPrintableRanges.begin(), nonPrintableRanges.end(), c);
 		if (it != nonPrintableRanges.end() && !(c < *it)) {
 			LoadGlyph(shFace, c, 0);
-			failedAttemptsToReplace.emplace(c, maxFontTries);
+			failedAttemptsToReplace.emplace(c, fontHandler.maxFontTries);
 		}
 		else {
 			map.emplace_back(c);
@@ -1082,7 +1072,7 @@ void CFontTexture::LoadWantedGlyphs(const std::vector<char32_t>& wanted)
 		alreadyCheckedFonts.insert(GetFaceKey(*f));
 
 		for (std::size_t idx = 0; idx < map.size(); /*nop*/) {
-			if (auto it = failedAttemptsToReplace.find(map[idx]); (it != failedAttemptsToReplace.end() && it->second == maxFontTries)) {
+			if (auto it = failedAttemptsToReplace.find(map[idx]); (it != failedAttemptsToReplace.end() && it->second == fontHandler.maxFontTries)) {
 				// handle maxFontTries attempts case
 				LoadGlyph(shFace, map[idx], 0);
 				LOG_L(L_WARNING, "[CFontTexture::%s] Failed to load glyph %u after %d font replacement attempts", __func__, uint32_t(map[idx]), failedAttemptsToReplace[map[idx]]);
@@ -1213,7 +1203,7 @@ void CFontTexture::LoadGlyph(std::shared_ptr<FontFace>& f, char32_t ch, unsigned
 
 	// load glyph
 	auto flags = FT_LOAD_DEFAULT;
-	if (FT_HAS_COLOR(f->face) && allowColorFonts) {
+	if (FT_HAS_COLOR(f->face) && fontHandler.allowColorFonts) {
 		flags |= FT_LOAD_COLOR;
 	} else {
 		flags |= FT_LOAD_RENDER;

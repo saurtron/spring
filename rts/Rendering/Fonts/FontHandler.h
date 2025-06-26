@@ -14,6 +14,13 @@ public:
 	bool Init();
 
 	bool disableOldColorIndicators = false;
+	int maxFontTries = 0;
+	int maxPinnedFonts = 0;
+	bool allowColorFonts = 0;
+	bool useFontConfigLib = false;
+	bool searchSystemFonts = true;
+	bool searchFontAttributes = true;
+	bool searchApplySubstitutions = true;
 };
 
 extern CFontHandler fontHandler;
