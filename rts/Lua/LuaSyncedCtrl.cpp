@@ -4126,6 +4126,32 @@ int LuaSyncedCtrl::BuggerOff(lua_State* L)
 }
 
 
+static std::optional<std::tuple<float, int, CUnit*, int, float3> > ParseDamageParams(lua_State* L)
+{
+	const float damage    = luaL_checkfloat(L, 2);
+	const int paralyze    = luaL_optint(L, 3, 0);
+	const int attackerID  = luaL_optint(L, 4, -1);
+	const int weaponDefID = luaL_optint(L, 5, -1);
+	const float3 impulse  = float3(std::clamp(luaL_optfloat(L, 6, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE),
+	                               std::clamp(luaL_optfloat(L, 7, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE),
+	                               std::clamp(luaL_optfloat(L, 8, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE));
+
+	CUnit* attacker = nullptr;
+
+	if (attackerID >= 0) {
+		if (static_cast<size_t>(attackerID) >= unitHandler.MaxUnits())
+			return std::nullopt;
+
+		attacker = unitHandler.GetUnit(attackerID);
+	}
+
+	// -1 is allowed
+	if (weaponDefID >= int(weaponDefHandler->NumWeaponDefs()))
+		return std::nullopt;
+	return std::make_tuple(damage, paralyze, attacker, weaponDefID, impulse);
+}
+
+
 /***
  * @function Spring.AddFeatureDamage
  *
@@ -4148,27 +4174,11 @@ int LuaSyncedCtrl::AddFeatureDamage(lua_State* L)
 	if (feature == nullptr)
 		return 0;
 
-	const float damage    = luaL_checkfloat(L, 2);
-	const int paralyze    = luaL_optint(L, 3, 0);
-	const int attackerID  = luaL_optint(L, 4, -1);
-	const int weaponDefID = luaL_optint(L, 5, -1);
-	const float3 impulse  = float3(std::clamp(luaL_optfloat(L, 6, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE),
-	                               std::clamp(luaL_optfloat(L, 7, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE),
-	                               std::clamp(luaL_optfloat(L, 8, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE));
-
-	CUnit* attacker = nullptr;
-
-	if (attackerID >= 0) {
-		if (static_cast<size_t>(attackerID) >= unitHandler.MaxUnits())
-			return 0;
-
-		attacker = unitHandler.GetUnit(attackerID);
-	}
-
-	// -1 is allowed
-	if (weaponDefID >= int(weaponDefHandler->NumWeaponDefs()))
+	const auto damageParams = ParseDamageParams(L);
+	if (!damageParams)
 		return 0;
 
+	const auto [damage, paralyze, attacker, weaponDefID, impulse] = *damageParams;
 	DamageArray damages(damage);
 
 	if (paralyze)
@@ -4199,26 +4209,11 @@ int LuaSyncedCtrl::AddUnitDamage(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
-	const float damage    = luaL_checkfloat(L, 2);
-	const int paralyze    = luaL_optint(L, 3, 0);
-	const int attackerID  = luaL_optint(L, 4, -1);
-	const int weaponDefID = luaL_optint(L, 5, -1);
-	const float3 impulse  = float3(std::clamp(luaL_optfloat(L, 6, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE),
-	                               std::clamp(luaL_optfloat(L, 7, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE),
-	                               std::clamp(luaL_optfloat(L, 8, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE));
-
-	CUnit* attacker = nullptr;
-
-	if (attackerID >= 0) {
-		if (static_cast<size_t>(attackerID) >= unitHandler.MaxUnits())
-			return 0;
-
-		attacker = unitHandler.GetUnit(attackerID);
-	}
-
-	// -1 is allowed
-	if (weaponDefID >= int(weaponDefHandler->NumWeaponDefs()))
+	const auto damageParams = ParseDamageParams(L);
+	if (!damageParams)
 		return 0;
+
+	const auto [damage, paralyze, attacker, weaponDefID, impulse] = *damageParams;
 
 	DamageArray damages;
 	damages.Set(unit->armorType, damage);
