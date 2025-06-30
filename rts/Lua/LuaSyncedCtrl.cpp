@@ -228,6 +228,7 @@ bool LuaSyncedCtrl::PushEntries(lua_State* L)
 	REGISTER_LUA_CFUNC(SetFactoryBuggerOff);
 	REGISTER_LUA_CFUNC(BuggerOff);
 
+	REGISTER_LUA_CFUNC(AddFeatureDamage);
 	REGISTER_LUA_CFUNC(AddUnitDamage);
 	REGISTER_LUA_CFUNC(AddUnitImpulse);
 	REGISTER_LUA_CFUNC(AddUnitSeismicPing);
@@ -4123,6 +4124,60 @@ int LuaSyncedCtrl::BuggerOff(lua_State* L)
 
 	return 0;
 }
+
+
+/***
+ * @function Spring.AddFeatureDamage
+ *
+ * @param featureID integer
+ * @param damage number
+ * @param paralyze number? (Default: `0`) equals to the paralyzetime in the WeaponDef.
+ * @param attackerID integer? (Default: `-1`)
+ * @param weaponID integer? (Default: `-1`)
+ * @param impulseX number?
+ * @param impulseY number?
+ * @param impulseZ number?
+ * @return nil
+ */
+int LuaSyncedCtrl::AddFeatureDamage(lua_State* L)
+{
+	CheckAllowGameChanges(L);
+
+	CFeature* feature = ParseFeature(L, __func__, 1);
+
+	if (feature == nullptr)
+		return 0;
+
+	const float damage    = luaL_checkfloat(L, 2);
+	const int paralyze    = luaL_optint(L, 3, 0);
+	const int attackerID  = luaL_optint(L, 4, -1);
+	const int weaponDefID = luaL_optint(L, 5, -1);
+	const float3 impulse  = float3(std::clamp(luaL_optfloat(L, 6, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE),
+	                               std::clamp(luaL_optfloat(L, 7, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE),
+	                               std::clamp(luaL_optfloat(L, 8, 0.0f), -MAX_EXPLOSION_IMPULSE, MAX_EXPLOSION_IMPULSE));
+
+	CUnit* attacker = nullptr;
+
+	if (attackerID >= 0) {
+		if (static_cast<size_t>(attackerID) >= unitHandler.MaxUnits())
+			return 0;
+
+		attacker = unitHandler.GetUnit(attackerID);
+	}
+
+	// -1 is allowed
+	if (weaponDefID >= int(weaponDefHandler->NumWeaponDefs()))
+		return 0;
+
+	DamageArray damages(damage);
+
+	if (paralyze)
+		damages.paralyzeDamageTime = paralyze;
+
+	feature->DoDamage(damages, impulse, attacker, weaponDefID, -1);
+	return 0;
+}
+
 
 /***
  * @function Spring.AddUnitDamage
