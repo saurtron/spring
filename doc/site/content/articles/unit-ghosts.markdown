@@ -1,4 +1,7 @@
-## Unit Ghosts
++++
+title = "Unit Ghosts"
+author = "saurtron"
++++
 
 Immobile buildings by default have no radar wobble once spotted, and leave `live ghosts` even after losing los and/or radar.
 
