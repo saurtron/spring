@@ -63,6 +63,8 @@ Units generating a dead ghost for an ally team will lose their `PREVLOS` for tha
 
 Ghost behaviour can be disabled altogether throught the `GAME\\ModOptions\\GhostedBuildings` property.
 
+This can be set at the game script under the mentioned section, usually manually or through some lobby application.
+
 ## References
 
 - Spring.SetUnitLeavesGhost
