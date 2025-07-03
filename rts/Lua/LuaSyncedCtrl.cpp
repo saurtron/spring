@@ -5097,7 +5097,7 @@ int LuaSyncedCtrl::SetFeaturePieceVisible(lua_State* L)
  *
  * @param unitID integer
  * @param wreckLevel integer Wreck index to use. Default: 1.
- * @param smokeMultiplier integer Smoke time multiplier to apply over featureDef.smokeTime. Default: 1.
+ * @param doSmoke boolean Emit smoke if `true`. Default: `true`
  * @return nil|integer featureID The wreck featureID, or nil if it couldn't be created or unit doesn't exist.
  */
 int LuaSyncedCtrl::CreateUnitWreck(lua_State* L)
@@ -5109,9 +5109,10 @@ int LuaSyncedCtrl::CreateUnitWreck(lua_State* L)
 		return 0;
 
 	const int wreckLevel = luaL_optint(L, 2, 1) - 1;
-	const int smokeTime = luaL_optint(L, 3, 1);
+	const int doSmoke = luaL_optboolean(L, 3, true);
 
-	CFeature* wreck = unit->CreateWreck(wreckLevel, smokeTime);
+	CFeature* wreck = unit->CreateWreck(wreckLevel, doSmoke ? 1 : 0);
+
 	if (wreck) {
 		lua_pushinteger(L, wreck->id);
 		return 1;
@@ -5127,7 +5128,7 @@ int LuaSyncedCtrl::CreateUnitWreck(lua_State* L)
  *
  * @param featureID integer
  * @param wreckLevel integer Wreck index to use. Default: 1.
- * @param smokeMultiplier integer Smoke time multiplier to apply over featureDef.smokeTime. Default: 0.
+ * @param doSmoke boolean Emit smoke if `true`. Default: `false`
  * @return nil|integer featureID The wreck featureID, or nil if it couldn't be created or unit doesn't exist.
  */
 
@@ -5140,9 +5141,9 @@ int LuaSyncedCtrl::CreateFeatureWreck(lua_State* L)
 		return 0;
 
 	const int wreckLevel = luaL_optint(L, 2, 1) - 1;
-	const int smokeTime = luaL_optint(L, 3, 0);
+	const int doSmoke = luaL_optboolean(L, 3, false);
 
-	CFeature* wreck = feature->CreateWreck(wreckLevel, smokeTime);
+	CFeature* wreck = feature->CreateWreck(wreckLevel, doSmoke ? 1 : 0);
 	if (wreck) {
 		lua_pushinteger(L, wreck->id);
 		return 1;
