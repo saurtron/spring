@@ -315,6 +315,9 @@ bool LuaSyncedRead::PushEntries(lua_State* L)
 	REGISTER_LUA_CFUNC(GetFeaturePieceCollisionVolumeData);
 	REGISTER_LUA_CFUNC(GetFeatureSeparation);
 
+	REGISTER_LUA_CFUNC(GetFeatureFireTime);
+	REGISTER_LUA_CFUNC(GetFeatureSmokeTime);
+
 	REGISTER_LUA_CFUNC(GetFeatureRulesParam);
 	REGISTER_LUA_CFUNC(GetFeatureRulesParams);
 
@@ -7172,6 +7175,44 @@ int LuaSyncedRead::GetFeatureCollisionVolumeData(lua_State* L)
 int LuaSyncedRead::GetFeaturePieceCollisionVolumeData(lua_State* L)
 {
 	return (PushPieceCollisionVolumeData(L, ParseFeature(L, __func__, 1)));
+}
+
+
+/*** Get the feature current fire timer in seconds.
+ *
+ * @function Spring.GetFeatureFireTime
+ *
+ * @param featureID integer
+ * @return number fireTime
+ */
+int LuaSyncedRead::GetFeatureFireTime(lua_State* L)
+{
+	const CFeature* feature = ParseFeature(L, __func__, 1);
+
+	if (feature == nullptr)
+		return 0;
+
+	lua_pushnumber(L, feature->fireTime / GAME_SPEED);
+	return 1;
+}
+
+
+/*** Get the feature current smoke timer in seconds.
+ *
+ * @function Spring.GetFeatureSmokeTime
+ *
+ * @param featureID integer
+ * @return number smokeTime
+ */
+int LuaSyncedRead::GetFeatureSmokeTime(lua_State* L)
+{
+	const CFeature* feature = ParseFeature(L, __func__, 1);
+
+	if (feature == nullptr)
+		return 0;
+
+	lua_pushnumber(L, feature->smokeTime / GAME_SPEED);
+	return 1;
 }
 
 

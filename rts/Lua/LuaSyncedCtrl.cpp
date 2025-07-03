@@ -269,6 +269,8 @@ bool LuaSyncedCtrl::PushEntries(lua_State* L)
 	REGISTER_LUA_CFUNC(SetFeaturePieceCollisionVolumeData);
 	REGISTER_LUA_CFUNC(SetFeaturePieceVisible);
 
+	REGISTER_LUA_CFUNC(SetFeatureFireTime);
+	REGISTER_LUA_CFUNC(SetFeatureSmokeTime);
 
 	REGISTER_LUA_CFUNC(SetProjectileAlwaysVisible);
 	REGISTER_LUA_CFUNC(SetProjectileUseAirLos);
@@ -5161,6 +5163,73 @@ int LuaSyncedCtrl::SetFeaturePieceVisible(lua_State* L)
 }
 
 
+/*** Set the fire timer for a feature.
+ *
+ * @function Spring.SetFeatureFireTime
+ *
+ * Starts or resets an internal feature fire timer, when reaching zero the
+ * feature will be destroyed.
+ *
+ * @param featureID integer
+ * @param fireTime number
+ */
+int LuaSyncedCtrl::SetFeatureFireTime(lua_State* L)
+{
+	CFeature* feature = ParseFeature(L, __func__, 1);
+
+	if (feature == nullptr)
+		return 0;
+
+	const float fireTime = luaL_checknumber(L, 2);
+
+	if (fireTime < 0)
+		return luaL_error(L, "[%s] 'fireTime' must be >= 0", __func__);
+
+	const int prevFireTime = feature->smokeTime;
+	feature->fireTime = fireTime * GAME_SPEED;
+
+	if (prevFireTime <= 0 && feature->fireTime > 0)
+		featureHandler.SetFeatureUpdateable(feature);
+
+	return 0;
+}
+
+
+/*** Set the smoke timer for a feature.
+ *
+ * @function Spring.SetFeatureSmokeTime
+ *
+ * If different than zero, starts emitting smoke until the timer counts down to zero.
+ *
+ * Setting to zero will stop smoke emission by the feature.
+ *
+ * The smoke timer affects both the duration and size of the smoke particles.
+ *
+ * @param featureID integer
+ * @param smokeTime number
+ */
+int LuaSyncedCtrl::SetFeatureSmokeTime(lua_State* L)
+{
+	CFeature* feature = ParseFeature(L, __func__, 1);
+
+	if (feature == nullptr)
+		return 0;
+
+	const float smokeTime = luaL_checknumber(L, 2);
+
+	if (smokeTime < 0)
+		return luaL_error(L, "[%s] 'smokeTime' must be >= 0", __func__);
+
+	const int prevSmokeTime = feature->smokeTime;
+	feature->smokeTime = smokeTime * GAME_SPEED;
+
+	if (prevSmokeTime <= 0 && feature->smokeTime > 0)
+		featureHandler.SetFeatureUpdateable(feature);
+
+	return 0;
+}
+
+
 /******************************************************************************
  * Wrecks
  * @section wrecks
@@ -5211,6 +5280,7 @@ int LuaSyncedCtrl::CreateUnitWreck(lua_State* L)
 int LuaSyncedCtrl::CreateFeatureWreck(lua_State* L)
 {
 	CheckAllowGameChanges(L);
+
 	CFeature* feature = ParseFeature(L, __func__, 1);
 
 	if (feature == nullptr)
