@@ -7192,7 +7192,7 @@ int LuaSyncedRead::GetFeatureFireTime(lua_State* L)
 	if (feature == nullptr)
 		return 0;
 
-	lua_pushnumber(L, feature->fireTime / GAME_SPEED);
+	lua_pushnumber(L, feature->fireTime * INV_GAME_SPEED);
 	return 1;
 }
 
@@ -7211,7 +7211,7 @@ int LuaSyncedRead::GetFeatureSmokeTime(lua_State* L)
 	if (feature == nullptr)
 		return 0;
 
-	lua_pushnumber(L, feature->smokeTime / GAME_SPEED);
+	lua_pushnumber(L, feature->smokeTime * INV_GAME_SPEED);
 	return 1;
 }
 
