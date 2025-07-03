@@ -4145,7 +4145,7 @@ static std::optional<std::tuple<float, int, CUnit*, int, float3> > ParseDamagePa
 		attacker = unitHandler.GetUnit(attackerID);
 	}
 
-	// -1 is allowed
+	// negated values from 'CSolidObject::DamageType' also allowed
 	if (weaponDefID >= int(weaponDefHandler->NumWeaponDefs()))
 		return std::nullopt;
 	return std::make_tuple(damage, paralyze, attacker, weaponDefID, impulse);
