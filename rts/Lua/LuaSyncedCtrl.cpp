@@ -4494,6 +4494,18 @@ int LuaSyncedCtrl::CreateFeature(lua_State* L)
 }
 
 
+// Internal helper method
+void LuaSyncedCtrl::DestroyFeatureCommon(lua_State* L, CFeature* feature)
+{
+	if (inDestroyFeature >= MAX_CMD_RECURSION_DEPTH)
+		luaL_error(L, "DestroyFeature() recursion is not permitted, max depth: %d", MAX_CMD_RECURSION_DEPTH);
+
+	inDestroyFeature++;
+	featureHandler.DeleteFeature(feature);
+	inDestroyFeature--;
+}
+
+
 /***
  * @function Spring.DestroyFeature
  * @param featureDefID integer
@@ -4506,12 +4518,7 @@ int LuaSyncedCtrl::DestroyFeature(lua_State* L)
 	if (feature == nullptr)
 		return 0;
 
-	if (inDestroyFeature >= MAX_CMD_RECURSION_DEPTH)
-		luaL_error(L, "DestroyFeature() recursion is not permitted, max depth: %d", MAX_CMD_RECURSION_DEPTH);
-
-	inDestroyFeature++;
-	featureHandler.DeleteFeature(feature);
-	inDestroyFeature--;
+	DestroyFeatureCommon(L, feature);
 
 	return 0;
 }
@@ -4568,6 +4575,7 @@ int LuaSyncedCtrl::SetFeatureUseAirLos(lua_State* L)
  * @function Spring.SetFeatureHealth
  * @param featureID integer
  * @param health number
+ * @param checkDestruction boolean? Whether to destroy feature if feature goes below 0 health. (Default: `false`)
  * @return nil
  */
 int LuaSyncedCtrl::SetFeatureHealth(lua_State* L)
@@ -4578,6 +4586,10 @@ int LuaSyncedCtrl::SetFeatureHealth(lua_State* L)
 		return 0;
 
 	feature->health = std::min(feature->maxHealth, luaL_checkfloat(L, 2));
+
+	if (feature->health <= 0.0f && luaL_optboolean(L, 3, false)) {
+		DestroyFeatureCommon(L, feature);
+	}
 	return 0;
 }
 
