@@ -5185,7 +5185,7 @@ int LuaSyncedCtrl::SetFeatureFireTime(lua_State* L)
 	if (fireTime < 0)
 		return luaL_error(L, "[%s] 'fireTime' must be >= 0", __func__);
 
-	const int prevFireTime = feature->smokeTime;
+	const int prevFireTime = feature->fireTime;
 	feature->fireTime = fireTime * GAME_SPEED;
 
 	if (prevFireTime <= 0 && feature->fireTime > 0)
