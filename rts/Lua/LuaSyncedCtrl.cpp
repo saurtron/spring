@@ -5096,7 +5096,7 @@ int LuaSyncedCtrl::SetFeaturePieceVisible(lua_State* L)
  * @function Spring.CreateUnitWreck
  *
  * @param unitID integer
- * @param wreckLevel integer Wreck index to use. Default: 0.
+ * @param wreckLevel integer Wreck index to use. Default: 1.
  * @param smokeMultiplier integer Smoke time multiplier to apply over featureDef.smokeTime. Default: 1.
  * @return nil|integer featureID The wreck featureID, or nil if it couldn't be created or unit doesn't exist.
  */
@@ -5108,7 +5108,7 @@ int LuaSyncedCtrl::CreateUnitWreck(lua_State* L)
 	if (unit == nullptr)
 		return 0;
 
-	const int wreckLevel = luaL_optint(L, 2, 0);
+	const int wreckLevel = luaL_optint(L, 2, 1) - 1;
 	const int smokeTime = luaL_optint(L, 3, 1);
 
 	CFeature* wreck = unit->CreateWreck(wreckLevel, smokeTime);
@@ -5126,7 +5126,7 @@ int LuaSyncedCtrl::CreateUnitWreck(lua_State* L)
  * @function Spring.CreateFeatureWreck
  *
  * @param featureID integer
- * @param wreckLevel integer Wreck index to use. Default: 0.
+ * @param wreckLevel integer Wreck index to use. Default: 1.
  * @param smokeMultiplier integer Smoke time multiplier to apply over featureDef.smokeTime. Default: 0.
  * @return nil|integer featureID The wreck featureID, or nil if it couldn't be created or unit doesn't exist.
  */
@@ -5139,7 +5139,7 @@ int LuaSyncedCtrl::CreateFeatureWreck(lua_State* L)
 	if (feature == nullptr)
 		return 0;
 
-	const int wreckLevel = luaL_optint(L, 2, 0);
+	const int wreckLevel = luaL_optint(L, 2, 1) - 1;
 	const int smokeTime = luaL_optint(L, 3, 0);
 
 	CFeature* wreck = feature->CreateWreck(wreckLevel, smokeTime);
