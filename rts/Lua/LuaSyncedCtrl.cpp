@@ -4575,7 +4575,7 @@ int LuaSyncedCtrl::SetFeatureUseAirLos(lua_State* L)
  * @function Spring.SetFeatureHealth
  * @param featureID integer
  * @param health number
- * @param checkDestruction boolean? Whether to destroy feature if feature goes below 0 health. (Default: `false`)
+ * @param checkDestruction boolean? (Default: `false`) Whether to destroy feature if feature goes below 0 health.
  * @return nil
  */
 int LuaSyncedCtrl::SetFeatureHealth(lua_State* L)
