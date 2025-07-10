@@ -4152,8 +4152,16 @@ static std::optional<std::tuple<float, int, CUnit*, int, float3> > ParseDamagePa
 }
 
 
-/***
+/*** Apply damage to feature
+ *
  * @function Spring.AddFeatureDamage
+ *
+ * Will trigger FeaturePreDamaged and FeatureDamaged callins.
+ *
+ * Won't do anything if paralyze is not zero, the feature is already marked for deletion, or in void.
+ *
+ * If health goes below 0 and featureDef is `destructable` the feature will be deleted and
+ * a wreck created.
  *
  * @param featureID integer
  * @param damage number
@@ -4163,7 +4171,9 @@ static std::optional<std::tuple<float, int, CUnit*, int, float3> > ParseDamagePa
  * @param impulseX number?
  * @param impulseY number?
  * @param impulseZ number?
- * @return nil
+ *
+ * @see SyncedCallins:FeaturePreDamaged
+ * @see SyncedCallins:FeatureDamaged
  */
 int LuaSyncedCtrl::AddFeatureDamage(lua_State* L)
 {
