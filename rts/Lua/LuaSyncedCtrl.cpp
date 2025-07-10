@@ -5129,7 +5129,7 @@ int LuaSyncedCtrl::CreateUnitWreck(lua_State* L)
  * @param featureID integer
  * @param wreckLevel integer (Default: `1`) Wreck index to use.
  * @param doSmoke boolean (Default: `false`) Wreck emits smoke when `true`.
- * @return nil|integer featureID The wreck featureID, or nil if it couldn't be created or unit doesn't exist.
+ * @return integer? featureID The wreck featureID, or nil if it couldn't be created or unit doesn't exist.
  */
 
 int LuaSyncedCtrl::CreateFeatureWreck(lua_State* L)
