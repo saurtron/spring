@@ -75,5 +75,5 @@ This can be set at the game script under the mentioned section, usually manually
 
 - Live ghost icon: A ghost icon for a unit who was previously seen an in continuous radar coverage.
 - Dead ghost icon: An independent unit ghost, usually for dead units, but also for units who sneaked away through SetUnitLeavesGhost.
-- Building: A unit having and empty yardmap, and also Immobile. Usually identified through unitDef.isBuilding.
+- Building: A unit having a non-empty yardmap, and also Immobile. Usually identified through unitDef.isBuilding.
 - Immobile unit: A unit having `pathType == -1U && !canfly && speed <= 0.0f`. Usually identified through unitDef.isImmobile.
