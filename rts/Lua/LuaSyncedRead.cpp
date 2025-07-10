@@ -7178,7 +7178,7 @@ int LuaSyncedRead::GetFeaturePieceCollisionVolumeData(lua_State* L)
 }
 
 
-/*** Get the feature current fire timer in seconds.
+/*** Get the feature current fire timer.
  *
  * @function Spring.GetFeatureFireTime
  *
@@ -7197,7 +7197,7 @@ int LuaSyncedRead::GetFeatureFireTime(lua_State* L)
 }
 
 
-/*** Get the feature current smoke timer in seconds.
+/*** Get the feature current smoke timer.
  *
  * @function Spring.GetFeatureSmokeTime
  *
