@@ -3,11 +3,12 @@ title = "Unit Ghosts"
 author = "saurtron"
 +++
 
-Immobile buildings by default have no radar wobble once spotted, and leave `live ghosts` even after losing los and/or radar.
+Immobile buildings by default have no radar wobble once spotted, and leave `ghosts` even after losing los and/or radar.
 
-When they die they also leave a `dead ghost` behind, if previously spotted and not under los or radar at that moment.
+When they die they also leave a `ghost` behind, if previously spotted and not under los or radar at that moment.
 
-Other units by default will also show a ghost when losing los but still under radar.
+Other units by default won't show a ghost but it's possible to do it from lua by using `gl.UnitShape` or `gl.UnitShapeTextures`.
+
 
 ### The leavesGhost property
 
@@ -27,6 +28,10 @@ It controls the following behaviour:
    - Standard radar wobble behaviour.
 
 So, immobile non-building units don't do this by default, but the behaviour can be enabled by setting leavesGhost at unitDef.
+
+### Dead and live ghosts
+
+Ghost behave slightly different if tied to a live unit (live ghosts), or independent of any units (dead ghosts). Dead ghosts simply stay at the place they were created at, but live ghosts can move with the unit so in certain situations the ghosts may need to be toggled to avoid leaking hidden game information to players.
 
 ### leavesGhost units who move
 
@@ -73,7 +78,7 @@ This can be set at the game script under the mentioned section, usually manually
 
 ## Glossary
 
-- Live ghost icon: A ghost icon for a unit who was previously seen an in continuous radar coverage.
-- Dead ghost icon: An independent unit ghost, usually for dead units, but also for units who sneaked away through SetUnitLeavesGhost.
-- Building: A unit having a non-empty yardmap, and also Immobile. Usually identified through unitDef.isBuilding.
+- Live ghost: A ghost for a unit who was previously seen an in continuous radar coverage.
+- Dead ghost: An independent unit ghost, usually for dead units, but also for units who sneaked away through SetUnitLeavesGhost.
+- Live/Dead ghost icon: Refers to the radar icon for a ghost.
 - Immobile unit: A unit having `pathType == -1U && !canfly && speed <= 0.0f`. Usually identified through unitDef.isImmobile.
