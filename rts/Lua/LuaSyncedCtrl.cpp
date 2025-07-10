@@ -5171,7 +5171,7 @@ int LuaSyncedCtrl::SetFeaturePieceVisible(lua_State* L)
  * feature will be destroyed.
  *
  * @param featureID integer
- * @param fireTime number
+ * @param fireTime number in seconds
  */
 int LuaSyncedCtrl::SetFeatureFireTime(lua_State* L)
 {
@@ -5206,7 +5206,7 @@ int LuaSyncedCtrl::SetFeatureFireTime(lua_State* L)
  * The smoke timer affects both the duration and size of the smoke particles.
  *
  * @param featureID integer
- * @param smokeTime number
+ * @param smokeTime number in seconds
  */
 int LuaSyncedCtrl::SetFeatureSmokeTime(lua_State* L)
 {
