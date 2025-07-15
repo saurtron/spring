@@ -5280,7 +5280,6 @@ int LuaSyncedCtrl::CreateUnitWreck(lua_State* L)
 int LuaSyncedCtrl::CreateFeatureWreck(lua_State* L)
 {
 	CheckAllowGameChanges(L);
-
 	CFeature* feature = ParseFeature(L, __func__, 1);
 
 	if (feature == nullptr)
