@@ -7202,7 +7202,7 @@ int LuaSyncedRead::GetFeatureFireTime(lua_State* L)
  * @function Spring.GetFeatureSmokeTime
  *
  * @param featureID integer
- * @return number smokeTime in seconds
+ * @return number? smokeTime in seconds
  */
 int LuaSyncedRead::GetFeatureSmokeTime(lua_State* L)
 {
