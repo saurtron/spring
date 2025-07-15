@@ -7183,7 +7183,7 @@ int LuaSyncedRead::GetFeaturePieceCollisionVolumeData(lua_State* L)
  * @function Spring.GetFeatureFireTime
  *
  * @param featureID integer
- * @return number fireTime in seconds
+ * @return number? fireTime in seconds, nil when featureID is invalid.
  */
 int LuaSyncedRead::GetFeatureFireTime(lua_State* L)
 {
@@ -7202,7 +7202,7 @@ int LuaSyncedRead::GetFeatureFireTime(lua_State* L)
  * @function Spring.GetFeatureSmokeTime
  *
  * @param featureID integer
- * @return number? smokeTime in seconds
+ * @return number? smokeTime in seconds, nil when featureID is invalid.
  */
 int LuaSyncedRead::GetFeatureSmokeTime(lua_State* L)
 {
