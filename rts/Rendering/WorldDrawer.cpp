@@ -343,7 +343,9 @@ void CWorldDrawer::DrawOpaqueObjects() const
 			SCOPED_TIMER("Draw::World::Decals");
 			SCOPED_GL_DEBUGGROUP("Draw::World::Decals");
 			groundDecals->Draw();
+#ifndef HEADLESS
 			projectileDrawer->DrawGroundFlashes();
+#endif
 		}
 		{
 			SCOPED_TIMER("Draw::World::Foliage");
@@ -412,7 +414,9 @@ void CWorldDrawer::DrawAlphaObjects() const
 	{
 		SCOPED_TIMER("Draw::World::Particles");
 		SCOPED_GL_DEBUGGROUP("Draw::World::Particles");
+#ifndef HEADLESS
 		projectileDrawer->DrawAlpha(!hasWaterRendering, true, false, false);
+#endif
 
 		if (hasWaterRendering)
 			glDisable(GL_CLIP_PLANE3);
@@ -451,7 +455,9 @@ void CWorldDrawer::DrawAlphaObjects() const
 	{
 		SCOPED_TIMER("Draw::World::Particles");
 		SCOPED_GL_DEBUGGROUP("Draw::World::Particles");
+#ifndef HEADLESS
 		projectileDrawer->DrawAlpha(true, false, false, false);
+#endif
 
 		glDisable(GL_CLIP_PLANE3);
 	}
